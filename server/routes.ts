@@ -1,5 +1,6 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { randomBytes, timingSafeEqual } from "crypto";
 import { z } from "zod";
 
 // Simple in-memory data for ingredients and recipes
@@ -325,6 +326,49 @@ const recognizeImageSchema = z.object({
   max_suggestions: z.number().default(5)
 });
 
+const MAX_QUERY_ITEMS = 50;
+const MAX_QUERY_VALUE_LENGTH = 100;
+
+function parseDelimitedQueryList(value: unknown): string[] {
+  if (typeof value !== "string") return [];
+
+  return value
+    .slice(0, MAX_QUERY_ITEMS * MAX_QUERY_VALUE_LENGTH)
+    .split(",")
+    .map((item) => item.trim().toLowerCase().slice(0, MAX_QUERY_VALUE_LENGTH))
+    .filter(Boolean)
+    .slice(0, MAX_QUERY_ITEMS);
+}
+
+function safeCompare(secret: string, provided: string): boolean {
+  const secretBuffer = Buffer.from(secret);
+  const providedBuffer = Buffer.from(provided);
+
+  if (secretBuffer.length !== providedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(secretBuffer, providedBuffer);
+}
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  const providedKey = req.header("x-admin-key");
+
+  if (adminApiKey) {
+    if (!providedKey || !safeCompare(adminApiKey, providedKey)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    return next();
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  return next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
   app.get("/api/health", (req, res) => {
@@ -379,7 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ recipes: recipesDatabase, total: recipesDatabase.length });
       }
 
-      const ingredientList = (ingredients as string).split(',').map(i => i.trim().toLowerCase());
+      const ingredientList = parseDelimitedQueryList(ingredients);
       
       // Start with ingredient-based filtering
       let matchingRecipes = recipesDatabase.filter(recipe => 
@@ -398,7 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (allergies) {
-        const allergyList = (allergies as string).split(',').map(a => a.trim().toLowerCase());
+        const allergyList = parseDelimitedQueryList(allergies);
         matchingRecipes = matchingRecipes.filter(recipe => 
           !allergyList.some(allergy => 
             recipe.ingredients.some(ingredient => 
@@ -593,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoints
-  app.get("/api/admin/stats", (req, res) => {
+  app.get("/api/admin/stats", requireAdmin, (req, res) => {
     const stats = {
       users: {
         total: 1247,
@@ -615,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(stats);
   });
 
-  app.get("/api/admin/users", (req, res) => {
+  app.get("/api/admin/users", requireAdmin, (req, res) => {
     const users = [
       {
         id: "user1",
@@ -640,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(users);
   });
 
-  app.get("/api/admin/recipes", (req, res) => {
+  app.get("/api/admin/recipes", requireAdmin, (req, res) => {
     const adminRecipes = recipesDatabase.map(recipe => ({
       id: recipe.id,
       title: recipe.title,
@@ -648,7 +692,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       status: "published" as const,
       createdAt: "2024-01-10",
       rating: recipe.rating,
-      views: Math.floor(Math.random() * 1000) + 100
+      views: recipe.reviewCount * 20 + recipe.cookTime * 10
     }));
     
     res.json(adminRecipes);
@@ -670,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "File too large. Maximum size is 5MB." });
       }
       
-      const imageId = `img_${Math.random().toString(36).substring(2, 11)}`;
+      const imageId = `img_${randomBytes(8).toString("hex")}`;
       const mockUploadUrl = `https://mock-storage.example.com/upload/${imageId}`;
       
       res.json({

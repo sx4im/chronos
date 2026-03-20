@@ -10,6 +10,10 @@ app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  const isSensitivePath =
+    path.startsWith("/api/admin/") ||
+    path.startsWith("/api/profile") ||
+    path.startsWith("/api/uploads/");
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
@@ -21,7 +25,7 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      if (capturedJsonResponse && !isSensitivePath) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
@@ -41,10 +45,18 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message =
+      status >= 500 && process.env.NODE_ENV === "production"
+        ? "Internal Server Error"
+        : err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    console.error("Error:", err);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error:", err);
+    } else {
+      console.error("Error:", { status, message: err?.message || "Internal Server Error" });
+    }
   });
 
   // importantly only setup vite in development and after
