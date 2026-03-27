@@ -122,7 +122,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Mobile Logo */}
       {location === "/" && (
-        <div className="lg:hidden fixed top-6 left-6 z-50 flex items-center">
+        <div className="lg:hidden fixed top-4 left-4 sm:top-6 sm:left-6 z-50 flex items-center">
           <Link href="/" className="flex items-center">
             <span className="font-serif text-2xl font-bold text-foreground">Ingredo.</span>
           </Link>
@@ -130,7 +130,7 @@ export function AppShell({ children }: AppShellProps) {
       )}
 
       {/* Mobile Menu Button */}
-      <div className={`lg:hidden fixed top-6 right-6 z-[9999] h-10 flex items-center transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`lg:hidden fixed top-4 right-4 sm:top-6 sm:right-6 z-[9999] h-10 flex items-center transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button 
@@ -142,7 +142,7 @@ export function AppShell({ children }: AppShellProps) {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80 [&>button]:hidden">
+          <SheetContent side="right" className="w-[88vw] max-w-80 [&>button]:hidden">
             <div className="flex flex-col h-full">
               {/* Mobile Header */}
               <div className="flex items-center justify-between mb-8 mt-2">
@@ -180,11 +180,11 @@ export function AppShell({ children }: AppShellProps) {
                 </nav>
 
                 {/* Mobile Profile Section */}
-                <div className="mt-8 pt-8 border-t border-gray-200">
+                <div className="mt-8 pt-8 border-t border-border">
                   <div className="space-y-2">
                     <Link
                       href="/profile"
-                      className="flex items-center px-4 py-3 text-lg font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+                      className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <User className="mr-3 h-5 w-5" />
@@ -192,13 +192,13 @@ export function AppShell({ children }: AppShellProps) {
                     </Link>
                     <Link
                       href="/settings"
-                      className="flex items-center px-4 py-3 text-lg font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+                      className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <Settings className="mr-3 h-5 w-5" />
                       Settings
                     </Link>
-                    <button className="flex items-center px-4 py-3 text-lg font-medium text-gray-700 hover:bg-gray-100 rounded-lg w-full text-left">
+                    <button className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted rounded-lg w-full text-left transition-colors">
                       <LogOut className="mr-3 h-5 w-5" />
                       Logout
                     </button>
@@ -217,7 +217,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Premium Footer — Redesign */}
       <footer className="relative border-t border-border/40 overflow-hidden pt-16 pb-8">
-        <div className="container mx-auto px-8 relative z-10">
+        <div className="container mx-auto px-6 sm:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-24 mb-16">
             
             {/* Column 1: Brand & Desc */}
