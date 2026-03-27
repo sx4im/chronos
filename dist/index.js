@@ -3,6 +3,7 @@ import express2 from "express";
 
 // server/routes.ts
 import { createServer } from "http";
+import { randomBytes, timingSafeEqual } from "crypto";
 import { z } from "zod";
 var ingredientsDatabase = [
   { name: "Tomato", score: 0.95 },
@@ -318,6 +319,34 @@ var recognizeImageSchema = z.object({
   mode: z.literal("vision"),
   max_suggestions: z.number().default(5)
 });
+var MAX_QUERY_ITEMS = 50;
+var MAX_QUERY_VALUE_LENGTH = 100;
+function parseDelimitedQueryList(value) {
+  if (typeof value !== "string") return [];
+  return value.slice(0, MAX_QUERY_ITEMS * MAX_QUERY_VALUE_LENGTH).split(",").map((item) => item.trim().toLowerCase().slice(0, MAX_QUERY_VALUE_LENGTH)).filter(Boolean).slice(0, MAX_QUERY_ITEMS);
+}
+function safeCompare(secret, provided) {
+  const secretBuffer = Buffer.from(secret);
+  const providedBuffer = Buffer.from(provided);
+  if (secretBuffer.length !== providedBuffer.length) {
+    return false;
+  }
+  return timingSafeEqual(secretBuffer, providedBuffer);
+}
+function requireAdmin(req, res, next) {
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  const providedKey = req.header("x-admin-key");
+  if (adminApiKey) {
+    if (!providedKey || !safeCompare(adminApiKey, providedKey)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    return next();
+  }
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  return next();
+}
 async function registerRoutes(app2) {
   app2.get("/api/health", (req, res) => {
     res.json({ ok: true, timestamp: (/* @__PURE__ */ new Date()).toISOString() });
@@ -358,7 +387,7 @@ async function registerRoutes(app2) {
       if (!ingredients) {
         return res.json({ recipes: recipesDatabase, total: recipesDatabase.length });
       }
-      const ingredientList = ingredients.split(",").map((i) => i.trim().toLowerCase());
+      const ingredientList = parseDelimitedQueryList(ingredients);
       let matchingRecipes = recipesDatabase.filter(
         (recipe) => recipe.ingredients.some(
           (ingredient) => ingredientList.some(
@@ -372,7 +401,7 @@ async function registerRoutes(app2) {
         );
       }
       if (allergies) {
-        const allergyList = allergies.split(",").map((a) => a.trim().toLowerCase());
+        const allergyList = parseDelimitedQueryList(allergies);
         matchingRecipes = matchingRecipes.filter(
           (recipe) => !allergyList.some(
             (allergy) => recipe.ingredients.some(
@@ -517,7 +546,7 @@ async function registerRoutes(app2) {
     ];
     res.json(collections);
   });
-  app2.get("/api/admin/stats", (req, res) => {
+  app2.get("/api/admin/stats", requireAdmin, (req, res) => {
     const stats = {
       users: {
         total: 1247,
@@ -537,7 +566,7 @@ async function registerRoutes(app2) {
     };
     res.json(stats);
   });
-  app2.get("/api/admin/users", (req, res) => {
+  app2.get("/api/admin/users", requireAdmin, (req, res) => {
     const users = [
       {
         id: "user1",
@@ -560,7 +589,7 @@ async function registerRoutes(app2) {
     ];
     res.json(users);
   });
-  app2.get("/api/admin/recipes", (req, res) => {
+  app2.get("/api/admin/recipes", requireAdmin, (req, res) => {
     const adminRecipes = recipesDatabase.map((recipe) => ({
       id: recipe.id,
       title: recipe.title,
@@ -568,7 +597,7 @@ async function registerRoutes(app2) {
       status: "published",
       createdAt: "2024-01-10",
       rating: recipe.rating,
-      views: Math.floor(Math.random() * 1e3) + 100
+      views: recipe.reviewCount * 20 + recipe.cookTime * 10
     }));
     res.json(adminRecipes);
   });
@@ -582,7 +611,7 @@ async function registerRoutes(app2) {
       if (size > 5 * 1024 * 1024) {
         return res.status(400).json({ message: "File too large. Maximum size is 5MB." });
       }
-      const imageId = `img_${Math.random().toString(36).substring(2, 11)}`;
+      const imageId = `img_${randomBytes(8).toString("hex")}`;
       const mockUploadUrl = `https://mock-storage.example.com/upload/${imageId}`;
       res.json({
         image_id: imageId,
@@ -758,6 +787,7 @@ app.use((req, res, next) => {
   const start = Date.now();
   const path3 = req.path;
   let capturedJsonResponse = void 0;
+  const isSensitivePath = path3.startsWith("/api/admin/") || path3.startsWith("/api/profile") || path3.startsWith("/api/uploads/");
   const originalResJson = res.json;
   res.json = function(bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
@@ -767,7 +797,7 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path3.startsWith("/api")) {
       let logLine = `${req.method} ${path3} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      if (capturedJsonResponse && !isSensitivePath) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
       if (logLine.length > 80) {
@@ -782,9 +812,13 @@ app.use((req, res, next) => {
   const server = await registerRoutes(app);
   app.use((err, _req, res, _next) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message = status >= 500 && process.env.NODE_ENV === "production" ? "Internal Server Error" : err.message || "Internal Server Error";
     res.status(status).json({ message });
-    console.error("Error:", err);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error:", err);
+    } else {
+      console.error("Error:", { status, message: err?.message || "Internal Server Error" });
+    }
   });
   if (app.get("env") === "development") {
     await setupVite(app, server);
