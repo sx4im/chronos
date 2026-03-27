@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { randomBytes, timingSafeEqual } from "crypto";
+import rateLimit from "express-rate-limit";
 import { z } from "zod";
 
 // Simple in-memory data for ingredients and recipes
@@ -370,13 +371,24 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const externalApiRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: "Too many requests. Please try again in a minute.",
+    },
+  });
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ ok: true, timestamp: new Date().toISOString() });
   });
 
   // Ingredients search endpoint
-  app.get("/api/ingredients", (req, res) => {
+  app.get("/api/ingredients", externalApiRateLimit, (req, res) => {
     try {
       const { q } = ingredientsQuerySchema.parse(req.query);
       
@@ -405,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipes search endpoint
-  app.get("/api/recipes", (req, res) => {
+  app.get("/api/recipes", externalApiRateLimit, (req, res) => {
     try {
       const {
         ingredients,
@@ -485,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Single recipe endpoint
-  app.get("/api/recipe/:slug", (req, res) => {
+  app.get("/api/recipe/:slug", externalApiRateLimit, (req, res) => {
     try {
       const { slug } = recipeParamsSchema.parse(req.params);
       
@@ -502,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Similar recipes endpoint
-  app.get("/api/recipe/:id/similar", (req, res) => {
+  app.get("/api/recipe/:id/similar", externalApiRateLimit, (req, res) => {
     try {
       const { id } = req.params;
       const recipe = recipesDatabase.find(r => r.id === id);
@@ -743,7 +755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/recognize-image", (req, res) => {
+  app.post("/api/recognize-image", externalApiRateLimit, (req, res) => {
     try {
       const { image_id, max_suggestions } = recognizeImageSchema.parse(req.body);
       

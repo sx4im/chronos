@@ -185,10 +185,10 @@ export const SearchResults = React.memo(function SearchResults({
     return (
       <EmptyState
         icon={<Search className="mx-auto h-12 w-12 mb-4 text-primary" />}
-        title="Start by adding ingredients"
-        description="Search for ingredients you have and we'll find recipes you can make!"
+        title="No ingredients yet"
+        description="Add one or more ingredients to start finding recipes you can cook right now."
         action={{
-          label: "Add ingredients above",
+          label: "Enter ingredients above",
           onClick: () => {}
         }}
         className={className}
@@ -198,21 +198,16 @@ export const SearchResults = React.memo(function SearchResults({
 
   if (error) {
     return (
-      <Card className={className}>
-        <CardContent className="p-8 text-center">
-          <div className="flex flex-col items-center justify-center">
-            <Search className="h-12 w-12 mb-4 text-primary" />
-            <h3 className="text-lg font-medium mb-2 text-gray-800">Search failed</h3>
-            <p className="text-black mb-4">
-              We couldn't find any recipes. Please try again.
-            </p>
-            <Button onClick={() => refetchMatched()}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Try Again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={<RefreshCw className="mx-auto h-12 w-12 mb-4 text-primary" />}
+        title="We couldn't reach the recipe service"
+        description="Please check your connection and try the search again."
+        action={{
+          label: "Retry search",
+          onClick: () => refetchMatched(),
+        }}
+        className={className}
+      />
     );
   }
 
@@ -298,9 +293,9 @@ export const SearchResults = React.memo(function SearchResults({
           <EmptyState
             icon={<Search className="mx-auto h-12 w-12 mb-4 opacity-50" />}
             title="No recipes found"
-            description={`${getEmptyStateSuggestions()}. Try adjusting your filters or adding more ingredients.`}
+            description={`${getEmptyStateSuggestions()}. Try broadening your filters or adding a few more ingredients.`}
             action={{
-              label: activeMode === 'match' ? "Generate Creative Recipes" : "Clear Filters",
+              label: activeMode === 'match' ? "Generate creative ideas" : "Try matched recipes",
               onClick: activeMode === 'match' ? handleGenerateCreative : () => {}
             }}
           />
