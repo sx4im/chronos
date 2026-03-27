@@ -67,29 +67,14 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
-            <details className="rounded-md bg-muted p-3">
-              <summary className="cursor-pointer text-sm font-medium">
-                Error details
-              </summary>
-              <pre className="mt-2 text-xs text-muted-foreground whitespace-pre-wrap">
-                {error.message}
-                {error.stack && `\n${error.stack}`}
-              </pre>
-            </details>
-          )}
           <div className="flex flex-col gap-2">
-            <Button 
-              onClick={resetError} 
-              className="w-full"
-              data-testid="error-retry-button"
-            >
+            <Button onClick={resetError} className="w-full" data-testid="error-retry-button">
               <RefreshCw className="mr-2 h-4 w-4" />
               Try again
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.reload()} 
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
               className="w-full"
               data-testid="error-reload-button"
             >
