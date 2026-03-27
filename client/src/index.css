@@ -32,20 +32,20 @@
   /* Main theme colors */
   --background: var(--bg-cream);
   --foreground: var(--text-charcoal);
-  --card: #FFFFFF;
+  --card: #FDFCFB;
   --card-foreground: var(--text-charcoal);
-  --popover: #FFFFFF;
+  --popover: #FDFCFB;
   --popover-foreground: var(--text-charcoal);
   --primary: var(--accent-olive);
   --primary-foreground: var(--bg-cream);
   --secondary: var(--accent-terracotta);
-  --secondary-foreground: #FFFFFF;
+  --secondary-foreground: var(--text-on-dark);
   --muted: #EBEAE6;
   --muted-foreground: #6B6A66;
   --accent: var(--accent-gold);
   --accent-foreground: var(--text-charcoal);
   --destructive: #8B3A3A;
-  --destructive-foreground: #FFFFFF;
+  --destructive-foreground: var(--text-on-dark);
   --border: #E0DFDB;
   --input: #EBEAE6;
   --ring: var(--accent-olive);
@@ -63,7 +63,7 @@
   --sidebar-primary: var(--accent-olive);
   --sidebar-primary-foreground: var(--bg-cream);
   --sidebar-accent: var(--accent-terracotta);
-  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-accent-foreground: var(--text-on-dark);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--accent-olive);
   
@@ -237,9 +237,35 @@ html {
   }
 
   /* Section spacing improvements */
-  .section-padding {
-    padding: 5rem 0;
+.section-padding {
+  padding: 5rem 0;
+}
+
+.container-px {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-px {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
+}
+
+@media (min-width: 768px) {
+  .container-px {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-px {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
 
   /* Hero section improvements */
   .hero-section {
@@ -775,7 +801,7 @@ html {
 .how-it-works-heading {
   font-size: 1.875rem; /* 30px - mobile */
   font-weight: bold;
-  color: white;
+  color: var(--text-on-dark);
   margin-bottom: 1rem;
 }
 
@@ -798,7 +824,7 @@ html {
 }
 
 .how-it-works-description {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-on-dark-muted);
   font-size: 0.875rem; /* 14px - mobile */
   max-width: 42rem;
   margin: 0 auto;
@@ -820,7 +846,7 @@ html {
 .step-card-title {
   font-size: 1rem; /* 16px - mobile */
   font-weight: 600;
-  color: rgb(31, 41, 55);
+  color: var(--foreground);
   margin-bottom: 0.75rem;
   text-align: center;
 }
@@ -838,7 +864,7 @@ html {
 }
 
 .step-card-description {
-  color: rgba(31, 41, 55, 0.8);
+  color: var(--muted-foreground);
   line-height: 1.625;
   text-align: center;
   font-size: 0.875rem; /* 14px - mobile */

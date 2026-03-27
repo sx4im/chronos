@@ -392,7 +392,7 @@ export default function Pantry() {
                   {/* Search Bar - Full Width */}
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
                         placeholder="Search pantry items..."
                         value={searchQuery}
@@ -474,9 +474,9 @@ export default function Pantry() {
             {filteredItems.length === 0 ? (
               <Card className="bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-12 text-center">
-                  <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">No items found</h3>
-                  <p className="text-gray-600 mb-6 text-center max-w-md mx-auto">
+                  <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2 text-center">No items found</h3>
+                  <p className="text-muted-foreground mb-6 text-center max-w-md mx-auto">
                     {pantryItems.length === 0 
                       ? "Start building your pantry by adding some ingredients!"
                       : "Try adjusting your search or filter criteria."
@@ -512,12 +512,12 @@ export default function Pantry() {
                         <Card className={`hover:shadow-lg transition-all duration-300 ${
                           expiryStatus.status === "expired" ? "border-red-200 bg-red-50" :
                           expiryStatus.status === "expiring" ? "border-secondary/30 bg-secondary/10" :
-                          "border-gray-200"
+                           "border-border"
                         }`}>
                           <CardContent className="p-6">
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
+                                <h3 className="font-semibold text-foreground mb-1">{item.name}</h3>
                                 <p className="text-sm text-gray-600 capitalize">{item.category}</p>
                               </div>
                               <div className="flex gap-1">

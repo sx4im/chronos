@@ -249,13 +249,13 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className={cn("w-full border border-gray-300 shadow-lg rounded-lg overflow-hidden", className)}>
+      <Card className={cn("w-full border border-border shadow-lg rounded-lg overflow-hidden", className)}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-200 rounded-t-lg">
+          <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors border-b border-border rounded-t-lg">
             <CardTitle className="flex items-center justify-between text-base font-semibold">
               <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-gray-700" />
-                <span className="text-gray-800">Filters</span>
+                <Filter className="h-5 w-5 text-foreground" />
+                <span className="text-foreground">Filters</span>
                 {activeFilterCount > 0 && (
                   <Badge variant="secondary" className="h-6 text-xs bg-primary/20 text-primary border-primary/30">
                     {activeFilterCount}
@@ -263,19 +263,19 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                 )}
               </div>
               <ChevronDown 
-                className={cn("h-5 w-5 text-gray-600 transition-transform", isOpen && "rotate-180")} 
+                className={cn("h-5 w-5 text-muted-foreground transition-transform", isOpen && "rotate-180")} 
               />
             </CardTitle>
           </CardHeader>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <CardContent className="space-y-6 bg-gray-50/30">
+          <CardContent className="space-y-6 bg-muted/10">
             {/* Active Filters */}
             {activeFilters.length > 0 && (
-              <div className="space-y-3 p-4 bg-white rounded-lg border border-gray-200">
+              <div className="space-y-3 p-4 bg-card rounded-lg border border-border">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">Active Filters</span>
+                  <span className="text-sm font-semibold text-foreground/80">Active Filters</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -310,19 +310,19 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
 
             <div className="grid gap-6 md:grid-cols-2 mt-6">
               {/* Diet */}
-              <div className="space-y-3 p-4 bg-white rounded-lg border border-gray-200">
-                <Label className="text-sm font-semibold text-gray-700">Diet</Label>
+              <div className="space-y-3 p-4 bg-card rounded-lg border border-border">
+                <Label className="text-sm font-semibold text-foreground/80">Diet</Label>
                 <Select
                   value={filters.diet}
                   onValueChange={(value) => updateFilter("diet", value as SearchFilters["diet"])}
                 >
                   <SelectTrigger 
                     data-testid="diet-select"
-                    className="border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="border border-gray-200 shadow-lg">
+                  <SelectContent className="border border-border shadow-lg">
                     <SelectItem value="any">Any</SelectItem>
                     <SelectItem value="vegan">Vegan</SelectItem>
                     <SelectItem value="vegetarian">Vegetarian</SelectItem>
@@ -333,24 +333,24 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
               </div>
 
               {/* Servings */}
-              <div className="space-y-3 p-4 bg-white rounded-lg border border-gray-200">
-                <Label className="text-sm font-semibold text-gray-700">Servings</Label>
+              <div className="space-y-3 p-4 bg-card rounded-lg border border-border">
+                <Label className="text-sm font-semibold text-foreground/80">Servings</Label>
                 <Input
                   type="number"
                   min={1}
                   max={12}
                   value={filters.servings}
                   onChange={(e) => updateFilter("servings", parseInt(e.target.value) || 4)}
-                  className="w-full border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                   data-testid="servings-input"
                 />
               </div>
             </div>
 
             {/* Max Cook Time */}
-            <div className="space-y-4 p-4 bg-white rounded-lg border border-gray-200 mt-6">
+            <div className="space-y-4 p-4 bg-card rounded-lg border border-border mt-6">
               <div className="flex justify-between items-center">
-                <Label className="text-sm font-semibold text-gray-700">Max Cook Time</Label>
+                <Label className="text-sm font-semibold text-foreground/80">Max Cook Time</Label>
                 <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded">{filters.maxCookTime} minutes</span>
               </div>
               <Slider
@@ -365,8 +365,8 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
             </div>
 
             {/* Difficulty */}
-            <div className="space-y-4 p-4 bg-white rounded-lg border border-gray-200 mt-6">
-              <Label className="text-sm font-semibold text-gray-700">Difficulty</Label>
+            <div className="space-y-4 p-4 bg-card rounded-lg border border-border mt-6">
+              <Label className="text-sm font-semibold text-foreground/80">Difficulty</Label>
               <RadioGroup
                 value={filters.difficulty}
                 onValueChange={(value) => updateFilter("difficulty", value as SearchFilters["difficulty"])}
@@ -377,51 +377,51 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                   <RadioGroupItem 
                     value="any" 
                     id="any" 
-                    className="border border-gray-300 text-primary focus:ring-2 focus:ring-primary/20"
+                    className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
-                  <Label htmlFor="any" className="text-sm font-medium text-gray-700">Any</Label>
+                  <Label htmlFor="any" className="text-sm font-medium text-foreground/80">Any</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem 
                     value="easy" 
                     id="easy" 
-                    className="border border-gray-300 text-green-600 focus:ring-2 focus:ring-green-200"
+                    className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
-                  <Label htmlFor="easy" className="text-sm font-medium text-gray-700">Easy</Label>
+                  <Label htmlFor="easy" className="text-sm font-medium text-foreground/80">Easy</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem 
                     value="medium" 
                     id="medium" 
-                    className="border border-gray-300 text-yellow-600 focus:ring-2 focus:ring-yellow-200"
+                    className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
-                  <Label htmlFor="medium" className="text-sm font-medium text-gray-700">Medium</Label>
+                  <Label htmlFor="medium" className="text-sm font-medium text-foreground/80">Medium</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem 
                     value="hard" 
                     id="hard" 
-                    className="border border-gray-300 text-red-600 focus:ring-2 focus:ring-red-200"
+                    className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
-                  <Label htmlFor="hard" className="text-sm font-medium text-gray-700">Hard</Label>
+                  <Label htmlFor="hard" className="text-sm font-medium text-foreground/80">Hard</Label>
                 </div>
               </RadioGroup>
             </div>
 
             {/* Cuisine */}
-            <div className="space-y-3 p-4 bg-white rounded-lg border border-gray-200 mt-6">
-              <Label className="text-sm font-semibold text-gray-700">Cuisine</Label>
+            <div className="space-y-3 p-4 bg-card rounded-lg border border-border mt-6">
+              <Label className="text-sm font-semibold text-foreground/80">Cuisine</Label>
               <Select
                 value={filters.cuisine || "any"}
                 onValueChange={(value) => updateFilter("cuisine", value === "any" ? undefined : value)}
               >
                 <SelectTrigger 
                   data-testid="cuisine-select"
-                  className="border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 >
                   <SelectValue placeholder="Any cuisine" />
                 </SelectTrigger>
-                <SelectContent className="border border-gray-200 shadow-lg">
+                <SelectContent className="border border-border shadow-lg">
                   <SelectItem value="any">Any cuisine</SelectItem>
                   {CUISINE_OPTIONS.map(cuisine => (
                     <SelectItem key={cuisine} value={cuisine}>{cuisine}</SelectItem>
@@ -431,8 +431,8 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
             </div>
 
             {/* Allergies */}
-            <div className="space-y-4 p-4 bg-white rounded-lg border border-gray-200 mt-6">
-              <Label className="text-sm font-semibold text-gray-700">Avoid Allergens</Label>
+            <div className="space-y-4 p-4 bg-card rounded-lg border border-border mt-6">
+              <Label className="text-sm font-semibold text-foreground/80">Avoid Allergens</Label>
               <div className="grid grid-cols-2 gap-3">
                 {ALLERGY_OPTIONS.map(allergy => (
                   <button
@@ -442,8 +442,8 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                     className={cn(
                       "inline-flex items-center justify-start whitespace-nowrap rounded-md px-3 h-10 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       filters.allergies.includes(allergy.value)
-                        ? "bg-secondary text-white border-secondary shadow-md"
-                        : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        ? "bg-secondary text-secondary-foreground border-secondary shadow-md"
+                        : "border border-border bg-card text-foreground hover:bg-muted"
                     )}
                     data-testid={`allergy-${allergy.value}`}
                   >
@@ -454,10 +454,10 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
             </div>
 
             {/* Allow Substitutions */}
-            <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 mt-6">
+            <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border mt-6">
               <div className="space-y-1">
-                <Label className="text-sm font-semibold text-gray-700">Allow Substitutions</Label>
-                <p className="text-xs text-gray-600">
+                <Label className="text-sm font-semibold text-foreground/80">Allow Substitutions</Label>
+                <p className="text-xs text-muted-foreground">
                   Allow ingredient substitutions in recipes
                 </p>
               </div>

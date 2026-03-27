@@ -74,9 +74,9 @@ export default function Home() {
       <section className="relative w-full min-h-[85vh] flex items-center z-10 pt-20 pb-16" style={{ background: 'var(--bg-deep-olive)' }}>
         {/* Ambient radial glow */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, var(--accent-gold) 0%, transparent 70%)', filter: 'blur(80px)' }} />
+          <div className="absolute top-1/4 left-1/4 w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] lg:w-[500px] lg:h-[500px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, var(--accent-gold) 0%, transparent 70%)', filter: 'blur(80px)' }} />
         </div>
-        <div className="container mx-auto px-6 lg:px-12 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 relative z-10">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
             {/* Left Content — Typography Focus */}
@@ -142,7 +142,7 @@ export default function Home() {
             </div>
 
             {/* Right Content — Constrained Hero Image */}
-            <div className="lg:col-span-5 order-1 lg:order-2 relative lg:h-[420px] h-[300px]">
+            <div className="lg:col-span-5 order-1 lg:order-2 relative h-[220px] sm:h-[280px] md:h-[320px] lg:h-[420px]">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -163,7 +163,7 @@ export default function Home() {
 
       {/* ─── Features Section — Warm Brown Atmosphere ─── */}
       <section id="why-ingredo" className="py-52 relative z-10" style={{ background: 'var(--bg-warm-brown)' }}>
-        <div className="container mx-auto px-6 lg:px-12 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 relative z-10">
           <div className="grid lg:grid-cols-2 gap-20 items-center">
             <div>
               <FadeUp allowedSections={['why-ingredo', 'popular-recipes', 'how-it-works']}>
@@ -219,7 +219,7 @@ export default function Home() {
 
       {/* ─── Recipes Showcase — Cream Contrast ─── */}
       <section id="popular-recipes" className="py-24 relative z-10 bg-background">
-        <div className="container mx-auto px-6 lg:px-12 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 relative z-10">
           <FadeUp allowedSections={['why-ingredo', 'popular-recipes', 'how-it-works']}>
             <div className="flex justify-between items-end mb-16 border-b border-border/60 pb-8">
               <div className="flex-1 text-left">
@@ -274,7 +274,7 @@ export default function Home() {
 
       {/* ─── How It Works — Deep Olive Surface ─── */}
       <section id="how-it-works" className="py-24 relative z-10 bg-[var(--bg-deep-olive)]">
-        <div className="container mx-auto px-6 lg:px-12 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 relative z-10">
           <div className="w-full mx-auto text-left">
             <FadeUp allowedSections={['why-ingredo', 'popular-recipes', 'how-it-works']}>
               <div className="text-left mb-8 sm:mb-12 lg:mb-16">

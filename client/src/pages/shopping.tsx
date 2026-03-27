@@ -451,7 +451,7 @@ export default function Shopping() {
                   {/* Search Bar - Full Width */}
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
                         placeholder="Search shopping items..."
                         value={searchQuery}
@@ -548,9 +548,9 @@ export default function Shopping() {
             {filteredItems.length === 0 ? (
               <Card className="bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-12 text-center">
-                  <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">No items found</h3>
-                  <p className="text-gray-600 mb-6 text-center max-w-md mx-auto">
+                  <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2 text-center">No items found</h3>
+                  <p className="text-muted-foreground mb-6 text-center max-w-md mx-auto">
                     {shoppingList.length === 0 
                       ? "Start building your shopping list by adding some items!"
                       : "Try adjusting your search or filter criteria."
