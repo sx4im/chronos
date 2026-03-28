@@ -94,6 +94,7 @@ export default function Home() {
                 text="Cook With Purpose"
                 tag="h1"
                 className="font-serif text-6xl md:text-8xl font-medium tracking-tighter leading-[0.9] mb-8"
+                textAlign="left"
                 delay={50}
                 duration={1.2}
                 ease="power4.out"
