@@ -299,8 +299,8 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Large Decorative Text — Redesign Root Element */}
-        <div className="w-full relative h-[20vw] md:h-[10vw] flex items-end justify-center overflow-hidden pointer-events-none select-none opacity-20">
-          <span className="text-[19vw] md:text-[19vw] leading-[0.90] font-serif font-bold text-foreground tracking-wide whitespace-nowrap blur-[0px] translate-y-[12%] md:translate-y-0">
+        <div className="w-full relative h-[20vw] md:h-[10vw] flex items-end md:items-start justify-center overflow-hidden pointer-events-none select-none opacity-20">
+          <span className="text-[19vw] leading-[0.90] font-serif font-bold text-foreground tracking-wide whitespace-nowrap blur-[0px]">
             INGREDO
           </span>
           <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-background to-transparent z-10" />
