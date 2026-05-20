@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 
 interface SplitTextProps {
   text: string;
@@ -18,10 +18,17 @@ interface SplitTextProps {
   onLetterAnimationComplete?: () => void;
 }
 
+interface SplitUnit {
+  value: string;
+  start: number;
+}
+
+const EMPTY_PROPS = {} as const;
+
 const SplitText = ({
   text,
   className = "",
-  style = {},
+  style = EMPTY_PROPS,
   delay = 100,
   duration = 0.6,
   ease,
@@ -34,46 +41,81 @@ const SplitText = ({
   tag = "p",
   onLetterAnimationComplete,
 }: SplitTextProps) => {
-  const units = React.useMemo(() => {
+  const [isAnimating, setIsAnimating] = React.useState(false);
+  const shouldReduceMotion = useReducedMotion();
+  const units = React.useMemo<SplitUnit[]>(() => {
     if (!text) return [];
     if (splitType.includes("words")) {
-      return text.split(/(\s+)/);
+      let offset = 0;
+      return text.split(/(\s+)/).map((value) => {
+        const start = offset;
+        offset += value.length;
+        return { value, start };
+      });
     }
-    return Array.from(text);
+    if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+      const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+      return Array.from(segmenter.segment(text), ({ segment, index }) => ({
+        value: segment,
+        start: index,
+      }));
+    }
+    let offset = 0;
+    return Array.from(text).map((value) => {
+      const start = offset;
+      offset += value.length;
+      return { value, start };
+    });
   }, [text, splitType]);
 
   const Tag = tag as keyof JSX.IntrinsicElements;
 
+  if (shouldReduceMotion) {
+    return (
+      <Tag className={`split-parent ${className}`} style={{ textAlign, ...style }}>
+        <m.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="inline">
+          {text}
+        </m.span>
+      </Tag>
+    );
+  }
+
   return (
     <Tag className={`split-parent ${className}`} style={{ textAlign, ...style }}>
-      <motion.span
+      <m.span
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: threshold }}
         transition={{ staggerChildren: delay / 1000 }}
-        onAnimationComplete={onLetterAnimationComplete}
+        onAnimationStart={() => setIsAnimating(true)}
+        onAnimationComplete={() => {
+          setIsAnimating(false);
+          onLetterAnimationComplete?.();
+        }}
+        onViewportLeave={() => setIsAnimating(false)}
         className="inline"
       >
-        {units.map((unit, index) => {
-          const isSpace = /^\s+$/.test(unit);
+        {units.map((unit) => {
+          const isSpace = /^\s+$/.test(unit.value);
           if (isSpace) {
-            return <span key={`space-${index}`}>{unit}</span>;
+            return <span key={`space-${unit.start}-${unit.value.length}`}>{unit.value}</span>;
           }
           return (
-            <motion.span
-              key={`${unit}-${index}`}
+            <m.span
+              key={`unit-${unit.start}-${unit.value}`}
               variants={{
                 hidden: { opacity: 0, y: 24 },
                 visible: { opacity: 1, y: 0 },
               }}
               transition={{ duration, ease: "easeOut" }}
-              className="inline-block will-change-transform"
+              style={{ willChange: isAnimating ? "transform" : "auto" }}
+              className="inline-block"
             >
-              {unit}
-            </motion.span>
+              {unit.value}
+            </m.span>
           );
         })}
-      </motion.span>
+      </m.span>
     </Tag>
   );
 };

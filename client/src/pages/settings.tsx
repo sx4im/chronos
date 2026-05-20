@@ -252,13 +252,13 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
+                    <User className="size-5 text-primary" />
                     Profile Settings
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center gap-6">
-                    <Avatar className="h-20 w-20">
+                    <Avatar className="size-20">
                       <AvatarImage src={user?.avatar} alt={user?.name} />
                       <AvatarFallback className="text-2xl">
                         {user?.name?.split(' ').map((n: string) => n[0]).join('')}
@@ -266,7 +266,7 @@ export default function Settings() {
                     </Avatar>
                     <div>
                       <Button variant="outline" size="sm">
-                        <Camera className="h-4 w-4 mr-2" />
+                        <Camera className="size-4 mr-2" />
                         Change Avatar
                       </Button>
                       <p className="text-sm text-gray-600 mt-1">
@@ -329,7 +329,7 @@ export default function Settings() {
                   </div>
                   
                   <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary/90">
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="size-4 mr-2" />
                     Save Profile
                   </Button>
                 </CardContent>
@@ -345,7 +345,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <ChefHat className="h-5 w-5 text-primary" />
+                    <ChefHat className="size-5 text-primary" />
                     Cooking Preferences
                   </CardTitle>
                 </CardHeader>
@@ -384,7 +384,7 @@ export default function Settings() {
                         size="sm"
                           onClick={() => setCookingPreferences(prev => ({ ...prev, preferredUnits: "metric" }))}
                       >
-                          <Scale className="h-4 w-4 mr-1" />
+                          <Scale className="size-4 mr-1" />
                           Metric
                       </Button>
                       <Button
@@ -392,7 +392,7 @@ export default function Settings() {
                         size="sm"
                           onClick={() => setCookingPreferences(prev => ({ ...prev, preferredUnits: "imperial" }))}
                       >
-                          <Scale className="h-4 w-4 mr-1" />
+                          <Scale className="size-4 mr-1" />
                           Imperial
                       </Button>
                       </div>
@@ -405,7 +405,7 @@ export default function Settings() {
                           size="sm"
                           onClick={() => setCookingPreferences(prev => ({ ...prev, temperatureUnit: "celsius" }))}
                         >
-                          <Thermometer className="h-4 w-4 mr-1" />
+                          <Thermometer className="size-4 mr-1" />
                           °C
                         </Button>
                         <Button
@@ -413,7 +413,7 @@ export default function Settings() {
                           size="sm"
                           onClick={() => setCookingPreferences(prev => ({ ...prev, temperatureUnit: "fahrenheit" }))}
                         >
-                          <Thermometer className="h-4 w-4 mr-1" />
+                          <Thermometer className="size-4 mr-1" />
                           °F
                         </Button>
                       </div>
@@ -493,7 +493,7 @@ export default function Settings() {
                   </div>
                   
                   <Button onClick={handleSaveCookingPreferences} className="bg-primary hover:bg-primary/90">
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="size-4 mr-2" />
                     Save Cooking Preferences
                   </Button>
                 </CardContent>
@@ -509,7 +509,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-secondary" />
+                    <Bell className="size-5 text-secondary" />
                     Notifications
                   </CardTitle>
                 </CardHeader>
@@ -631,7 +631,7 @@ export default function Settings() {
                   </div>
                   
                   <Button onClick={handleSaveNotifications} className="bg-primary hover:bg-primary/90">
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="size-4 mr-2" />
                     Save Notifications
                   </Button>
                 </CardContent>
@@ -647,7 +647,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-green-600" />
+                    <Shield className="size-5 text-green-600" />
                     Privacy & Security
                   </CardTitle>
                 </CardHeader>
@@ -666,7 +666,7 @@ export default function Settings() {
                           size="sm"
                           onClick={() => setPrivacy(prev => ({ ...prev, profileVisibility: "public" }))}
                         >
-                          <Globe className="h-4 w-4 mr-1" />
+                          <Globe className="size-4 mr-1" />
                           Public
                         </Button>
                         <Button
@@ -674,7 +674,7 @@ export default function Settings() {
                           size="sm"
                           onClick={() => setPrivacy(prev => ({ ...prev, profileVisibility: "private" }))}
                         >
-                          <Lock className="h-4 w-4 mr-1" />
+                          <Lock className="size-4 mr-1" />
                           Private
                         </Button>
                       </div>
@@ -741,14 +741,14 @@ export default function Settings() {
                     <Separator />
                     <div className="space-y-2">
                       <Button variant="outline" size="sm" className="border-2 border-gray-300">
-                        <Key className="h-4 w-4 mr-2" />
+                        <Key className="size-4 mr-2" />
                         Update Password
                       </Button>
                     </div>
                   </div>
                   
                   <Button onClick={handleSavePrivacy} className="bg-green-600 hover:bg-green-700">
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="size-4 mr-2" />
                     Save Privacy Settings
                   </Button>
                 </CardContent>
@@ -764,7 +764,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Eye className="h-5 w-5 text-primary" />
+                    <Eye className="size-5 text-primary" />
                     Accessibility
                   </CardTitle>
                 </CardHeader>
@@ -842,7 +842,7 @@ export default function Settings() {
                   </div>
                   
                   <Button onClick={handleSaveAccessibility} className="bg-primary hover:bg-primary/90">
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="size-4 mr-2" />
                     Save Accessibility Settings
                         </Button>
                 </CardContent>
@@ -858,7 +858,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Cloud className="h-5 w-5 text-green-600" />
+                    <Cloud className="size-5 text-green-600" />
                     Data Sync & Backup
                   </CardTitle>
                 </CardHeader>
@@ -915,13 +915,13 @@ export default function Settings() {
                       </p>
                     </div>
                     <Button variant="outline" onClick={handleSyncNow}>
-                      <Cloud className="h-4 w-4 mr-2" />
+                      <Cloud className="size-4 mr-2" />
                       Sync Now
                     </Button>
                   </div>
                   
                   <Button onClick={handleSaveDataSync} className="bg-green-600 hover:bg-green-700">
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="size-4 mr-2" />
                     Save Sync Settings
                   </Button>
                 </CardContent>
@@ -937,7 +937,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Download className="h-5 w-5 text-gray-600" />
+                    <Download className="size-5 text-gray-600" />
                     Data Management
                   </CardTitle>
                 </CardHeader>
@@ -951,7 +951,7 @@ export default function Settings() {
                         </p>
                       </div>
                       <Button variant="outline" onClick={handleExportData}>
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="size-4 mr-2" />
                         Export
                       </Button>
                     </div>
@@ -964,7 +964,7 @@ export default function Settings() {
                         </p>
                       </div>
                       <Button variant="outline" onClick={handleImportData}>
-                        <Upload className="h-4 w-4 mr-2" />
+                        <Upload className="size-4 mr-2" />
                         Import
                       </Button>
                     </div>
@@ -981,7 +981,7 @@ export default function Settings() {
                         </p>
                       </div>
                       <Button variant="destructive" onClick={handleDeleteAccount}>
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="size-4 mr-2" />
                         Delete Account
                       </Button>
                     </div>

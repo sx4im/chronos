@@ -4,14 +4,15 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/lib/auth-context";
 import { Leaf, Menu, User, Heart, Settings, LogOut, X, Package, ShoppingCart } from "lucide-react";
 
 interface AppShellProps {
@@ -19,7 +20,8 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { isAuthenticated, isLoading, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const navigation = [
@@ -40,7 +42,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="container mx-auto px-8 relative z-10">
             <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center transition-opacity hover:opacity-80" data-testid="logo-link">
+            <Link href="/" className="flex items-center transition-opacity hover:opacity-80 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm" data-testid="logo-link">
                <span className="font-serif text-3xl font-bold tracking-tight text-foreground">Ingredo.</span>
             </Link>
 
@@ -52,8 +54,8 @@ export function AppShell({ children }: AppShellProps) {
                   href={item.href}
                   className={cn(
                     "text-xs font-bold tracking-[0.2em] uppercase transition-colors relative",
-                    item.current ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground",
-                    "after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-[1px] after:bg-accent-gold after:transition-all hover:after:w-full",
+                    item.current ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground active:text-foreground",
+                    "after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-[1px] after:bg-accent-gold after:transition-all hover:after:w-full active:after:w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm",
                     item.current && "after:w-full"
                   )}
                   data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
@@ -65,55 +67,75 @@ export function AppShell({ children }: AppShellProps) {
 
             {/* Right Actions */}
             <div className="flex items-center">
-              {/* Profile Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" data-testid="profile-menu" className="h-12 w-12 rounded-full p-0 hover:bg-transparent profile-icon-button">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary text-white text-sm rounded-full">
-                        <User className="h-5 w-5" />
-                      </AvatarFallback>
-                    </Avatar>
+              {!isLoading && !isAuthenticated ? (
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" asChild className="text-xs font-bold tracking-[0.2em] uppercase">
+                    <Link href="/auth/login" data-testid="desktop-login-link">
+                      Sign in
+                    </Link>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="mt-4">
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" data-testid="menu-profile">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
+                  <Button asChild className="text-xs font-bold tracking-[0.2em] uppercase">
+                    <Link href="/auth/signup" data-testid="desktop-signup-link">
+                      Create account
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/favorites" data-testid="menu-favorites">
-                      <Heart className="mr-2 h-4 w-4" />
-                      Favorites
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings" data-testid="menu-settings">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/pantry" data-testid="menu-pantry">
-                      <Package className="mr-2 h-4 w-4" />
-                      Pantry
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/shopping" data-testid="menu-shopping">
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Shopping List
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem data-testid="menu-logout">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </Button>
+                </div>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" data-testid="profile-menu" className="size-12 rounded-full p-0 hover:bg-transparent profile-icon-button">
+                      <Avatar className="size-10">
+                        <AvatarFallback className="bg-primary text-white text-sm rounded-full">
+                          <User className="size-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" sideOffset={12}>
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" data-testid="menu-profile">
+                        <User className="mr-2 size-4" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/favorites" data-testid="menu-favorites">
+                        <Heart className="mr-2 size-4" />
+                        Favorites
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings" data-testid="menu-settings">
+                        <Settings className="mr-2 size-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/pantry" data-testid="menu-pantry">
+                        <Package className="mr-2 size-4" />
+                        Pantry
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/shopping" data-testid="menu-shopping">
+                        <ShoppingCart className="mr-2 size-4" />
+                        Shopping List
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      data-testid="menu-logout"
+                      onClick={() => {
+                        logout();
+                        setLocation("/");
+                      }}
+                    >
+                      <LogOut className="mr-2 size-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
           </div>
@@ -123,25 +145,29 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile Logo */}
       {location === "/" && (
         <div className="lg:hidden fixed top-4 left-4 sm:top-6 sm:left-6 z-50 flex items-center">
-          <Link href="/" className="flex items-center">
-            <span className="font-serif text-2xl font-bold text-foreground">Ingredo.</span>
+          <Link href="/" className="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm">
+            <span className="px-3 py-1 rounded-md">
+              <span className="font-serif text-2xl font-bold text-black">Ingredo.</span>
+            </span>
           </Link>
         </div>
       )}
 
       {/* Mobile Menu Button */}
-      <div className={`lg:hidden fixed top-4 right-4 sm:top-6 sm:right-6 z-[9999] h-10 flex items-center transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className="lg:hidden fixed top-4 right-4 sm:top-6 sm:right-6 z-50 h-10 flex items-center">
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-foreground hover:bg-transparent"
-              data-testid="mobile-menu-toggle"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
+          {!isMobileMenuOpen && (
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-12 bg-white/90 text-black shadow-sm backdrop-blur-sm hover:bg-white/90 active:bg-white/90"
+                data-testid="mobile-menu-toggle"
+              >
+                <Menu className="size-7" />
+              </Button>
+            </SheetTrigger>
+          )}
           <SheetContent side="right" className="w-[88vw] max-w-80 [&>button]:hidden">
             <div className="flex flex-col h-full">
               {/* Mobile Header */}
@@ -151,9 +177,9 @@ export function AppShell({ children }: AppShellProps) {
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 hover:bg-muted rounded-full transition-colors"
+                  className="p-2 hover:bg-muted active:bg-muted rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
-                  <X className="h-6 w-6 text-foreground" />
+                  <X className="size-6 text-foreground" />
                 </button>
               </div>
 
@@ -166,10 +192,10 @@ export function AppShell({ children }: AppShellProps) {
                       key={item.name}
                       href={item.href}
                       className={cn(
-                        "flex items-center px-6 py-4 text-lg font-serif font-medium transition-all rounded-xl",
-                        item.current 
-                          ? "bg-[var(--accent-gold)] text-[var(--bg-deep-olive)] shadow-lg shadow-gold/20" 
-                          : "text-foreground hover:bg-[var(--bg-olive-surface)]/20 hover:pl-8"
+                        "flex items-center px-6 py-4 text-lg font-serif font-medium transition-transform rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        item.current
+                          ? "bg-[var(--accent-gold)] text-[var(--bg-deep-olive)] shadow-lg shadow-gold/20"
+                          : "text-foreground hover:bg-[var(--bg-olive-surface)]/20 active:bg-[var(--bg-olive-surface)]/20 hover:translate-x-2 active:translate-x-2"
                       )}
                       data-testid={`mobile-nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -181,28 +207,50 @@ export function AppShell({ children }: AppShellProps) {
 
                 {/* Mobile Profile Section */}
                 <div className="mt-8 pt-8 border-t border-border">
-                  <div className="space-y-2">
-                    <Link
-                      href="/profile"
-                      className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <User className="mr-3 h-5 w-5" />
-                      Profile
-                    </Link>
-                    <Link
-                      href="/settings"
-                      className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Settings className="mr-3 h-5 w-5" />
-                      Settings
-                    </Link>
-                    <button className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted rounded-lg w-full text-left transition-colors">
-                      <LogOut className="mr-3 h-5 w-5" />
-                      Logout
-                    </button>
-                  </div>
+                  {!isLoading && !isAuthenticated ? (
+                    <div className="space-y-3">
+                      <Button asChild className="w-full">
+                        <Link href="/auth/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                          Create account
+                        </Link>
+                      </Button>
+                      <Button variant="outline" asChild className="w-full">
+                        <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                          Sign in
+                        </Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Link
+                        href="/profile"
+                        className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted active:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <User className="mr-3 size-5" />
+                        Profile
+                      </Link>
+                      <Link
+                        href="/settings"
+                        className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted active:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Settings className="mr-3 size-5" />
+                        Settings
+                      </Link>
+                      <button
+                        className="flex items-center px-4 py-3 text-lg font-medium text-foreground hover:bg-muted active:bg-muted rounded-lg w-full text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        onClick={() => {
+                          logout();
+                          setIsMobileMenuOpen(false);
+                          setLocation("/");
+                        }}
+                      >
+                        <LogOut className="mr-3 size-5" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -219,7 +267,7 @@ export function AppShell({ children }: AppShellProps) {
       <footer className="relative border-t border-border/40 overflow-hidden pt-16 pb-8">
         <div className="container mx-auto px-6 sm:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-24 mb-16">
-            
+
             {/* Column 1: Brand & Desc */}
             <div className="lg:col-span-5">
               <Link href="/" className="inline-block mb-6">
@@ -228,7 +276,7 @@ export function AppShell({ children }: AppShellProps) {
               <p className="text-muted-foreground text-lg font-serif leading-relaxed mb-8 max-w-sm">
                 Culinary intelligence for the modern home chef. Transform your ingredients into extraordinary, zero-waste experiences.
               </p>
-              
+
               {/* Social Icons */}
               <div className="flex items-center gap-4">
                 {[
@@ -237,15 +285,15 @@ export function AppShell({ children }: AppShellProps) {
                   { name: 'LinkedIn', icon: 'M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z', href: 'https://linkedin.com/in/sx4im' },
                   { name: 'Instagram', icon: 'M12.017 0H7.983C3.582 0 0 3.582 0 7.983v4.034C0 16.418 3.582 20 7.983 20h4.034C16.418 20 20 16.418 20 12.017V7.983C20 3.582 16.418 0 12.017 0zM10 13.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7zm6.5-6.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z', href: 'https://instagram.com/sx4im' }
                 ].map((social) => (
-                  <a 
+                  <a
                     key={social.name}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full border border-border/40 flex items-center justify-center transition-all hover:bg-foreground hover:text-background"
+                    className="size-10 rounded-full border border-border/40 flex items-center justify-center transition-all hover:bg-foreground active:bg-foreground hover:text-background active:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <span className="sr-only">{social.name}</span>
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="size-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d={social.icon} clipRule="evenodd" />
                     </svg>
                   </a>
@@ -257,10 +305,10 @@ export function AppShell({ children }: AppShellProps) {
             <div className="lg:col-span-2">
               <h4 className="text-xs font-bold uppercase tracking-[0.2em] mb-8">Product</h4>
               <ul className="space-y-4">
-                <li><Link href="/" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Features</Link></li>
-                <li><Link href="/search" className="text-muted-foreground hover:text-foreground transition-colors text-sm">How It Works</Link></li>
-                <li><Link href="/pantry" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Pantry Manager</Link></li>
-                <li><Link href="/search" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Recipe Search</Link></li>
+                <li><Link href="/" className="text-muted-foreground hover:text-foreground active:text-foreground transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm">Features</Link></li>
+                <li><Link href="/search" className="text-muted-foreground hover:text-foreground active:text-foreground transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm">How It Works</Link></li>
+                <li><Link href="/pantry" className="text-muted-foreground hover:text-foreground active:text-foreground transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm">Pantry Manager</Link></li>
+                <li><Link href="/search" className="text-muted-foreground hover:text-foreground active:text-foreground transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm">Recipe Search</Link></li>
               </ul>
             </div>
 
@@ -268,10 +316,10 @@ export function AppShell({ children }: AppShellProps) {
             <div className="lg:col-span-2">
               <h4 className="text-xs font-bold uppercase tracking-[0.2em] mb-8">Company</h4>
               <ul className="space-y-4">
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">About</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Blog</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Careers</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Contact</a></li>
+                <li><button type="button" className="appearance-none bg-transparent border-0 p-0 text-left font-[inherit] cursor-pointer text-muted-foreground hover:text-foreground transition-colors text-sm">About</button></li>
+                <li><button type="button" className="appearance-none bg-transparent border-0 p-0 text-left font-[inherit] cursor-pointer text-muted-foreground hover:text-foreground transition-colors text-sm">Blog</button></li>
+                <li><button type="button" className="appearance-none bg-transparent border-0 p-0 text-left font-[inherit] cursor-pointer text-muted-foreground hover:text-foreground transition-colors text-sm">Careers</button></li>
+                <li><button type="button" className="appearance-none bg-transparent border-0 p-0 text-left font-[inherit] cursor-pointer text-muted-foreground hover:text-foreground transition-colors text-sm">Contact</button></li>
               </ul>
             </div>
 
@@ -279,9 +327,9 @@ export function AppShell({ children }: AppShellProps) {
             <div className="lg:col-span-3">
               <h4 className="text-xs font-bold uppercase tracking-[0.2em] mb-8">Legal</h4>
               <ul className="space-y-4">
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Privacy Policy</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Terms of Service</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Cookie Policy</a></li>
+                <li><button type="button" className="appearance-none bg-transparent border-0 p-0 text-left font-[inherit] cursor-pointer text-muted-foreground hover:text-foreground transition-colors text-sm">Privacy Policy</button></li>
+                <li><button type="button" className="appearance-none bg-transparent border-0 p-0 text-left font-[inherit] cursor-pointer text-muted-foreground hover:text-foreground transition-colors text-sm">Terms of Service</button></li>
+                <li><button type="button" className="appearance-none bg-transparent border-0 p-0 text-left font-[inherit] cursor-pointer text-muted-foreground hover:text-foreground transition-colors text-sm">Cookie Policy</button></li>
               </ul>
             </div>
           </div>
@@ -295,12 +343,12 @@ export function AppShell({ children }: AppShellProps) {
               Crafted by <a href="https://saimshafique.com/" target="_blank" rel="noopener noreferrer" className="font-bold hover:text-foreground transition-colors underline underline-offset-4 decoration-accent-gold/40">Saim Shafique</a>
             </p>
           </div>
-          
+
         </div>
 
         {/* Large Decorative Text — Redesign Root Element */}
-        <div className="w-full relative h-[20vw] md:h-[10vw] flex items-end md:items-start justify-center overflow-hidden pointer-events-none select-none opacity-20">
-          <span className="text-[19vw] leading-[0.90] font-serif font-bold text-foreground tracking-wide whitespace-nowrap blur-[0px]">
+        <div className="w-full relative h-32 md:h-40 lg:h-48 flex items-end md:items-start justify-center overflow-hidden pointer-events-none select-none opacity-20">
+          <span className="leading-[0.90] font-serif font-bold text-foreground tracking-wide whitespace-nowrap blur-[0px]" style={{ fontSize: "clamp(4rem, 19vw, 16rem)" }}>
             INGREDO
           </span>
           <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-background to-transparent z-10" />

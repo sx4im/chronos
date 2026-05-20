@@ -1,33 +1,8 @@
-import express, { type NextFunction, type Request, type Response } from "express";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
+import { type NextFunction, type Request, type Response } from "express";
 import { registerRoutes } from "../server/routes";
-import { pool } from "../server/db";
+import { createApp } from "../server/createApp";
 
-const app = express();
-const PgSession = connectPgSimple(session);
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-app.use(
-  session({
-    store: new PgSession({
-      pool,
-      tableName: "user_sessions",
-      createTableIfMissing: true,
-    }),
-    secret: process.env.SESSION_SECRET || "dev-session-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    },
-  }),
-);
+const app = createApp();
 
 let initialized = false;
 let initPromise: Promise<void> | null = null;

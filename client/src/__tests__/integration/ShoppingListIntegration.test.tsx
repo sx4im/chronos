@@ -7,20 +7,15 @@ import { ShoppingList } from '../../components/ShoppingList/ShoppingList';
 import { RecipeCard } from '../../components/RecipeCard/RecipeCard';
 
 // Mock the API client
-const mockApiClient = {
+const mockApiClient = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-};
+}));
 
 vi.mock('../../lib/apiClient', () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
-  },
+  apiClient: mockApiClient,
 }));
 
 // Mock toast
@@ -36,6 +31,7 @@ describe('ShoppingList Integration Tests', () => {
       defaultOptions: {
         queries: {
           retry: false,
+          queryFn: ({ queryKey }) => mockApiClient.get(queryKey[0] as string),
         },
       },
     });
@@ -95,6 +91,9 @@ describe('ShoppingList Integration Tests', () => {
       renderWithQueryClient(<ShoppingListManager />);
 
       // Click create button
+      await waitFor(() => {
+        expect(screen.getByText('Create Your First List')).toBeInTheDocument();
+      });
       fireEvent.click(screen.getByText('Create Your First List'));
 
       // Fill in form

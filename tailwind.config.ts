@@ -105,7 +105,18 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "slide-in": "slide-in 0.3s ease-out",
       },
+      perspective: {
+        "1000": "1000px",
+      },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+    function ({ addUtilities }: { addUtilities: (utilities: Record<string, Record<string, string>>) => void }) {
+      addUtilities({
+        ".perspective-1000": { perspective: "1000px" },
+      });
+    },
+  ],
 } satisfies Config;

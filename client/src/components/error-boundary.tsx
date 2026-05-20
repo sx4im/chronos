@@ -58,8 +58,8 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="h-6 w-6 text-destructive" />
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="size-6 text-destructive" />
           </div>
           <CardTitle className="text-destructive">Something went wrong</CardTitle>
           <CardDescription>
@@ -69,7 +69,7 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-2">
             <Button onClick={resetError} className="w-full" data-testid="error-retry-button">
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-2 size-4" />
               Try again
             </Button>
             <Button

@@ -288,7 +288,7 @@ export default function Shopping() {
                 <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                   <DialogTrigger asChild>
                     <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="size-4 mr-2" />
                       Add Item
                     </Button>
                   </DialogTrigger>
@@ -392,7 +392,7 @@ export default function Shopping() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <ShoppingCart className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <ShoppingCart className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{totalCount}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Total Items</p>
@@ -404,7 +404,7 @@ export default function Shopping() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <CheckCircle2 className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <CheckCircle2 className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{purchasedCount}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Purchased</p>
@@ -416,7 +416,7 @@ export default function Shopping() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <List className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <List className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{remainingCount}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Remaining</p>
@@ -428,7 +428,7 @@ export default function Shopping() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Filter className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Filter className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{new Set(shoppingList.map(item => item.category)).size}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Categories</p>
@@ -451,7 +451,7 @@ export default function Shopping() {
                   {/* Search Bar - Full Width */}
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                       <Input
                         placeholder="Search shopping items..."
                         value={searchQuery}
@@ -465,7 +465,7 @@ export default function Shopping() {
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                       <SelectTrigger className="w-full sm:w-40">
-                        <Filter className="h-4 w-4 mr-2" />
+                        <Filter className="size-4 mr-2" />
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -497,7 +497,7 @@ export default function Shopping() {
                         onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                         className="px-3"
                       >
-                        {sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                        {sortOrder === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
                       </Button>
                       
                       <Button
@@ -516,20 +516,20 @@ export default function Shopping() {
                 {shoppingList.length > 0 && (
                   <div className="flex gap-2 mt-4 pt-4 border-t">
                     <Button variant="outline" size="sm" onClick={exportToText}>
-                      <Download className="h-4 w-4 mr-2" />
+                      <Download className="size-4 mr-2" />
                       Export TXT
                     </Button>
                     <Button variant="outline" size="sm" onClick={copyToClipboard}>
-                      <Copy className="h-4 w-4 mr-2" />
+                      <Copy className="size-4 mr-2" />
                       Copy List
                     </Button>
                     <Button variant="outline" size="sm" onClick={printList}>
-                      <Printer className="h-4 w-4 mr-2" />
+                      <Printer className="size-4 mr-2" />
                       Print
                     </Button>
                     {purchasedCount > 0 && (
                       <Button variant="outline" size="sm" onClick={handleClearPurchased}>
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="size-4 mr-2" />
                         Clear Completed
                       </Button>
                     )}
@@ -548,7 +548,7 @@ export default function Shopping() {
             {filteredItems.length === 0 ? (
               <Card className="bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-12 text-center">
-                  <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <ShoppingCart className="size-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-foreground mb-2 text-center">No items found</h3>
                   <p className="text-muted-foreground mb-6 text-center max-w-md mx-auto">
                     {shoppingList.length === 0 
@@ -559,7 +559,7 @@ export default function Shopping() {
                   {shoppingList.length === 0 && (
                     <div className="flex justify-center">
                       <Button onClick={() => setShowAddDialog(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="size-4 mr-2" />
                         Add Your First Item
                       </Button>
                     </div>
@@ -609,14 +609,14 @@ export default function Shopping() {
                                 onClick={() => handleEditItem(item)}
                                 disabled={item.isPurchased}
                               >
-                                <Edit className="h-4 w-4" />
+                                <Edit className="size-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDeleteItem(item.id, item.name)}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="size-4" />
                               </Button>
                             </div>
                           </div>

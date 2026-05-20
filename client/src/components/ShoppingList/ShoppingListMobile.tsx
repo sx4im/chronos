@@ -54,11 +54,12 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
   const [editAmount, setEditAmount] = React.useState("");
   const [editUnit, setEditUnit] = React.useState("");
   const [swipedItem, setSwipedItem] = React.useState<string | null>(null);
-  const [touchStart, setTouchStart] = React.useState<{ x: number; y: number } | null>(null);
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
 
   const { data: shoppingList, isLoading } = useQuery<ShoppingList>({
     queryKey: ['/api/shopping-lists', listId],
     enabled: !!listId,
+    queryFn: () => apiClient.get<ShoppingList>(`/api/shopping-lists/${listId}`),
   });
 
   const updateItemMutation = useMutation({
@@ -140,11 +141,12 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
     if (editingItem) return;
     
     const touch = e.touches[0];
-    setTouchStart({ x: touch.clientX, y: touch.clientY });
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
     setSwipedItem(itemId);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    const touchStart = touchStartRef.current;
     if (!touchStart || !swipedItem) return;
     
     const touch = e.touches[0];
@@ -154,7 +156,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
     // Only trigger swipe if horizontal movement is greater than vertical
     if (deltaY > 50) {
       setSwipedItem(null);
-      setTouchStart(null);
+      touchStartRef.current = null;
       return;
     }
     
@@ -165,6 +167,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchStart = touchStartRef.current;
     if (!touchStart || !swipedItem) return;
     
     const touch = e.changedTouches[0];
@@ -177,7 +180,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
       setSwipedItem(null);
     }
     
-    setTouchStart(null);
+    touchStartRef.current = null;
   };
 
   if (isLoading) {
@@ -198,7 +201,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
       <div className={cn("w-full", className)}>
         <Card>
           <CardContent className="p-6 text-center">
-            <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <ShoppingCart className="mx-auto size-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Shopping list not found</h3>
             <p className="text-muted-foreground">
               The shopping list you're looking for doesn't exist.
@@ -216,7 +219,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
         <div className="flex items-center gap-3">
           {onClose && (
             <Button variant="ghost" size="sm" onClick={onClose}>
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="size-5" />
             </Button>
           )}
           <div>
@@ -251,7 +254,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
         {shoppingList.items.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center">
-              <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+              <ShoppingCart className="mx-auto size-12 text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium mb-2">Empty shopping list</h3>
               <p className="text-muted-foreground text-sm">
                 Add recipes to generate your shopping list.
@@ -300,11 +303,11 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
                         className="w-16 h-8 text-sm"
                         placeholder="Unit"
                       />
-                      <Button size="sm" onClick={saveEdit} className="h-8 w-8 p-0">
-                        <Check className="h-3 w-3" />
+                      <Button size="sm" onClick={saveEdit} className="size-8 p-0">
+                        <Check className="size-3" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-8 w-8 p-0">
-                        <X className="h-3 w-3" />
+                      <Button size="sm" variant="ghost" onClick={cancelEdit} className="size-8 p-0">
+                        <X className="size-3" />
                       </Button>
                     </div>
                   ) : (
@@ -321,9 +324,9 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
                         size="sm"
                         variant="ghost"
                         onClick={() => startEditing(item)}
-                        className="h-8 w-8 p-0"
+                        className="size-8 p-0"
                       >
-                        <Edit3 className="h-3 w-3" />
+                        <Edit3 className="size-3" />
                       </Button>
                     </>
                   )}
@@ -339,7 +342,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
                     onClick={() => deleteItemMutation.mutate(item.id)}
                     className="h-8"
                   >
-                    <Trash2 className="h-4 w-4 mr-1" />
+                    <Trash2 className="size-4 mr-1" />
                     Delete
                   </Button>
                 </div>
@@ -362,7 +365,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
               onClick={copyToClipboard}
               className="flex flex-col items-center gap-1 h-auto py-3"
             >
-              <Copy className="h-4 w-4" />
+              <Copy className="size-4" />
               <span className="text-xs">Copy</span>
             </Button>
             <Button
@@ -372,7 +375,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
               disabled={exportMutation.isPending}
               className="flex flex-col items-center gap-1 h-auto py-3"
             >
-              <Download className="h-4 w-4" />
+              <Download className="size-4" />
               <span className="text-xs">CSV</span>
             </Button>
             <Button
@@ -382,7 +385,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
               disabled={exportMutation.isPending}
               className="flex flex-col items-center gap-1 h-auto py-3"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="size-4" />
               <span className="text-xs">Email</span>
             </Button>
           </div>

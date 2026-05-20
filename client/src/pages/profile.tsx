@@ -80,7 +80,7 @@ export default function Profile() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex items-center space-x-4">
-            <Skeleton className="h-20 w-20 rounded-full" />
+            <Skeleton className="size-20 rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-6 w-48" />
               <Skeleton className="h-4 w-32" />
@@ -118,7 +118,7 @@ export default function Profile() {
         {/* Profile Header */}
         <SlowFadeUp>
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
-            <Avatar className="h-20 w-20">
+            <Avatar className="size-20">
               <AvatarImage src={profile.avatar} alt={profile.name} />
               <AvatarFallback className="text-2xl">
                 {profile.name.split(' ').map(n => n[0]).join('')}
@@ -132,7 +132,7 @@ export default function Profile() {
             </div>
 
             <Button data-testid="edit-profile" onClick={() => alert('Edit Profile functionality coming soon!')}>
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="mr-2 size-4" />
               Edit Profile
             </Button>
           </div>
@@ -145,7 +145,7 @@ export default function Profile() {
               <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <Heart className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                    <Heart className="size-5" style={{ color: 'var(--accent-gold)' }} />
                     <div>
                       <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{profile.stats.savedRecipes}</p>
                       <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Saved Recipes</p>
@@ -159,7 +159,7 @@ export default function Profile() {
               <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <ChefHat className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                    <ChefHat className="size-5" style={{ color: 'var(--accent-gold)' }} />
                     <div>
                       <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{profile.stats.cookedRecipes}</p>
                       <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Recipes Cooked</p>
@@ -173,7 +173,7 @@ export default function Profile() {
               <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <BookOpen className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                    <BookOpen className="size-5" style={{ color: 'var(--accent-gold)' }} />
                     <div>
                       <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{profile.stats.collections}</p>
                       <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Collections</p>
@@ -206,7 +206,7 @@ export default function Profile() {
                     size="sm"
                     onClick={() => alert('Filter functionality coming soon!')}
                   >
-                    <Filter className="h-4 w-4 mr-2" />
+                    <Filter className="size-4 mr-2" />
                     Filter
                   </Button>
                   <Button 
@@ -214,7 +214,7 @@ export default function Profile() {
                     size="sm"
                     onClick={() => alert('Sort functionality coming soon!')}
                   >
-                    <SortAsc className="h-4 w-4 mr-2" />
+                    <SortAsc className="size-4 mr-2" />
                     Sort
                   </Button>
                 </div>
@@ -255,13 +255,13 @@ export default function Profile() {
                             ))}
                           </div>
                           <div className="flex items-center text-muted-foreground text-sm">
-                            <Clock className="mr-1 h-3 w-3" />
+                            <Clock className="mr-1 size-3" />
                             {recipe.cookTime}m
                           </div>
                         </div>
                         <h3 className="font-semibold text-lg mb-2">{recipe.title}</h3>
                         <div className="flex items-center space-x-2">
-                          <Star className="h-4 w-4 text-accent fill-current" />
+                          <Star className="size-4 text-accent fill-current" />
                           <span className="text-sm font-medium">{recipe.rating}</span>
                           <span className="text-muted-foreground text-sm">
                             ({recipe.reviewCount})
@@ -276,7 +276,7 @@ export default function Profile() {
               <FadeUp >
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <Heart className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <Heart className="mx-auto size-12 text-muted-foreground/50 mb-4" />
                     <h3 className="text-lg font-medium mb-2">No saved recipes yet</h3>
                     <p className="text-muted-foreground">
                       Start exploring recipes and save your favorites!
@@ -303,7 +303,7 @@ export default function Profile() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Card key={i}>
                     <CardContent className="p-4 flex items-center gap-4">
-                      <Skeleton className="h-16 w-16 rounded" />
+                      <Skeleton className="size-16 rounded" />
                       <div className="flex-1 space-y-2">
                         <Skeleton className="h-4 w-1/2" />
                         <Skeleton className="h-3 w-1/4" />
@@ -323,7 +323,7 @@ export default function Profile() {
                             <img 
                               src={recipe.image}
                               alt={recipe.title}
-                              className="w-16 h-16 rounded object-cover"
+                              className="size-16 rounded object-cover"
                             />
                           )}
                           <div className="flex-1">
@@ -331,11 +331,11 @@ export default function Profile() {
                             <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                               <span>Cooked {recipe.lastCooked}</span>
                               <div className="flex items-center">
-                                <Clock className="mr-1 h-3 w-3" />
+                                <Clock className="mr-1 size-3" />
                                 {recipe.cookTime}m
                               </div>
                               <div className="flex items-center">
-                                <Star className="mr-1 h-3 w-3 text-accent" />
+                                <Star className="mr-1 size-3 text-accent" />
                                 {recipe.rating}
                               </div>
                             </div>
@@ -353,7 +353,7 @@ export default function Profile() {
               <FadeUp >
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <ChefHat className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <ChefHat className="mx-auto size-12 text-muted-foreground/50 mb-4" />
                     <h3 className="text-lg font-medium mb-2">No recipes cooked yet</h3>
                     <p className="text-muted-foreground">
                       Start cooking recipes and they'll appear here!
@@ -373,7 +373,7 @@ export default function Profile() {
                   data-testid="create-collection"
                   onClick={() => alert('Create collection functionality coming soon!')}
                 >
-                  <BookOpen className="mr-2 h-4 w-4" />
+                  <BookOpen className="mr-2 size-4" />
                   New Collection
                 </Button>
               </div>
@@ -404,7 +404,7 @@ export default function Profile() {
                         />
                       ) : (
                         <div className="w-full h-32 bg-muted flex items-center justify-center">
-                          <BookOpen className="h-8 w-8 text-muted-foreground" />
+                          <BookOpen className="size-8 text-muted-foreground" />
                         </div>
                       )}
                       <CardContent className="p-4">
@@ -429,7 +429,7 @@ export default function Profile() {
               <FadeUp >
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <BookOpen className="mx-auto size-12 text-muted-foreground/50 mb-4" />
                     <h3 className="text-lg font-medium mb-2">No collections yet</h3>
                     <p className="text-muted-foreground mb-4">
                       Create collections to organize your favorite recipes!

@@ -1,5 +1,4 @@
 import { toast } from "@/hooks/use-toast";
-import { createMockApiClient } from "./mockApi";
 
 class APIError extends Error {
   status: number;
@@ -33,11 +32,51 @@ async function handleResponse(response: Response) {
   return response;
 }
 
-// Use mock API in development, real API in production
-const isDevelopment = import.meta.env.DEV;
-const mockClient = createMockApiClient();
+let cachedCsrfToken: string | null = null;
+async function getCsrfToken() {
+  if (cachedCsrfToken) return cachedCsrfToken;
+  try {
+    const response = await fetch('/api/csrf-token', { credentials: "include" });
+    const data = await response.json();
+    cachedCsrfToken = data.token;
+    return cachedCsrfToken;
+  } catch (error) {
+    console.error('Failed to fetch CSRF token', error);
+    return null;
+  }
+}
 
-export const apiClient = isDevelopment ? mockClient : {
+async function getJsonHeaders(url: string) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (url !== "/api/csrf-token" && url !== "/api/health") {
+    const token = await getCsrfToken();
+    if (token) headers["x-csrf-token"] = token;
+  }
+  return headers;
+}
+
+export async function csrfFetch(url: string, init: RequestInit = {}) {
+  const method = init.method?.toUpperCase() ?? "GET";
+  const headers = new Headers(init.headers);
+  if (!headers.has("Content-Type") && init.body) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (!["GET", "HEAD", "OPTIONS"].includes(method) && url !== "/api/csrf-token" && url !== "/api/health") {
+    const token = await getCsrfToken();
+    if (token) headers.set("x-csrf-token", token);
+  }
+
+  return fetch(url, {
+    ...init,
+    method,
+    headers,
+    credentials: "include",
+  });
+}
+
+const realClient = {
   async get<T>(url: string): Promise<T> {
     const response = await fetch(url, {
       method: "GET",
@@ -54,9 +93,7 @@ export const apiClient = isDevelopment ? mockClient : {
   async post<T>(url: string, data?: unknown): Promise<T> {
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getJsonHeaders(url),
       credentials: "include",
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -68,9 +105,7 @@ export const apiClient = isDevelopment ? mockClient : {
   async put<T>(url: string, data?: unknown): Promise<T> {
     const response = await fetch(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getJsonHeaders(url),
       credentials: "include",
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -82,9 +117,7 @@ export const apiClient = isDevelopment ? mockClient : {
   async patch<T>(url: string, data?: unknown): Promise<T> {
     const response = await fetch(url, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getJsonHeaders(url),
       credentials: "include",
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -96,15 +129,21 @@ export const apiClient = isDevelopment ? mockClient : {
   async delete<T>(url: string): Promise<T> {
     const response = await fetch(url, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: await getJsonHeaders(url),
       credentials: "include",
     });
     
     await handleResponse(response);
     return response.json();
   },
-};
+} as const;
+
+export let apiClient: typeof realClient = realClient;
+
+if (import.meta.env.DEV) {
+  void import("./mockApi").then(({ createMockApiClient }) => {
+    apiClient = createMockApiClient();
+  });
+}
 
 export { APIError };

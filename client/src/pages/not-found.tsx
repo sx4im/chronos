@@ -7,7 +7,7 @@ export default function NotFound() {
       <Card className="w-full max-w-md mx-4 bg-card border-border/50 shadow-sm">
         <CardContent className="pt-6">
           <div className="flex mb-4 gap-2 items-center">
-            <AlertCircle className="h-8 w-8 text-secondary" />
+            <AlertCircle className="size-8 text-secondary" />
             <h1 className="font-serif text-2xl font-medium text-foreground">404 Page Not Found</h1>
           </div>
 

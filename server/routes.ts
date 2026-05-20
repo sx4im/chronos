@@ -1,8 +1,80 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { randomBytes, timingSafeEqual } from "crypto";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcrypt";
+import { storage } from "./storage";
+import { insertUserSchema, type User } from "../shared/schema";
+import { extractIngredientsFromImage, recommendRecipes } from "./lib/ai";
+
+const authRegisterSchema = insertUserSchema.pick({
+  name: true,
+  username: true,
+  password: true,
+}).extend({
+  name: z.string().trim().min(2).max(80),
+  username: z.string().trim().min(3).max(30).regex(/^[a-zA-Z0-9._-]+$/, "Username can only contain letters, numbers, dots, underscores, and hyphens").transform((value) => value.toLowerCase()),
+});
+
+const authLoginSchema = z.object({
+  username: z.string().trim().min(1).transform((value) => value.toLowerCase()),
+  password: z.string().min(1),
+});
+
+function toClientUser(user: User) {
+  const { password: _, ...userWithoutPassword } = user;
+  return {
+    ...userWithoutPassword,
+    email: user.email ?? "",
+    role: "user" as const,
+    joinDate: new Date().toISOString(),
+  };
+}
+
+// Passport configuration
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: 'username',
+      passwordField: 'password',
+    },
+    async (username, password, done) => {
+      try {
+        const parsed = authLoginSchema.safeParse({ username, password });
+        if (!parsed.success) {
+          return done(null, false, { message: 'Incorrect username or password.' });
+        }
+        const user = await storage.getUserByUsername(parsed.data.username);
+        if (!user) {
+          return done(null, false, { message: 'Incorrect username or password.' });
+        }
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+          return done(null, false, { message: 'Incorrect username or password.' });
+        }
+        return done(null, user);
+      } catch (err) {
+        return done(err);
+      }
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, (user as User).id);
+});
+
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    const user = await storage.getUser(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
 
 // Simple in-memory data for ingredients and recipes
 const ingredientsDatabase = [
@@ -310,25 +382,59 @@ const recipeParamsSchema = z.object({
 });
 
 const uploadSignRequestSchema = z.object({
-  filename: z.string(),
-  contentType: z.string(),
-  size: z.number()
+  filename: z.string().min(1).max(255).regex(/^[A-Za-z0-9._-]+$/),
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  size: z.number().int().positive().max(5 * 1024 * 1024)
 });
 
 const uploadCompleteSchema = z.object({
   image_id: z.string(),
-  url: z.string(),
+  url: z.string().url().refine(
+    (url) => {
+      try {
+        const u = new URL(url);
+        return u.protocol === 'https:' && ['mock-storage.example.com'].includes(u.hostname);
+      } catch {
+        return false;
+      }
+    },
+    { message: 'Invalid URL' }
+  ),
   metadata: z.object({}).optional()
 });
 
 const recognizeImageSchema = z.object({
   image_id: z.string(),
   mode: z.literal('vision'),
-  max_suggestions: z.number().default(5)
+  max_suggestions: z.number().int().min(1).max(20).default(5)
+});
+
+const extractIngredientsSchema = z.object({
+  image: z.string().min(1).max(7 * 1024 * 1024).refine(
+    (value) => isSupportedImageSource(value),
+    { message: "Image must be a data URI or HTTPS URL" }
+  ),
+});
+
+const recommendRecipesSchema = z.object({
+  ingredients: z.array(z.string().trim().min(1).max(100)).min(1).max(50),
 });
 
 const MAX_QUERY_ITEMS = 50;
 const MAX_QUERY_VALUE_LENGTH = 100;
+
+function isSupportedImageSource(value: string): boolean {
+  if (/^data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(value)) {
+    return true;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 function parseDelimitedQueryList(value: unknown): string[] {
   if (typeof value !== "string") return [];
@@ -353,24 +459,17 @@ function safeCompare(secret: string, provided: string): boolean {
 }
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  const adminApiKey = process.env.ADMIN_API_KEY;
+  const currentAdminKey = process.env.ADMIN_API_KEY;
   const providedKey = req.header("x-admin-key");
-
-  if (adminApiKey) {
-    if (!providedKey || !safeCompare(adminApiKey, providedKey)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    return next();
-  }
-
-  if (process.env.NODE_ENV === "production") {
+  if (!currentAdminKey || !providedKey || !safeCompare(currentAdminKey, providedKey)) {
     return res.status(403).json({ message: "Forbidden" });
   }
-
   return next();
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const imageExtractionJsonParser = express.json({ limit: "7mb" });
+
   const externalApiRateLimit = rateLimit({
     windowMs: 60 * 1000,
     max: 10,
@@ -380,6 +479,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       status: 429,
       message: "Too many requests. Please try again in a minute.",
     },
+  });
+
+  // Additional rate limiters
+  const uploadRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: "Too many upload requests. Please try again later."
+    }
+  });
+
+  const adminRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: "Too many admin requests. Please try again later."
+    }
+  });
+
+  const aiRecipeRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+      const user = req.user as User | undefined;
+      if (req.isAuthenticated() && user?.id) {
+        return `user:${user.id}`;
+      }
+      return `ip:${req.ip ?? req.socket.remoteAddress ?? "unknown"}`;
+    },
+    message: {
+      status: 429,
+      message: "Too many AI recipe requests. Please try again later."
+    }
   });
 
   // Health check endpoint
@@ -496,6 +636,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/recipes/recommend", aiRecipeRateLimit, async (req, res, next) => {
+    const abortController = new AbortController();
+    req.on("close", () => abortController.abort());
+
+    try {
+      const { ingredients } = recommendRecipesSchema.parse(req.body);
+
+      res.status(200);
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+
+      for await (const chunk of recommendRecipes(ingredients, { signal: abortController.signal })) {
+        if (res.destroyed) break;
+        if (!res.write(chunk)) {
+          await new Promise<void>((resolve) => res.once("drain", resolve));
+        }
+      }
+
+      res.end();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid recipe recommendation request", errors: error.errors });
+      }
+      if (res.headersSent) {
+        res.destroy(error instanceof Error ? error : undefined);
+        return;
+      }
+      next(error);
+    }
+  });
+
   // Single recipe endpoint
   app.get("/api/recipe/:slug", externalApiRateLimit, (req, res) => {
     try {
@@ -547,7 +720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save recipe endpoint
-  app.post("/api/recipe/:id/save", (req, res) => {
+  app.post("/api/recipe/:id/save", externalApiRateLimit, (req, res) => {
     try {
       const { id } = req.params;
       const recipe = recipesDatabase.find(r => r.id === id);
@@ -564,7 +737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe progress tracking endpoint
-  app.post("/api/recipe/:id/progress", (req, res) => {
+  app.post("/api/recipe/:id/progress", externalApiRateLimit, (req, res) => {
     try {
       const { id } = req.params;
       const { type, itemId } = req.body;
@@ -649,7 +822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoints
-  app.get("/api/admin/stats", requireAdmin, (req, res) => {
+  app.get("/api/admin/stats", adminRateLimit, requireAdmin, (req, res) => {
     const stats = {
       users: {
         total: 1247,
@@ -671,7 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(stats);
   });
 
-  app.get("/api/admin/users", requireAdmin, (req, res) => {
+  app.get("/api/admin/users", adminRateLimit, requireAdmin, (req, res) => {
     const users = [
       {
         id: "user1",
@@ -696,7 +869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(users);
   });
 
-  app.get("/api/admin/recipes", requireAdmin, (req, res) => {
+  app.get("/api/admin/recipes", adminRateLimit, requireAdmin, (req, res) => {
     const adminRecipes = recipesDatabase.map(recipe => ({
       id: recipe.id,
       title: recipe.title,
@@ -711,20 +884,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload endpoints
-  app.post("/api/uploads/sign", (req, res) => {
+  app.post("/api/uploads/sign", uploadRateLimit, externalApiRateLimit, (req, res) => {
     try {
       const { filename, contentType, size } = uploadSignRequestSchema.parse(req.body);
-      
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(contentType)) {
-        return res.status(400).json({ message: "Invalid file type. Only JPEG, PNG, and WebP are allowed." });
-      }
-      
-      // Validate file size (5MB limit)
-      if (size > 5 * 1024 * 1024) {
-        return res.status(400).json({ message: "File too large. Maximum size is 5MB." });
-      }
       
       const imageId = `img_${randomBytes(8).toString("hex")}`;
       const mockUploadUrl = `https://mock-storage.example.com/upload/${imageId}`;
@@ -738,7 +900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/uploads/complete", (req, res) => {
+  app.post("/api/uploads/complete", uploadRateLimit, externalApiRateLimit, (req, res) => {
     try {
       const { image_id, url } = uploadCompleteSchema.parse(req.body);
       
@@ -755,10 +917,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/ingredients/extract", uploadRateLimit, externalApiRateLimit, imageExtractionJsonParser, async (req, res, next) => {
+    try {
+      const { image } = extractIngredientsSchema.parse(req.body);
+      const extraction = await extractIngredientsFromImage(image);
+      res.json(extraction);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid image extraction request", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
   app.post("/api/recognize-image", externalApiRateLimit, (req, res) => {
     try {
       const { image_id, max_suggestions } = recognizeImageSchema.parse(req.body);
-      
+
       // Mock ingredient recognition results
       const mockRecognitions = [
         { name: "Tomato", normalized: "tomato", confidence: 0.95 },
@@ -767,10 +942,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { name: "Garlic", normalized: "garlic", confidence: 0.76 },
         { name: "Basil", normalized: "basil", confidence: 0.71 }
       ];
-      
+
       // Return up to max_suggestions items
       const suggestions = mockRecognitions.slice(0, max_suggestions);
-      
+
       res.json({
         image_id,
         recognized: suggestions
@@ -778,6 +953,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(400).json({ message: "Invalid recognition request" });
     }
+  });
+
+  // Rate limiters for auth endpoints
+  const loginRateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 5,              // 5 requests per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: "Too many login attempts. Please try again later."
+    }
+  });
+
+  const registerRateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 3,              // 3 requests per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: "Too many registration attempts. Please try again later."
+    }
+  });
+
+  // Authentication endpoints
+  app.post('/api/auth/register', registerRateLimiter, async (req, res) => {
+    try {
+      const { name, username, password } = authRegisterSchema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(409).json({ message: 'User already exists' });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Create user
+      const user = await storage.createUser({
+        username,
+        password: hashedPassword,
+        name,
+      });
+
+      // Automatically log in the user after registration
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Login failed after registration' });
+        }
+        return res.status(201).json(toClientUser(user));
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/auth/login', loginRateLimiter, (req, res, next) => {
+    passport.authenticate('local', (err: unknown, user: User | false) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          return next(loginErr);
+        }
+        return res.json(toClientUser(user));
+      });
+    })(req, res, next);
+  });
+
+  app.post('/api/auth/logout', (req, res, next) => {
+    req.logout((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.json({ message: 'Logged out successfully' });
+    });
+  });
+
+  app.get('/api/auth/me', (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    res.json(toClientUser(req.user as User));
   });
 
   const httpServer = createServer(app);

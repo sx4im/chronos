@@ -207,13 +207,13 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
             <div className="flex items-center gap-3">
               <DialogTitle className="text-2xl font-bold">AI-Generated Recipe</DialogTitle>
               <Badge variant="secondary" className="bg-primary/10 text-primary uppercase tracking-widest font-bold text-[10px]">
-                <ChefHat className="w-3 h-3 mr-1" />
+                <ChefHat className="size-3 mr-1" />
                 AI Generated
               </Badge>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <HelpCircle className="w-4 h-4" />
+                <HelpCircle className="size-4" />
                 <span>This recipe was generated using your ingredients as a base — you can tweak quantities or steps.</span>
               </div>
             </div>
@@ -228,13 +228,13 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
               <div className="flex gap-2">
                 {!isEditing ? (
                   <Button onClick={handleEdit} size="sm" variant="outline">
-                    <Edit3 className="w-4 h-4 mr-2" />
+                    <Edit3 className="size-4 mr-2" />
                     Edit
                   </Button>
                 ) : (
                   <div className="flex gap-2">
                     <Button onClick={handleCancel} size="sm" variant="outline">
-                      <X className="w-4 h-4 mr-2" />
+                      <X className="size-4 mr-2" />
                       Cancel
                     </Button>
                     <Button 
@@ -242,7 +242,7 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
                       size="sm" 
                       disabled={!!jsonError || isSaving}
                     >
-                      <Save className="w-4 h-4 mr-2" />
+                      <Save className="size-4 mr-2" />
                       {isSaving ? 'Saving...' : 'Save Recipe'}
                     </Button>
                   </div>
@@ -261,7 +261,7 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
                 {jsonError && (
                   <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-center gap-2 text-red-800">
-                      <AlertTriangle className="w-4 h-4" />
+                      <AlertTriangle className="size-4" />
                       <span className="font-medium">JSON Error:</span>
                     </div>
                     <p className="text-red-700 text-sm mt-1">{jsonError}</p>
@@ -282,7 +282,7 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
           {/* Right Panel - Live Preview */}
           <div className="flex-1 flex flex-col">
             <div className="flex items-center gap-2 mb-4">
-              <Eye className="w-5 h-5" />
+              <Eye className="size-5" />
               <h3 className="text-lg font-semibold">Live Preview</h3>
             </div>
 
@@ -298,7 +298,7 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
                       <img 
                         src={editedRecipe.image} 
                         alt={editedRecipe.title}
-                        className="w-24 h-24 object-cover rounded-lg"
+                        className="size-24 object-cover rounded-lg"
                       />
                     </div>
                   </CardHeader>
@@ -306,21 +306,21 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
                   <CardContent>
                     <div className="grid grid-cols-3 gap-4 mb-6">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <Clock className="size-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">Prep Time</p>
                           <p className="text-sm text-muted-foreground">{editedRecipe.prepTime} min</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <Clock className="size-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">Cook Time</p>
                           <p className="text-sm text-muted-foreground">{editedRecipe.cookTime} min</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <Users className="size-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">Servings</p>
                           <p className="text-sm text-muted-foreground">{editedRecipe.servings}</p>
@@ -334,7 +334,7 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
                         <ul className="space-y-2">
                           {editedRecipe.ingredients.map((ingredient, index) => (
                             <li key={index} className="flex items-center gap-3">
-                              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                              <div className="size-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
                                 {index + 1}
                               </div>
                               <span className="text-sm">
@@ -350,7 +350,7 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
                         <ol className="space-y-3">
                           {editedRecipe.instructions.map((instruction, index) => (
                             <li key={index} className="flex gap-3">
-                              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium flex-shrink-0">
+                              <div className="size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium flex-shrink-0">
                                 {instruction.step}
                               </div>
                               <div className="flex-1">

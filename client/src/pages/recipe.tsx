@@ -300,7 +300,7 @@ export default function Recipe() {
   };
 
   // Use substitution
-  const useSubstitution = (ingredientId: string, substituteName: string) => {
+  const applySubstitution = (ingredientId: string, substituteName: string) => {
     setSubstitutions(prev => ({ ...prev, [ingredientId]: substituteName }));
     toast({
       title: "Substitution applied!",
@@ -388,7 +388,7 @@ export default function Recipe() {
                     onClick={() => saveRecipeMutation.mutate(recipe.id)}
                     data-testid="save-recipe"
                   >
-                    <Heart className="mr-2 h-4 w-4" />
+                    <Heart className="mr-2 size-4" />
                     Save
                   </Button>
                   <Button
@@ -397,7 +397,7 @@ export default function Recipe() {
                     onClick={() => setShowShareModal(true)}
                     data-testid="share-recipe"
                   >
-                    <Share2 className="mr-2 h-4 w-4" />
+                    <Share2 className="mr-2 size-4" />
                     Share
                   </Button>
                   <Button
@@ -406,7 +406,7 @@ export default function Recipe() {
                     onClick={handlePrint}
                     data-testid="print-recipe"
                   >
-                    <Printer className="mr-2 h-4 w-4" />
+                    <Printer className="mr-2 size-4" />
                     Print
                   </Button>
                 </div>
@@ -427,8 +427,8 @@ export default function Recipe() {
               
               {/* Author */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-vintage-warm-brown/20 flex items-center justify-center">
-                  <ChefHat className="h-5 w-5 text-foreground" />
+                <div className="size-10 rounded-full bg-vintage-warm-brown/20 flex items-center justify-center">
+                  <ChefHat className="size-5 text-foreground" />
                 </div>
                 <div>
                   <p className="text-foreground font-medium">{recipe.author.name}</p>
@@ -439,19 +439,19 @@ export default function Recipe() {
             {/* Recipe Meta */}
               <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
+                <Clock className="size-4" />
                 <span>{recipe.prepTime + recipe.cookTime} mins total</span>
               </div>
               <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
+                <Users className="size-4" />
                   <span>{servings} servings</span>
               </div>
               <div className="flex items-center gap-1">
-                <ChefHat className="h-4 w-4" />
+                <ChefHat className="size-4" />
                 <span>{recipe.difficulty}</span>
               </div>
               <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                  <Star className="size-4 text-yellow-400 fill-current" />
                 <span>{recipe.rating} ({recipe.reviewCount} reviews)</span>
                 </div>
               </div>
@@ -481,18 +481,18 @@ export default function Recipe() {
                       variant="outline"
                       onClick={() => handleServingsChange(servings - 1)}
                       disabled={servings <= 1}
-                      className="h-8 w-8 p-0"
+                      className="size-8 p-0"
                     >
-                      <Minus className="h-4 w-4" />
+                      <Minus className="size-4" />
                     </Button>
                     <span className="text-2xl font-bold text-foreground min-w-[3rem]">{servings}</span>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleServingsChange(servings + 1)}
-                      className="h-8 w-8 p-0"
+                      className="size-8 p-0"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="size-4" />
                     </Button>
                   </div>
                   <div className="text-sm text-muted-foreground">Servings</div>
@@ -507,7 +507,7 @@ export default function Recipe() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Timer className="h-6 w-6 text-foreground" />
+                    <Timer className="size-6 text-foreground" />
                     <div>
                       <div className="text-lg font-bold text-foreground">
                         Step {activeTimer.stepNumber} Timer
@@ -520,17 +520,17 @@ export default function Recipe() {
                   <div className="flex gap-2">
                     {activeTimer.isRunning ? (
                       <Button size="sm" onClick={pauseTimer}>
-                        <Pause className="h-4 w-4 mr-2" />
+                        <Pause className="size-4 mr-2" />
                         Pause
               </Button>
                     ) : (
                       <Button size="sm" onClick={resumeTimer}>
-                        <Play className="h-4 w-4 mr-2" />
+                        <Play className="size-4 mr-2" />
                         Resume
               </Button>
                     )}
                     <Button size="sm" variant="outline" onClick={stopTimer}>
-                      <RotateCcw className="h-4 w-4 mr-2" />
+                      <RotateCcw className="size-4 mr-2" />
                       Stop
               </Button>
             </div>
@@ -570,7 +570,7 @@ export default function Recipe() {
                             <img 
                               src={ingredient.thumbnail} 
                               alt={ingredient.name}
-                              className="w-8 h-8 rounded object-cover"
+                              className="size-8 rounded object-cover"
                             />
                           )}
                           <div className="flex-1">
@@ -589,7 +589,7 @@ export default function Recipe() {
                                 key={index}
                                 size="sm"
                                 variant="outline"
-                                onClick={() => useSubstitution(ingredient.id, sub.name)}
+                                onClick={() => applySubstitution(ingredient.id, sub.name)}
                                 className="text-xs h-7"
                               >
                                 {sub.name}
@@ -615,7 +615,7 @@ export default function Recipe() {
                         <div className="flex flex-col items-center">
                       <button
                         onClick={() => toggleStep(instruction.step)}
-                            className={`flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            className={`flex-shrink-0 size-10 rounded-full border-2 flex items-center justify-center transition-colors ${
                           completedSteps.has(instruction.step)
                                 ? 'bg-vintage-warm-brown border-vintage-warm-brown text-foreground'
                                 : 'border-vintage-light-beige/30 hover:border-vintage-warm-brown text-foreground'
@@ -623,7 +623,7 @@ export default function Recipe() {
                         data-testid={`step-${instruction.step}`}
                       >
                         {completedSteps.has(instruction.step) ? (
-                              <CheckCircle2 className="h-5 w-5" />
+                              <CheckCircle2 className="size-5" />
                         ) : (
                           <span className="text-sm font-medium">{instruction.step}</span>
                         )}
@@ -636,7 +636,7 @@ export default function Recipe() {
                               className="mt-2 text-xs h-6"
                               disabled={!!activeTimer}
                             >
-                              <Timer className="h-3 w-3 mr-1" />
+                              <Timer className="size-3 mr-1" />
                               {instruction.time_min}m
                             </Button>
                           )}
@@ -710,7 +710,7 @@ export default function Recipe() {
                     variant="outline"
                     onClick={() => setCompletedIngredients(new Set(recipe.ingredients.map(i => i.id)))}
                   >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    <CheckCircle2 className="mr-2 size-4" />
                     Check All Ingredients
                   </Button>
                   <Button 
@@ -718,7 +718,7 @@ export default function Recipe() {
                     variant="outline"
                     onClick={() => setCompletedSteps(new Set(recipe.instructions.map(i => i.step)))}
                   >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    <CheckCircle2 className="mr-2 size-4" />
                     Complete All Steps
                   </Button>
                   <Button 
@@ -729,7 +729,7 @@ export default function Recipe() {
                       setCompletedSteps(new Set());
                     }}
                   >
-                    <RotateCcw className="mr-2 h-4 w-4" />
+                    <RotateCcw className="mr-2 size-4" />
                     Reset Progress
                   </Button>
                 </CardContent>
@@ -781,11 +781,11 @@ export default function Recipe() {
                         <h3 className="font-medium text-foreground mb-2">{similar.title}</h3>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
+                            <Clock className="size-3" />
                             {similar.cookTime}m
                           </span>
                           <span className="flex items-center gap-1">
-                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <Star className="size-3 text-yellow-400 fill-current" />
                             {similar.rating}
                           </span>
                         </div>
@@ -813,7 +813,7 @@ export default function Recipe() {
                 className="flex-1"
               />
               <Button onClick={copyLink} variant="outline">
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy className="size-4 mr-2" />
                 Copy
               </Button>
             </div>
@@ -823,7 +823,7 @@ export default function Recipe() {
                 variant="outline" 
                 className="flex-1"
               >
-                <Facebook className="h-4 w-4 mr-2" />
+                <Facebook className="size-4 mr-2" />
                 Facebook
               </Button>
               <Button 
@@ -831,7 +831,7 @@ export default function Recipe() {
                 variant="outline" 
                 className="flex-1"
               >
-                <Twitter className="h-4 w-4 mr-2" />
+                <Twitter className="size-4 mr-2" />
                 Twitter
               </Button>
               <Button 
@@ -839,7 +839,7 @@ export default function Recipe() {
                 variant="outline" 
                 className="flex-1"
               >
-                <Instagram className="h-4 w-4 mr-2" />
+                <Instagram className="size-4 mr-2" />
                 Instagram
               </Button>
             </div>

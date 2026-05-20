@@ -2,8 +2,14 @@
 
 import express from "express";
 import { AddressInfo } from "net";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { registerRoutes } from "./routes";
+
+vi.hoisted(() => {
+  process.env.DATABASE_URL ||= "postgres://user:password@localhost:5432/ingredo_test";
+  process.env.SESSION_SECRET ||= "test-session-secret";
+  process.env.ADMIN_API_KEY ||= "test-admin-key";
+});
 
 const originalNodeEnv = process.env.NODE_ENV;
 const originalAdminKey = process.env.ADMIN_API_KEY;

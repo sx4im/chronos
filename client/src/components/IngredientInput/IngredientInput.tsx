@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/apiClient";
+import { generateId } from "@/lib/ids";
 import { type IngredientChip, type UploadedImage } from "@shared/schema";
 import { X, GripVertical, Camera, Search } from "lucide-react";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -87,7 +88,7 @@ function SortableChip({ chip, onRemove }: SortableChipProps) {
         className="cursor-grab touch-none hover:cursor-grabbing"
         aria-label={`Drag ${chip.name}`}
       >
-        <GripVertical className="h-3 w-3" />
+        <GripVertical className="size-3" />
       </button>
       <span>{displayText}</span>
       <button
@@ -96,7 +97,7 @@ function SortableChip({ chip, onRemove }: SortableChipProps) {
         aria-label={`Remove ${chip.name}`}
         data-testid={`remove-chip-${chip.name.toLowerCase()}`}
       >
-        <X className="h-3 w-3" />
+        <X className="size-3" />
       </button>
     </div>
   );
@@ -121,10 +122,6 @@ function parseIngredient(text: string): Omit<IngredientChip, "id"> {
   }
   
   return { name: trimmed };
-}
-
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 11);
 }
 
 export function IngredientInput({
@@ -169,6 +166,7 @@ export function IngredientInput({
   // Fetch suggestions
   const { data: suggestionsData } = useQuery<IngredientsResponse>({
     queryKey: ["/api/ingredients", debouncedQuery],
+    queryFn: () => apiClient.get<IngredientsResponse>(`/api/ingredients?q=${encodeURIComponent(debouncedQuery)}`),
     enabled: debouncedQuery.length > 0 && showSuggestions,
     staleTime: 5 * 60 * 1000,
   });
@@ -326,7 +324,7 @@ export function IngredientInput({
       <div className="relative">
         <div className="relative flex min-h-[40px] w-full border border-vintage-warm-brown/50 focus-within:border-vintage-warm-brown focus-within:ring-0 focus-within:ring-offset-0 bg-transparent px-3 py-2 text-sm rounded-md flex-wrap gap-1">
           {/* Search Icon */}
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-vintage-warm-brown h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-vintage-warm-brown size-4" />
           
           {/* Chips */}
           {ingredients.length > 0 && (
@@ -386,11 +384,11 @@ export function IngredientInput({
             variant="ghost"
             size="sm"
             onClick={openImageModal}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 text-vintage-warm-brown"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 size-6 p-0 text-vintage-warm-brown"
             aria-label="Add photo"
             data-testid="add-photo-button"
           >
-            <Camera className="h-4 w-4" />
+            <Camera className="size-4" />
           </Button>
         </div>
 
@@ -458,7 +456,7 @@ export function IngredientInput({
                   size="sm"
                   onClick={() => setShowImageUploader(false)}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="size-4" />
                 </Button>
               </div>
               <ImageUploader

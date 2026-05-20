@@ -5,29 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { 
   Eye, 
   EyeOff, 
-  Mail, 
   Lock, 
   User,
   ArrowRight, 
-  Github, 
-  Chrome,
   Loader2
 } from "lucide-react";
 
 export default function Signup() {
   const [, setLocation] = useLocation();
-  const { register, loginWithGoogle, loginWithGitHub, isLoading } = useAuth();
+  const { register, isLoading } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = React.useState({
     name: "",
-    email: "",
+    username: "",
     password: "",
     confirmPassword: "",
   });
@@ -54,16 +50,16 @@ export default function Signup() {
       newErrors.name = "Name must be at least 2 characters";
     }
     
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (!/^[a-zA-Z0-9._-]{3,30}$/.test(formData.username.trim())) {
+      newErrors.username = "Use 3-30 letters, numbers, dots, underscores, or hyphens";
     }
     
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
     }
     
     if (!formData.confirmPassword) {
@@ -82,7 +78,7 @@ export default function Signup() {
     if (!validateForm()) return;
     
     try {
-      await register(formData.name, formData.email, formData.password);
+      await register(formData.name, formData.username, formData.password);
       toast({
         title: "Welcome to Ingredo!",
         description: "Your account has been created successfully.",
@@ -97,39 +93,6 @@ export default function Signup() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      toast({
-        title: "Welcome!",
-        description: "You've successfully signed up with Google.",
-      });
-      setLocation("/dashboard");
-    } catch (error) {
-      toast({
-        title: "Google signup failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleGitHubLogin = async () => {
-    try {
-      await loginWithGitHub();
-      toast({
-        title: "Welcome!",
-        description: "You've successfully signed up with GitHub.",
-      });
-      setLocation("/dashboard");
-    } catch (error) {
-      toast({
-        title: "GitHub signup failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-deep-olive)' }}>
@@ -145,9 +108,9 @@ export default function Signup() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="mx-auto w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center mb-4"
+              className="mx-auto size-24 rounded-2xl flex items-center justify-center"
             >
-              <img src="/logo.webp" alt="Ingredo" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <img src="/logo.svg" alt="Ingredo" className="size-16 sm:size-20" />
             </motion.div>
             <CardTitle className="font-serif text-2xl font-medium text-foreground">
               Join Ingredo
@@ -165,7 +128,7 @@ export default function Signup() {
                   Full name
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                   <Input
                     id="name"
                     name="name"
@@ -193,35 +156,36 @@ export default function Signup() {
                 </AnimatePresence>
               </div>
 
-              {/* Email Field */}
+              {/* Username Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                  Email address
+                <Label htmlFor="username" className="text-sm font-medium text-foreground">
+                  Username
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                   <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
+                    id="username"
+                    name="username"
+                    type="text"
+                    autoComplete="username"
+                    value={formData.username}
                     onChange={handleInputChange}
                     className={`pl-10 h-12 bg-background border-border focus:border-primary focus:ring-primary/20 ${
-                      errors.email ? "border-destructive focus:border-destructive" : ""
+                      errors.username ? "border-destructive focus:border-destructive" : ""
                     }`}
-                    placeholder="Enter your email"
+                    placeholder="Choose a username"
                     disabled={isLoading}
                   />
                 </div>
                 <AnimatePresence>
-                  {errors.email && (
+                  {errors.username && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       className="text-sm text-red-500"
                     >
-                      {errors.email}
+                      {errors.username}
                     </motion.p>
                   )}
                 </AnimatePresence>
@@ -233,7 +197,7 @@ export default function Signup() {
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                   <Input
                     id="password"
                     name="password"
@@ -252,7 +216,7 @@ export default function Signup() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
                 <AnimatePresence>
@@ -275,7 +239,7 @@ export default function Signup() {
                   Confirm password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -294,7 +258,7 @@ export default function Signup() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     disabled={isLoading}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
                 <AnimatePresence>
@@ -338,45 +302,13 @@ export default function Signup() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="size-4 animate-spin mr-2" />
                 ) : (
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="size-4 mr-2" />
                 )}
                 Create account
               </Button>
             </form>
-
-            {/* Divider */}
-            <div className="relative">
-              <Separator className="bg-border" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-card px-4 text-sm text-muted-foreground">or continue with</span>
-              </div>
-            </div>
-
-            {/* OAuth Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
-                className="h-12 bg-background border-border hover:bg-muted transition-all duration-200"
-              >
-                <Chrome className="h-4 w-4 mr-2" />
-                Google
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGitHubLogin}
-                disabled={isLoading}
-                className="h-12 bg-background border-border hover:bg-muted transition-all duration-200"
-              >
-                <Github className="h-4 w-4 mr-2" />
-                GitHub
-              </Button>
-            </div>
 
             {/* Sign In Link */}
             <div className="text-center">

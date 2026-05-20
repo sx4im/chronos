@@ -54,10 +54,6 @@ interface ShoppingListProps {
 
 export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, className }: ShoppingListProps) {
   const isMobile = useIsMobile();
-  const queryClient = useQueryClient();
-  const [editingItem, setEditingItem] = React.useState<string | null>(null);
-  const [editAmount, setEditAmount] = React.useState("");
-  const [editUnit, setEditUnit] = React.useState("");
 
   // Use mobile version on mobile devices
   if (isMobile) {
@@ -70,10 +66,26 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
     );
   }
 
+  return (
+    <DesktopShoppingList
+      listId={listId}
+      onClose={onClose}
+      className={className}
+    />
+  );
+});
+
+function DesktopShoppingList({ listId, onClose, className }: ShoppingListProps) {
+  const queryClient = useQueryClient();
+  const [editingItem, setEditingItem] = React.useState<string | null>(null);
+  const [editAmount, setEditAmount] = React.useState("");
+  const [editUnit, setEditUnit] = React.useState("");
+
   const { data: shoppingList, isLoading, error } = useQuery<ShoppingList>({
     queryKey: ['/api/shopping-lists', listId],
     enabled: !!listId,
     retry: 1,
+    queryFn: () => apiClient.get<ShoppingList>(`/api/shopping-lists/${listId}`),
   });
 
   const updateItemMutation = useMutation({
@@ -172,7 +184,7 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
     return (
       <Card className={cn("w-full max-w-2xl mx-auto", className)}>
         <CardContent className="p-6 text-center">
-          <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <ShoppingCart className="mx-auto size-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">Error loading shopping list</h3>
           <p className="text-muted-foreground">
             {error.message || "Failed to load the shopping list. Please try again."}
@@ -192,7 +204,7 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
     return (
       <Card className={cn("w-full max-w-2xl mx-auto", className)}>
         <CardContent className="p-6 text-center">
-          <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <ShoppingCart className="mx-auto size-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">Shopping list not found</h3>
           <p className="text-muted-foreground">
             The shopping list you're looking for doesn't exist.
@@ -213,7 +225,7 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
         </div>
         {onClose && (
           <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </Button>
         )}
       </CardHeader>
@@ -237,7 +249,7 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
         <div className="space-y-3">
           {shoppingList.items.length === 0 ? (
             <div className="text-center py-8">
-              <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+              <ShoppingCart className="mx-auto size-12 text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium mb-2">Empty shopping list</h3>
               <p className="text-muted-foreground">
                 Add recipes to generate your shopping list.
@@ -278,11 +290,11 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
                         className="w-20 h-8"
                         placeholder="Unit"
                       />
-                      <Button size="sm" onClick={saveEdit} disabled={updateItemMutation.isPending}>
-                        <Check className="h-4 w-4" />
+                      <Button size="sm" onClick={saveEdit} disabled={updateItemMutation.isPending} aria-label={`Check ${item.name}`}>
+                        <Check className="size-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={cancelEdit}>
-                        <X className="h-4 w-4" />
+                      <Button size="sm" variant="ghost" onClick={cancelEdit} aria-label={`Cancel ${item.name}`}>
+                        <X className="size-4" />
                       </Button>
                     </div>
                   ) : (
@@ -299,16 +311,18 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
                         size="sm"
                         variant="ghost"
                         onClick={() => startEditing(item)}
+                        aria-label={`Edit ${item.name}`}
                       >
-                        <Edit3 className="h-4 w-4" />
+                        <Edit3 className="size-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => deleteItemMutation.mutate(item.id)}
                         disabled={deleteItemMutation.isPending}
+                        aria-label={`Trash ${item.name}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </>
                   )}
@@ -326,7 +340,7 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
               size="sm"
               onClick={copyToClipboard}
             >
-              <Copy className="h-4 w-4 mr-2" />
+              <Copy className="size-4 mr-2" />
               Copy List
             </Button>
             <Button
@@ -335,7 +349,7 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
               onClick={() => exportMutation.mutate('csv')}
               disabled={exportMutation.isPending}
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="size-4 mr-2" />
               Export CSV
             </Button>
             <Button
@@ -344,7 +358,7 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
               onClick={() => exportMutation.mutate('email')}
               disabled={exportMutation.isPending}
             >
-              <Mail className="h-4 w-4 mr-2" />
+              <Mail className="size-4 mr-2" />
               Email List
             </Button>
           </div>
@@ -352,4 +366,4 @@ export const ShoppingList = React.memo(function ShoppingList({ listId, onClose, 
       </CardContent>
     </Card>
   );
-});
+}

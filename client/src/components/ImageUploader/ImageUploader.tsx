@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { apiClient } from "@/lib/apiClient";
+import { apiClient, csrfFetch } from "@/lib/apiClient";
+import { generateId } from "@/lib/ids";
 import { useToast } from "@/hooks/use-toast";
 import { type UploadedImage, type IngredientChip } from "@shared/schema";
 import { 
@@ -53,16 +54,8 @@ interface CompleteUploadResponse {
 }
 
 interface RecognitionResponse {
-  image_id: string;
-  recognized: Array<{
-    name: string;
-    normalized: string;
-    confidence: number;
-  }>;
-}
-
-function generateId(): string {
-  return Math.random().toString(36).substr(2, 9);
+  ingredients: string[];
+  confidence: number;
 }
 
 // Image preprocessing utilities
@@ -93,6 +86,21 @@ async function preprocessImage(file: File): Promise<File> {
     console.warn("Image preprocessing failed, using original:", error);
     return file;
   }
+}
+
+async function fileToDataUri(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Failed to read image data"));
+      }
+    };
+    reader.onerror = () => reject(new Error("Failed to read image data"));
+    reader.readAsDataURL(file);
+  });
 }
 
 function validateImageFile(file: File): string | null {
@@ -141,13 +149,17 @@ export function ImageUploader({
   });
 
   // Recognition mutation
-  const recognitionMutation = useMutation<RecognitionResponse, Error, { image_id: string }>({
+  const recognitionMutation = useMutation<RecognitionResponse, Error, { file: File }>({
     mutationFn: async (data) => {
-      return apiClient.post('/api/recognize-image', {
-        ...data,
-        mode: 'vision',
-        max_suggestions: 5,
+      const image = await fileToDataUri(data.file);
+      const response = await csrfFetch('/api/ingredients/extract', {
+        method: 'POST',
+        body: JSON.stringify({ image }),
       });
+      if (!response.ok) {
+        throw new Error((await response.text()) || response.statusText);
+      }
+      return response.json();
     },
   });
 
@@ -235,10 +247,14 @@ export function ImageUploader({
         updateUploadProgress(uploadId, { status: 'recognizing' });
         try {
           const recognitionResponse = await recognitionMutation.mutateAsync({
-            image_id: signResponse.image_id,
+            file: processedFile,
           });
           
-          uploadedImage.recognized = recognitionResponse.recognized;
+          uploadedImage.recognized = recognitionResponse.ingredients.map((name) => ({
+            name,
+            normalized: name.toLowerCase(),
+            confidence: recognitionResponse.confidence,
+          }));
         } catch (error) {
           console.warn("Recognition failed:", error);
           // Continue without recognition
@@ -357,9 +373,9 @@ export function ImageUploader({
         >
           <div className="space-y-4">
             {isDragOver ? (
-              <Upload className="h-12 w-12 mx-auto text-primary" />
+              <Upload className="size-12 mx-auto text-primary" />
             ) : (
-              <Camera className="h-12 w-12 mx-auto text-muted-foreground" />
+              <Camera className="size-12 mx-auto text-muted-foreground" />
             )}
             
             <div>
@@ -379,7 +395,7 @@ export function ImageUploader({
                   }}
                   disabled={uploads.length + uploadedImages.length >= maxImages}
                 >
-                  <ImageIcon className="mr-2 h-4 w-4" />
+                  <ImageIcon className="mr-2 size-4" />
                   Choose Photos
                 </Button>
                 <Button
@@ -390,7 +406,7 @@ export function ImageUploader({
                   }}
                   disabled={uploads.length + uploadedImages.length >= maxImages}
                 >
-                  <Camera className="mr-2 h-4 w-4" />
+                  <Camera className="mr-2 size-4" />
                   Take Photo
                 </Button>
               </div>
@@ -445,7 +461,7 @@ export function ImageUploader({
               
               {upload.error && (
                 <div className="flex items-center gap-2 mt-2 text-destructive text-sm">
-                  <AlertCircle className="h-4 w-4" />
+                  <AlertCircle className="size-4" />
                   {upload.error}
                 </div>
               )}
@@ -471,18 +487,18 @@ export function ImageUploader({
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="h-6 w-6 p-0"
+                      className="size-6 p-0"
                       onClick={() => setSelectedImage(image)}
                     >
-                      <Crop className="h-3 w-3" />
+                      <Crop className="size-3" />
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
-                      className="h-6 w-6 p-0"
+                      className="size-6 p-0"
                       onClick={() => removeImage(image.id)}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="size-3" />
                     </Button>
                   </div>
                 </div>
@@ -515,7 +531,7 @@ export function ImageUploader({
                             className="h-6 text-xs px-2 justify-start"
                             onClick={() => addIngredientFromRecognition(ingredient, image.id)}
                           >
-                            <Plus className="mr-1 h-3 w-3" />
+                            <Plus className="mr-1 size-3" />
                             {ingredient.name}
                             <Badge variant="secondary" className="ml-1 text-xs">
                               {Math.round(ingredient.confidence * 100)}%

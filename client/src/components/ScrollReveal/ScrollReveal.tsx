@@ -1,5 +1,6 @@
 import React from 'react';
 import { useScrollReveal, scrollRevealPresets, type UseScrollRevealOptions } from '@/hooks/use-scroll-reveal';
+import { m, useReducedMotion } from 'framer-motion';
 
 interface ScrollRevealProps extends UseScrollRevealOptions {
   children: React.ReactNode;
@@ -16,12 +17,57 @@ export function ScrollReveal({
   ...options 
 }: ScrollRevealProps) {
   const scrollOptions = preset ? { ...scrollRevealPresets[preset], ...options } : options;
-  const { ref, style } = useScrollReveal(scrollOptions);
+  const shouldReduceMotion = useReducedMotion();
+  const [isAllowed, setIsAllowed] = React.useState(true);
+  const ref = React.useRef<HTMLElement>(null);
+  const {
+    direction = 'up',
+    distance = '30px',
+    duration = 1200,
+    delay = 0,
+    threshold = 0.1,
+    allowedSections = [],
+  } = scrollOptions;
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element || allowedSections.length === 0) {
+      setIsAllowed(true);
+      return;
+    }
+
+    let currentElement: HTMLElement | null = element;
+    while (currentElement) {
+      if (
+        (currentElement.id && allowedSections.includes(currentElement.id)) ||
+        allowedSections.some((section) => currentElement?.classList.contains(section))
+      ) {
+        setIsAllowed(true);
+        return;
+      }
+      currentElement = currentElement.parentElement;
+    }
+    setIsAllowed(false);
+  }, [allowedSections]);
+
+  const offset = shouldReduceMotion || !isAllowed ? '0px' : distance;
+  const initial = {
+    opacity: shouldReduceMotion || !isAllowed ? 1 : 0,
+    x: direction === 'left' ? offset : direction === 'right' ? `-${offset}` : 0,
+    y: direction === 'up' ? offset : direction === 'down' ? `-${offset}` : 0,
+    scale: direction === 'scale' && !shouldReduceMotion && isAllowed ? 0.8 : 1,
+    rotate: direction === 'rotate' && !shouldReduceMotion && isAllowed ? -5 : 0,
+  };
+  const visible = { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 };
 
   return (
-    <Component 
-      ref={ref} 
-      style={style} 
+    <Component
+      as={m.div}
+      ref={ref}
+      initial={initial}
+      whileInView={shouldReduceMotion || !isAllowed ? initial : visible}
+      viewport={{ once: true, amount: threshold }}
+      transition={{ duration: duration / 1000, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}

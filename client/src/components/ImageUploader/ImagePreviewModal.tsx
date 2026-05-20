@@ -78,7 +78,7 @@ export function ImagePreviewModal({ image, onClose, onSave }: ImagePreviewModalP
               size="sm"
               onClick={handleRotate}
             >
-              <RotateCw className="mr-2 h-4 w-4" />
+              <RotateCw className="mr-2 size-4" />
               Rotate
             </Button>
             
@@ -87,7 +87,7 @@ export function ImagePreviewModal({ image, onClose, onSave }: ImagePreviewModalP
               size="sm"
               onClick={handleCrop}
             >
-              <Crop className="mr-2 h-4 w-4" />
+              <Crop className="mr-2 size-4" />
               {isEditing ? "Exit Crop" : "Crop"}
             </Button>
           </div>
@@ -129,11 +129,11 @@ export function ImagePreviewModal({ image, onClose, onSave }: ImagePreviewModalP
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>
-            <X className="mr-2 h-4 w-4" />
+            <X className="mr-2 size-4" />
             Cancel
           </Button>
           <Button onClick={handleSave}>
-            <Save className="mr-2 h-4 w-4" />
+            <Save className="mr-2 size-4" />
             Save Changes
           </Button>
         </DialogFooter>

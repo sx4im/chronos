@@ -5,11 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AppShell } from "@/components/app-shell";
-import { AuthProvider } from "@/lib/auth-context";
+import { AuthProvider, ProtectedRoute } from "@/lib/auth-context";
 import { Analytics } from "@vercel/analytics/react";
+import { LazyMotion, domAnimation } from "framer-motion";
 
 import { lazy, Suspense } from "react";
-import { Loader2 } from "lucide-react";
+import { AppLoader } from "@/components/ui/app-loader";
 
 // Lazy-loaded Pages
 const Home = lazy(() => import("@/pages/home"));
@@ -31,11 +32,7 @@ const Signup = lazy(() => import("@/pages/auth/signup"));
 function AppRouter() {
   return (
     <Suspense 
-      fallback={
-        <div className="flex h-[50vh] w-full items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      }
+      fallback={<AppLoader />}
     >
       <Switch>
           {/* Public Routes */}
@@ -48,13 +45,13 @@ function AppRouter() {
           <Route path="/auth/signup" component={Signup} />
           
           {/* Protected Routes */}
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/pantry" component={Pantry} />
-          <Route path="/shopping" component={Shopping} />
-          <Route path="/favorites" component={Favorites} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/admin" component={Admin} />
+          <Route path="/dashboard"><ProtectedRoute><Dashboard /></ProtectedRoute></Route>
+          <Route path="/pantry"><ProtectedRoute><Pantry /></ProtectedRoute></Route>
+          <Route path="/shopping"><ProtectedRoute><Shopping /></ProtectedRoute></Route>
+          <Route path="/favorites"><ProtectedRoute><Favorites /></ProtectedRoute></Route>
+          <Route path="/settings"><ProtectedRoute><Settings /></ProtectedRoute></Route>
+          <Route path="/profile"><ProtectedRoute><Profile /></ProtectedRoute></Route>
+          <Route path="/admin"><ProtectedRoute requireRole="admin"><Admin /></ProtectedRoute></Route>
           
         {/* 404 */}
         <Route component={NotFound} />
@@ -70,9 +67,11 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <Router>
-              <AppShell>
-                <AppRouter />
-              </AppShell>
+              <LazyMotion features={domAnimation}>
+                <AppShell>
+                  <AppRouter />
+                </AppShell>
+              </LazyMotion>
               <Toaster />
               <Analytics />
             </Router>

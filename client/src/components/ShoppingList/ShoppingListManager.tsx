@@ -172,7 +172,7 @@ export function ShoppingListManager({ className }: ShoppingListManagerProps) {
                       setSelectedListId(list.id);
                     }}
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="size-4" />
                   </Button>
                 </div>
               </CardHeader>
@@ -180,16 +180,16 @@ export function ShoppingListManager({ className }: ShoppingListManagerProps) {
                 <div className="space-y-2">
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <FileText className="h-4 w-4" />
+                      <FileText className="size-4" />
                       {list.itemCount} items
                     </div>
                     <div className="flex items-center gap-1">
-                      <ShoppingCart className="h-4 w-4" />
+                      <ShoppingCart className="size-4" />
                       {list.recipeCount} recipes
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
+                    <Calendar className="size-3" />
                     Created {formatDate(list.createdAt)}
                   </div>
                 </div>
@@ -201,13 +201,13 @@ export function ShoppingListManager({ className }: ShoppingListManagerProps) {
         <Card className="w-full">
           <CardContent className="p-8 text-center">
             <div className="flex flex-col items-center justify-center min-h-[300px]">
-              <ShoppingCart className="h-12 w-12 text-muted-foreground/50 mb-4" />
+              <ShoppingCart className="size-12 text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium mb-2">No shopping lists yet</h3>
               <p className="text-muted-foreground mb-4">
                 Create your first shopping list to start organizing your grocery shopping.
               </p>
               <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="size-4 mr-2" />
                 Create Your First List
               </Button>
             </div>

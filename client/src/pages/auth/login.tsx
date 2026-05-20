@@ -5,27 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Lock, 
-  ArrowRight, 
-  Github, 
-  Chrome,
+  Eye,
+  EyeOff,
+  User,
+  Lock,
+  ArrowRight,
   Loader2
 } from "lucide-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login, loginWithGoogle, loginWithGitHub, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = React.useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [showPassword, setShowPassword] = React.useState(false);
@@ -44,10 +41,8 @@ export default function Login() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
     }
     
     if (!formData.password) {
@@ -66,7 +61,7 @@ export default function Login() {
     if (!validateForm()) return;
     
     try {
-      await login(formData.email, formData.password);
+      await login(formData.username, formData.password);
       toast({
         title: "Welcome back!",
         description: "You've successfully logged in.",
@@ -75,45 +70,13 @@ export default function Login() {
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Invalid email or password. Please try again.",
+        description: "Invalid username or password. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      toast({
-        title: "Welcome!",
-        description: "You've successfully logged in with Google.",
-      });
-      setLocation("/dashboard");
-    } catch (error) {
-      toast({
-        title: "Google login failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const handleGitHubLogin = async () => {
-    try {
-      await loginWithGitHub();
-      toast({
-        title: "Welcome!",
-        description: "You've successfully logged in with GitHub.",
-      });
-      setLocation("/dashboard");
-    } catch (error) {
-      toast({
-        title: "GitHub login failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-deep-olive)' }}>
@@ -129,9 +92,9 @@ export default function Login() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4"
+              className="mx-auto size-24 rounded-2xl flex items-center justify-center"
             >
-              <img src="/logo.webp" alt="Ingredo" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <img src="/logo.svg" alt="Ingredo" className="size-16 sm:size-20" />
             </motion.div>
             <CardTitle className="font-serif text-2xl font-medium text-foreground">
               Welcome back
@@ -143,35 +106,36 @@ export default function Login() {
 
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email Field */}
+              {/* Username Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                  Email address
+                <Label htmlFor="username" className="text-sm font-medium text-foreground">
+                  Username
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                   <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
+                    id="username"
+                    name="username"
+                    type="text"
+                    autoComplete="username"
+                    value={formData.username}
                     onChange={handleInputChange}
                     className={`pl-10 h-12 bg-background border-border focus:border-primary focus:ring-primary/20 ${
-                      errors.email ? "border-destructive focus:border-destructive" : ""
+                      errors.username ? "border-destructive focus:border-destructive" : ""
                     }`}
-                    placeholder="Enter your email"
+                    placeholder="Enter your username"
                     disabled={isLoading}
                   />
                 </div>
                 <AnimatePresence>
-                  {errors.email && (
+                  {errors.username && (
                     <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       className="text-sm text-red-500"
                     >
-                      {errors.email}
+                      {errors.username}
                     </motion.p>
                   )}
                 </AnimatePresence>
@@ -183,7 +147,7 @@ export default function Login() {
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                   <Input
                     id="password"
                     name="password"
@@ -202,7 +166,7 @@ export default function Login() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
                 <AnimatePresence>
@@ -237,45 +201,13 @@ export default function Login() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="size-4 animate-spin mr-2" />
                 ) : (
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="size-4 mr-2" />
                 )}
                 Sign in
               </Button>
             </form>
-
-            {/* Divider */}
-            <div className="relative">
-              <Separator className="bg-border" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-card px-4 text-sm text-muted-foreground">or continue with</span>
-              </div>
-            </div>
-
-            {/* OAuth Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
-                className="h-12 bg-background border-border hover:bg-muted transition-all duration-200"
-              >
-                <Chrome className="h-4 w-4 mr-2" />
-                Google
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGitHubLogin}
-                disabled={isLoading}
-                className="h-12 bg-background border-border hover:bg-muted transition-all duration-200"
-              >
-                <Github className="h-4 w-4 mr-2" />
-                GitHub
-              </Button>
-            </div>
 
             {/* Sign Up Link */}
             <div className="text-center">

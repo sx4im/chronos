@@ -1,13 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { generateId } from '@/lib/ids';
 
 // User types
 export interface User {
   id: string;
   name: string;
+  username?: string;
   email: string;
   avatar?: string;
   joinDate: string;
+  role?: 'user' | 'admin';
 }
 
 // Recipe types
@@ -110,9 +113,6 @@ interface AppStore {
   };
   setSearchFilters: (filters: Partial<AppStore['searchFilters']>) => void;
 }
-
-// Generate unique ID
-const generateId = () => Math.random().toString(36).substring(2, 11);
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -229,8 +229,6 @@ export const useAppStore = create<AppStore>()(
     {
       name: 'ingredo-store',
       partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
         favoriteRecipes: state.favoriteRecipes,
         pantryItems: state.pantryItems,
         shoppingList: state.shoppingList,

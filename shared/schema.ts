@@ -7,11 +7,18 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  name: text("name").notNull(),
+  email: text("email").unique(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  name: true,
+  email: true,
+}).extend({
+  username: z.string().trim().min(3).max(30).regex(/^[a-zA-Z0-9._-]+$/, "Username can only contain letters, numbers, dots, underscores, and hyphens"),
+  password: z.string().min(8)
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

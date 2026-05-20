@@ -209,13 +209,13 @@ export default function Favorites() {
               
               <div className="flex items-center gap-3">
                 <Badge variant="secondary" className="px-3 py-1">
-                  <Heart className="h-4 w-4 mr-1" />
+                  <Heart className="size-4 mr-1" />
                   {favoriteRecipesData.length} recipes
                 </Badge>
                 
                 <Link href="/search">
                   <Button>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="size-4 mr-2" />
                     Find More Recipes
                   </Button>
                 </Link>
@@ -233,7 +233,7 @@ export default function Favorites() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Heart className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Heart className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{favoriteRecipesData.length}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Total Favorites</p>
@@ -245,7 +245,7 @@ export default function Favorites() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <ChefHat className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <ChefHat className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
                       {favoriteRecipesData.filter(r => r.difficulty === "Easy").length}
@@ -259,7 +259,7 @@ export default function Favorites() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Clock className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Clock className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
                       {favoriteRecipesData.filter(r => r.tags.includes("Quick")).length}
@@ -273,7 +273,7 @@ export default function Favorites() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Star className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Star className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
                       {(favoriteRecipesData.reduce((sum, r) => sum + r.rating, 0) / favoriteRecipesData.length).toFixed(1)}
@@ -296,7 +296,7 @@ export default function Favorites() {
               <CardContent className="p-6">
                 <div className="flex flex-col gap-4">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                     <Input
                       placeholder="Search your favorite recipes..."
                       value={searchQuery}
@@ -309,7 +309,7 @@ export default function Favorites() {
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                     <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
                       <SelectTrigger className="w-full sm:w-40">
-                        <Filter className="h-4 w-4 mr-2" />
+                        <Filter className="size-4 mr-2" />
                         <SelectValue placeholder="Difficulty" />
                       </SelectTrigger>
                       <SelectContent>
@@ -339,7 +339,7 @@ export default function Favorites() {
                         onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                         className="px-3"
                       >
-                        {sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                        {sortOrder === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
                       </Button>
                       
                       <div className="flex gap-1">
@@ -349,7 +349,7 @@ export default function Favorites() {
                           onClick={() => setViewMode("grid")}
                           className="px-3"
                         >
-                          <Grid className="h-4 w-4" />
+                          <Grid className="size-4" />
                         </Button>
                         <Button
                           variant={viewMode === "list" ? "default" : "outline"}
@@ -357,7 +357,7 @@ export default function Favorites() {
                           onClick={() => setViewMode("list")}
                           className="px-3"
                         >
-                          <List className="h-4 w-4" />
+                          <List className="size-4" />
                         </Button>
                       </div>
                     </div>
@@ -376,7 +376,7 @@ export default function Favorites() {
             {filteredRecipes.length === 0 ? (
               <Card className="bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-12 text-center">
-                  <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <Heart className="size-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-foreground mb-2 text-center">No favorites found</h3>
                   <p className="text-muted-foreground mb-6 text-center max-w-md mx-auto">
                     {favoriteRecipesData.length === 0 
@@ -388,7 +388,7 @@ export default function Favorites() {
                     <div className="flex justify-center">
                       <Link href="/search">
                         <Button className="bg-secondary hover:bg-secondary/90">
-                          <Plus className="h-4 w-4 mr-2" />
+                          <Plus className="size-4 mr-2" />
                           Find Recipes to Save
                         </Button>
                       </Link>
@@ -426,17 +426,17 @@ export default function Favorites() {
                                 size="sm"
                                 variant="secondary"
                                 onClick={() => handleRemoveFavorite(recipe.id, recipe.title)}
-                                className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white"
+                                className="size-8 p-0 rounded-full bg-white/90 hover:bg-white"
                               >
-                                <Heart className="h-4 w-4 text-red-500 fill-current" />
+                                <Heart className="size-4 text-red-500 fill-current" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="secondary"
                                 onClick={() => handleAddToCollection(recipe.id, recipe.title)}
-                                className="h-8 w-8 p-0 rounded-full bg-white/90 hover:bg-white"
+                                className="size-8 p-0 rounded-full bg-white/90 hover:bg-white"
                               >
-                                <BookOpen className="h-4 w-4" />
+                                <BookOpen className="size-4" />
                               </Button>
                             </div>
                           </div>
@@ -467,16 +467,16 @@ export default function Favorites() {
                           <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" />
+                                <Clock className="size-4" />
                                 {recipe.prepTime + recipe.cookTime}m
                               </div>
                               <div className="flex items-center gap-1">
-                                <Users className="h-4 w-4" />
+                                <Users className="size-4" />
                                 {recipe.servings}
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                              <Star className="size-4 text-yellow-400 fill-current" />
                               {recipe.rating}
                             </div>
                           </div>
@@ -492,7 +492,7 @@ export default function Favorites() {
                               size="sm"
                               onClick={() => handleRemoveFavorite(recipe.id, recipe.title)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="size-4" />
                             </Button>
                           </div>
                         </CardContent>

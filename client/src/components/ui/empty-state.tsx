@@ -48,7 +48,7 @@ interface EmptyStateIconProps {
 
 export function EmptyStateIcon({ className }: EmptyStateIconProps) {
   return (
-    <div className={cn("mx-auto h-12 w-12 opacity-50", className)}>
+    <div className={cn("mx-auto size-12 opacity-50", className)}>
       <svg
         className="h-full w-full"
         fill="none"

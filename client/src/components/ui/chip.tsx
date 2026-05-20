@@ -44,7 +44,7 @@ const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
             data-testid="chip-remove"
             aria-label="Remove"
           >
-            <X className="h-3 w-3" />
+            <X className="size-3" />
           </button>
         )}
       </div>

@@ -17,7 +17,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RecipeCard, type RecipeCardData } from "@/components/RecipeCard";
 import { RecipeCardGridSkeleton } from "@/components/RecipeCard/RecipeCardSkeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import { apiClient } from "@/lib/apiClient";
+import { apiClient, csrfFetch } from "@/lib/apiClient";
 import { type SearchFilters } from "@shared/schema";
 import { 
   Search, 
@@ -64,6 +64,10 @@ export const SearchResults = React.memo(function SearchResults({
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [activeMode, setActiveMode] = useState<SearchMode>("match");
   const [isGeneratingCreative, setIsGeneratingCreative] = useState(false);
+  const [creativeText, setCreativeText] = useState("");
+  const [creativeStreamError, setCreativeStreamError] = useState<Error | null>(null);
+  const streamAbortRef = React.useRef<AbortController | null>(null);
+  const ingredientsKey = useMemo(() => ingredients.join("\u0000"), [ingredients]);
 
   // Build query parameters
   const queryParams = useMemo(() => {
@@ -92,10 +96,10 @@ export const SearchResults = React.memo(function SearchResults({
     if (filters.servings && filters.servings !== 4) {
       params.set('servings', filters.servings.toString());
     }
-    params.set('mode', activeMode);
+    params.set('mode', 'match');
     params.set('sort', sortBy);
     return params.toString();
-  }, [ingredients, filters, activeMode, sortBy]);
+  }, [ingredients, filters, sortBy]);
 
   // Fetch matched recipes
   const { 
@@ -105,43 +109,86 @@ export const SearchResults = React.memo(function SearchResults({
     refetch: refetchMatched
   } = useQuery<RecipeSearchResponse>({
     queryKey: ['/api/recipes', queryParams],
+    queryFn: () => apiClient.get<RecipeSearchResponse>(`/api/recipes?${queryParams}`),
     enabled: ingredients.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  // Fetch creative recipes
-  const { 
-    data: creativeData, 
-    isLoading: creativeLoading, 
-    error: creativeError,
-    refetch: refetchCreative
-  } = useQuery<RecipeSearchResponse>({
-    queryKey: ['/api/recipes', queryParams.replace('mode=match', 'mode=creative')],
-    enabled: false, // Only fetch when explicitly requested
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  React.useEffect(() => {
+    return () => {
+      streamAbortRef.current?.abort();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    streamAbortRef.current?.abort();
+    setCreativeText("");
+    setCreativeStreamError(null);
+  }, [ingredientsKey]);
+
+  const streamCreativeRecipes = React.useCallback(async () => {
+    const streamIngredients = ingredientsKey.split("\u0000").filter(Boolean);
+    if (streamIngredients.length === 0) return;
+
+    streamAbortRef.current?.abort();
+    const controller = new AbortController();
+    streamAbortRef.current = controller;
+    setCreativeText("");
+    setCreativeStreamError(null);
+    setIsGeneratingCreative(true);
+
+    try {
+      const response = await csrfFetch('/api/recipes/recommend', {
+        method: 'POST',
+        body: JSON.stringify({ ingredients: streamIngredients }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error((await response.text()) || response.statusText);
+      }
+
+      if (!response.body) {
+        throw new Error("Recipe stream was empty");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        setCreativeText(prev => prev + decoder.decode(value, { stream: true }));
+      }
+
+      const finalChunk = decoder.decode();
+      if (finalChunk) {
+        setCreativeText(prev => prev + finalChunk);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+      setCreativeStreamError(error instanceof Error ? error : new Error("Recipe generation failed"));
+    } finally {
+      if (streamAbortRef.current === controller) {
+        streamAbortRef.current = null;
+        setIsGeneratingCreative(false);
+      }
+    }
+  }, [ingredientsKey]);
 
   const handleModeChange = async (value: string) => {
     const mode = value as SearchMode;
     setActiveMode(mode);
-    if (mode === 'creative' && !creativeData) {
-      setIsGeneratingCreative(true);
-      try {
-        await refetchCreative();
-      } finally {
-        setIsGeneratingCreative(false);
-      }
+    if (mode === 'creative' && !creativeText && !isGeneratingCreative) {
+      await streamCreativeRecipes();
     }
   };
 
   const handleGenerateCreative = async () => {
-    setIsGeneratingCreative(true);
-    try {
-      await refetchCreative();
-      setActiveMode('creative');
-    } finally {
-      setIsGeneratingCreative(false);
-    }
+    setActiveMode('creative');
+    await streamCreativeRecipes();
   };
 
   const handleSortChange = (value: string) => {
@@ -150,7 +197,7 @@ export const SearchResults = React.memo(function SearchResults({
 
   // Sort recipes based on selected option
   const sortedRecipes = useMemo(() => {
-    const recipes = activeMode === 'creative' ? creativeData?.recipes || [] : matchedData?.recipes || [];
+    const recipes = matchedData?.recipes || [];
     
     switch (sortBy) {
       case 'time':
@@ -163,11 +210,10 @@ export const SearchResults = React.memo(function SearchResults({
       default:
         return [...recipes].sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
     }
-  }, [activeMode, creativeData, matchedData, sortBy]);
+  }, [matchedData, sortBy]);
 
-  const currentData = activeMode === 'creative' ? creativeData : matchedData;
-  const isLoading = activeMode === 'creative' ? creativeLoading : matchedLoading;
-  const error = activeMode === 'creative' ? creativeError : matchedError;
+  const isLoading = activeMode === 'creative' ? isGeneratingCreative && !creativeText : matchedLoading;
+  const error = activeMode === 'creative' ? creativeStreamError : matchedError;
 
   // Empty state suggestions
   const getEmptyStateSuggestions = () => {
@@ -184,7 +230,7 @@ export const SearchResults = React.memo(function SearchResults({
   if (ingredients.length === 0) {
     return (
       <EmptyState
-        icon={<Search className="mx-auto h-12 w-12 mb-4 text-primary" />}
+        icon={<Search className="mx-auto size-12 mb-4 text-primary" />}
         title="No ingredients yet"
         description="Add one or more ingredients to start finding recipes you can cook right now."
         action={{
@@ -199,12 +245,12 @@ export const SearchResults = React.memo(function SearchResults({
   if (error) {
     return (
       <EmptyState
-        icon={<RefreshCw className="mx-auto h-12 w-12 mb-4 text-primary" />}
+        icon={<RefreshCw className="mx-auto size-12 mb-4 text-primary" />}
         title="We couldn't reach the recipe service"
         description="Please check your connection and try the search again."
         action={{
           label: "Retry search",
-          onClick: () => refetchMatched(),
+          onClick: activeMode === 'creative' ? handleGenerateCreative : () => refetchMatched(),
         }}
         className={className}
       />
@@ -219,9 +265,13 @@ export const SearchResults = React.memo(function SearchResults({
           <h2 className="h2 vintage-text-primary">
             {activeMode === 'creative' ? 'Creative Recipes' : 'Matched Recipes'}
           </h2>
-          {currentData && (
+          {activeMode === 'creative' && creativeText ? (
             <Badge variant="secondary" className="text-sm">
-              {currentData.total} recipes found
+              AI recommendations
+            </Badge>
+          ) : matchedData && (
+            <Badge variant="secondary" className="text-sm">
+              {matchedData.total} recipes found
             </Badge>
           )}
         </div>
@@ -238,7 +288,7 @@ export const SearchResults = React.memo(function SearchResults({
                 return (
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
+                      <Icon className="size-4" />
                       {option.label}
                     </div>
                   </SelectItem>
@@ -251,11 +301,11 @@ export const SearchResults = React.memo(function SearchResults({
           <Tabs value={activeMode} onValueChange={handleModeChange} className="w-auto">
             <TabsList>
               <TabsTrigger value="match" data-testid="mode-matched">
-                <Search className="h-4 w-4 mr-1" />
+                <Search className="size-4 mr-1" />
                 Matched
               </TabsTrigger>
               <TabsTrigger value="creative" data-testid="mode-creative">
-                <Sparkles className="h-4 w-4 mr-1" />
+                <Sparkles className="size-4 mr-1" />
                 Creative
               </TabsTrigger>
             </TabsList>
@@ -264,7 +314,31 @@ export const SearchResults = React.memo(function SearchResults({
       </div>
 
       {/* Results */}
-      {isLoading ? (
+      {activeMode === 'creative' ? (
+        creativeText ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+          >
+            <Card>
+              <CardContent className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
+                {creativeText}
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : !isGeneratingCreative && (
+          <EmptyState
+            icon={<Sparkles className="mx-auto size-12 mb-4 opacity-50" />}
+            title="No creative recipes yet"
+            description="Generate creative recommendations from your current ingredients."
+            action={{
+              label: "Generate creative ideas",
+              onClick: handleGenerateCreative
+            }}
+          />
+        )
+      ) : isLoading ? (
         <RecipeCardGridSkeleton count={6} />
       ) : sortedRecipes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -291,12 +365,12 @@ export const SearchResults = React.memo(function SearchResults({
           transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
         >
           <EmptyState
-            icon={<Search className="mx-auto h-12 w-12 mb-4 opacity-50" />}
+            icon={<Search className="mx-auto size-12 mb-4 opacity-50" />}
             title="No recipes found"
             description={`${getEmptyStateSuggestions()}. Try broadening your filters or adding a few more ingredients.`}
             action={{
-              label: activeMode === 'match' ? "Generate creative ideas" : "Try matched recipes",
-              onClick: activeMode === 'match' ? handleGenerateCreative : () => {}
+              label: "Generate creative ideas",
+              onClick: handleGenerateCreative
             }}
           />
         </motion.div>
@@ -307,7 +381,7 @@ export const SearchResults = React.memo(function SearchResults({
         <Card>
           <CardContent className="p-8 text-center">
             <div className="flex items-center justify-center gap-3">
-              <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+              <RefreshCw className="size-5 animate-spin text-primary" />
               <span className="text-lg font-medium">Generating creative recipes...</span>
             </div>
             <p className="text-muted-foreground mt-2">
@@ -318,14 +392,14 @@ export const SearchResults = React.memo(function SearchResults({
       )}
 
       {/* Load more button for creative mode */}
-      {activeMode === 'creative' && creativeData && !isGeneratingCreative && (
+      {activeMode === 'creative' && creativeText && !isGeneratingCreative && (
         <div className="text-center">
           <Button
             variant="outline"
             onClick={handleGenerateCreative}
             disabled={isGeneratingCreative}
           >
-            <Sparkles className="mr-2 h-4 w-4" />
+            <Sparkles className="mr-2 size-4" />
             Generate More Creative Recipes
           </Button>
         </div>

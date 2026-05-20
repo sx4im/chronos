@@ -71,7 +71,7 @@ export default function Dashboard() {
       title: "Saved Caprese Salad",
       description: "Added to your favorites",
       timestamp: "2 hours ago",
-      icon: <Heart className="h-4 w-4 text-red-500" />
+      icon: <Heart className="size-4 text-red-500" />
     },
     {
       id: "2",
@@ -79,7 +79,7 @@ export default function Dashboard() {
       title: "Added Tomatoes",
       description: "Added to your pantry",
       timestamp: "4 hours ago",
-      icon: <Package className="h-4 w-4 text-green-500" />
+      icon: <Package className="size-4 text-green-500" />
     },
     {
       id: "3",
@@ -87,7 +87,7 @@ export default function Dashboard() {
       title: "Cooked Pasta Marinara",
       description: "Marked as completed",
       timestamp: "1 day ago",
-      icon: <ChefHat className="h-4 w-4 text-primary" />
+      icon: <ChefHat className="size-4 text-primary" />
     },
     {
       id: "4",
@@ -95,7 +95,7 @@ export default function Dashboard() {
       title: "Added Basil",
       description: "Added to shopping list",
       timestamp: "2 days ago",
-      icon: <ShoppingCart className="h-4 w-4 text-primary" />
+      icon: <ShoppingCart className="size-4 text-primary" />
     }
   ]);
 
@@ -156,11 +156,11 @@ export default function Dashboard() {
               
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" className="btn-fill-up">
-                  <Bell className="h-4 w-4 mr-2" />
+                  <Bell className="size-4 mr-2" />
                   Notifications
                 </Button>
                 <Button variant="outline" size="sm" className="btn-fill-up">
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="size-4 mr-2" />
                   Settings
                 </Button>
               </div>
@@ -178,7 +178,7 @@ export default function Dashboard() {
               <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <Heart className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                    <Heart className="size-5" style={{ color: 'var(--accent-gold)' }} />
                     <div>
                       <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.savedRecipes}</p>
                       <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Saved Recipes</p>
@@ -192,7 +192,7 @@ export default function Dashboard() {
               <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <ChefHat className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                    <ChefHat className="size-5" style={{ color: 'var(--accent-gold)' }} />
                     <div>
                       <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.cookedRecipes}</p>
                       <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Recipes Cooked</p>
@@ -206,7 +206,7 @@ export default function Dashboard() {
               <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <Package className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                    <Package className="size-5" style={{ color: 'var(--accent-gold)' }} />
                     <div>
                       <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.pantryItems}</p>
                       <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Pantry Items</p>
@@ -220,7 +220,7 @@ export default function Dashboard() {
               <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <ShoppingCart className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                    <ShoppingCart className="size-5" style={{ color: 'var(--accent-gold)' }} />
                     <div>
                       <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.shoppingItems}</p>
                       <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Shopping Items</p>
@@ -252,7 +252,7 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Link href="/search">
                         <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center justify-center gap-2">
-                          <ChefHat className="h-5 w-5 text-primary" />
+                          <ChefHat className="size-5 text-primary" />
                           <div className="text-center">
                             <div className="font-bold text-[10px] tracking-widest uppercase">Find Recipes</div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">Discover new meals</div>
@@ -262,7 +262,7 @@ export default function Dashboard() {
                       
                       <Link href="/pantry">
                         <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center justify-center gap-2">
-                          <Package className="h-5 w-5 text-secondary" />
+                          <Package className="size-5 text-secondary" />
                           <div className="text-center">
                             <div className="font-bold text-[10px] tracking-widest uppercase">Manage Pantry</div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">Track ingredients</div>
@@ -272,7 +272,7 @@ export default function Dashboard() {
                       
                       <Link href="/shopping">
                         <Button variant="outline" className="w-full h-auto py-4 flex flex-col items-center justify-center gap-2">
-                          <ShoppingCart className="h-5 w-5 text-accent" />
+                          <ShoppingCart className="size-5 text-accent" />
                           <div className="text-center">
                             <div className="font-bold text-[10px] tracking-widest uppercase">Shopping List</div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">Plan your shopping</div>
@@ -357,7 +357,7 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       <div className="flex-1 flex flex-col justify-center items-center text-center min-h-[145px]">
-                        <Package className="h-8 w-8 text-gray-300 mx-auto" />
+                        <Package className="size-8 text-gray-300 mx-auto" />
                         <p className="text-gray-600 text-sm">No items expiring soon</p>
                         <p className="text-xs text-gray-500 mt-1">Great job managing your pantry!</p>
                       </div>

@@ -98,7 +98,7 @@ export default function Admin() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-serif text-4xl lg:text-5xl font-medium tracking-tight text-foreground">Admin Dashboard</h1>
           <Button data-testid="admin-settings">
-            <Settings className="mr-2 h-4 w-4" />
+            <Settings className="mr-2 size-4" />
             Settings
           </Button>
         </div>
@@ -109,7 +109,7 @@ export default function Admin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Users className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.users.total.toLocaleString()}</div>
@@ -122,7 +122,7 @@ export default function Admin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <TrendingUp className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.users.active.toLocaleString()}</div>
@@ -135,7 +135,7 @@ export default function Admin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Recipes</CardTitle>
-                <ChefHat className="h-4 w-4 text-muted-foreground" />
+                <ChefHat className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.recipes.total.toLocaleString()}</div>
@@ -148,7 +148,7 @@ export default function Admin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="size-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.system.uptime}</div>
@@ -161,7 +161,7 @@ export default function Admin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">API Calls</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
+                <Database className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.system.apiCalls.toLocaleString()}</div>
@@ -174,7 +174,7 @@ export default function Admin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">System Errors</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <AlertTriangle className="size-4 text-destructive" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.system.errors}</div>
@@ -264,7 +264,7 @@ export default function Admin() {
                   </Table>
                 ) : (
                   <div className="text-center py-8">
-                    <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <Users className="mx-auto size-12 text-muted-foreground/50 mb-4" />
                     <h3 className="text-lg font-medium mb-2">No users found</h3>
                     <p className="text-muted-foreground">Users will appear here once they register.</p>
                   </div>
@@ -341,7 +341,7 @@ export default function Admin() {
                   </Table>
                 ) : (
                   <div className="text-center py-8">
-                    <ChefHat className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <ChefHat className="mx-auto size-12 text-muted-foreground/50 mb-4" />
                     <h3 className="text-lg font-medium mb-2">No recipes found</h3>
                     <p className="text-muted-foreground">Recipes will appear here once users start creating them.</p>
                   </div>
@@ -355,13 +355,13 @@ export default function Admin() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
+                  <BarChart3 className="size-5" />
                   Analytics Dashboard
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
-                  <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <BarChart3 className="mx-auto size-12 text-muted-foreground/50 mb-4" />
                   <h3 className="text-lg font-medium mb-2">Analytics Coming Soon</h3>
                   <p className="text-muted-foreground">
                     Detailed analytics and insights will be available here.

@@ -42,7 +42,7 @@ const ALLERGY_OPTIONS = [
 ] as const;
 
 const CUISINE_OPTIONS = [
-  "Italian", "Chinese", "Mexican", "Indian", "Japanese", "French", 
+  "Italian", "Chinese", "Mexican", "Indian", "Japanese", "French",
   "Thai", "Mediterranean", "American", "Korean", "Greek", "Spanish",
   "Middle Eastern", "Vietnamese", "British", "German", "Brazilian"
 ];
@@ -66,7 +66,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export const PreferencesPanel = React.memo(function PreferencesPanel({ onFiltersChange, className }: PreferencesPanelProps) {
   const [location, navigate] = useLocation();
-  
+
   // Custom hook to manage search params since wouter doesn't have useSearchParams
   const getSearchParams = () => new URLSearchParams(window.location.search);
   const setSearchParams = (params: string) => {
@@ -78,25 +78,25 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
     // Parse filters from URL on mount
     const searchParams = getSearchParams();
     const urlFilters: Partial<SearchFilters> = {};
-    
+
     const diet = searchParams.get("diet");
     if (diet) urlFilters.diet = diet as SearchFilters["diet"];
-    
+
     const allergies = searchParams.get("allergies");
     if (allergies) urlFilters.allergies = allergies.split(",") as SearchFilters["allergies"];
-    
+
     const maxCookTime = searchParams.get("maxCookTime");
     if (maxCookTime) urlFilters.maxCookTime = parseInt(maxCookTime);
-    
+
     const cuisine = searchParams.get("cuisine");
     if (cuisine) urlFilters.cuisine = cuisine;
-    
+
     const difficulty = searchParams.get("difficulty");
     if (difficulty) urlFilters.difficulty = difficulty as SearchFilters["difficulty"];
-    
+
     const allowSubstitutions = searchParams.get("allowSubstitutions");
     if (allowSubstitutions) urlFilters.allowSubstitutions = allowSubstitutions === "true";
-    
+
     const servings = searchParams.get("servings");
     if (servings) urlFilters.servings = parseInt(servings);
 
@@ -109,31 +109,31 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
   // Update URL and call onChange when debounced filters change
   useEffect(() => {
     const params = new URLSearchParams();
-    
+
     if (debouncedFilters.diet !== "any") {
       params.set("diet", debouncedFilters.diet);
     }
-    
+
     if (debouncedFilters.allergies.length > 0) {
       params.set("allergies", debouncedFilters.allergies.join(","));
     }
-    
+
     if (debouncedFilters.maxCookTime !== 60) {
       params.set("maxCookTime", debouncedFilters.maxCookTime.toString());
     }
-    
+
     if (debouncedFilters.cuisine) {
       params.set("cuisine", debouncedFilters.cuisine);
     }
-    
+
     if (debouncedFilters.difficulty !== "any") {
       params.set("difficulty", debouncedFilters.difficulty);
     }
-    
+
     if (!debouncedFilters.allowSubstitutions) {
       params.set("allowSubstitutions", "false");
     }
-    
+
     if (debouncedFilters.servings !== 4) {
       params.set("servings", debouncedFilters.servings.toString());
     }
@@ -174,7 +174,7 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
   const activeFilterCount = useMemo(() => {
     const defaults = searchFiltersSchema.parse({});
     let count = 0;
-    
+
     if (filters.diet !== defaults.diet) count++;
     if (filters.allergies.length > 0) count++;
     if (filters.maxCookTime !== defaults.maxCookTime) count++;
@@ -182,7 +182,7 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
     if (filters.difficulty !== defaults.difficulty) count++;
     if (filters.allowSubstitutions !== defaults.allowSubstitutions) count++;
     if (filters.servings !== defaults.servings) count++;
-    
+
     return count;
   }, [filters]);
 
@@ -254,7 +254,7 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
           <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors border-b border-border rounded-t-lg">
             <CardTitle className="flex items-center justify-between text-base font-semibold">
               <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5 text-foreground" />
+                <Filter className="size-5 text-foreground" />
                 <span className="text-foreground">Filters</span>
                 {activeFilterCount > 0 && (
                   <Badge variant="secondary" className="h-6 text-xs bg-primary/20 text-primary border-primary/30">
@@ -262,8 +262,8 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                   </Badge>
                 )}
               </div>
-              <ChevronDown 
-                className={cn("h-5 w-5 text-muted-foreground transition-transform", isOpen && "rotate-180")} 
+              <ChevronDown
+                className={cn("size-5 text-muted-foreground transition-transform", isOpen && "rotate-180")}
               />
             </CardTitle>
           </CardHeader>
@@ -288,9 +288,9 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {activeFilters.map((filter, index) => (
-                    <Badge 
+                    <Badge
                       key={index}
-                      variant="secondary" 
+                      variant="secondary"
                       className="text-xs gap-1 bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20"
                     >
                       {filter.label}
@@ -300,7 +300,7 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                         onClick={filter.onRemove}
                         className="h-auto w-auto p-0 hover:bg-transparent hover:text-secondary"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="size-3" />
                       </Button>
                     </Badge>
                   ))}
@@ -316,7 +316,7 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                   value={filters.diet}
                   onValueChange={(value) => updateFilter("diet", value as SearchFilters["diet"])}
                 >
-                  <SelectTrigger 
+                  <SelectTrigger
                     data-testid="diet-select"
                     className="border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
@@ -374,33 +374,33 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                 data-testid="difficulty-radio"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="any" 
-                    id="any" 
+                  <RadioGroupItem
+                    value="any"
+                    id="any"
                     className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <Label htmlFor="any" className="text-sm font-medium text-foreground/80">Any</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="easy" 
-                    id="easy" 
+                  <RadioGroupItem
+                    value="easy"
+                    id="easy"
                     className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <Label htmlFor="easy" className="text-sm font-medium text-foreground/80">Easy</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="medium" 
-                    id="medium" 
+                  <RadioGroupItem
+                    value="medium"
+                    id="medium"
                     className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <Label htmlFor="medium" className="text-sm font-medium text-foreground/80">Medium</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value="hard" 
-                    id="hard" 
+                  <RadioGroupItem
+                    value="hard"
+                    id="hard"
                     className="border border-border text-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <Label htmlFor="hard" className="text-sm font-medium text-foreground/80">Hard</Label>
@@ -415,7 +415,7 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                 value={filters.cuisine || "any"}
                 onValueChange={(value) => updateFilter("cuisine", value === "any" ? undefined : value)}
               >
-                <SelectTrigger 
+                <SelectTrigger
                   data-testid="cuisine-select"
                   className="border border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
                 >

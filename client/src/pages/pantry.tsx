@@ -209,7 +209,7 @@ export default function Pantry() {
               <div className="flex items-center gap-3">
                 {getExpiringCount() > 0 && (
                   <Badge variant="destructive" className="px-3 py-1">
-                    <AlertTriangle className="h-4 w-4 mr-1" />
+                    <AlertTriangle className="size-4 mr-1" />
                     {getExpiringCount()} expiring
                   </Badge>
                 )}
@@ -217,7 +217,7 @@ export default function Pantry() {
                 <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                   <DialogTrigger asChild>
                     <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="size-4 mr-2" />
                       Add Item
                     </Button>
                   </DialogTrigger>
@@ -331,7 +331,7 @@ export default function Pantry() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Package className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Package className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{pantryItems.length}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Total Items</p>
@@ -343,7 +343,7 @@ export default function Pantry() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <AlertTriangle className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <AlertTriangle className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{getExpiringCount()}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Expiring Soon</p>
@@ -355,7 +355,7 @@ export default function Pantry() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <CheckCircle className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <CheckCircle className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{new Set(pantryItems.map(item => item.category)).size}</p>
                     <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Categories</p>
@@ -367,7 +367,7 @@ export default function Pantry() {
             <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Clock className="h-5 w-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Clock className="size-5" style={{ color: 'var(--accent-gold)' }} />
                   <div>
                     <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
                       {pantryItems.filter(item => getExpiryStatus(item.expiryDate).status === "fresh").length}
@@ -392,7 +392,7 @@ export default function Pantry() {
                   {/* Search Bar - Full Width */}
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
                       <Input
                         placeholder="Search pantry items..."
                         value={searchQuery}
@@ -406,7 +406,7 @@ export default function Pantry() {
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                       <SelectTrigger className="w-full sm:w-40">
-                        <Filter className="h-4 w-4 mr-2" />
+                        <Filter className="size-4 mr-2" />
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -437,7 +437,7 @@ export default function Pantry() {
                         onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
                         className="px-3"
                       >
-                        {sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                        {sortOrder === "asc" ? <SortAsc className="size-4" /> : <SortDesc className="size-4" />}
                       </Button>
                       
                       <div className="flex gap-1">
@@ -447,7 +447,7 @@ export default function Pantry() {
                           onClick={() => setViewMode("grid")}
                           className="px-3"
                         >
-                          <Grid className="h-4 w-4" />
+                          <Grid className="size-4" />
                         </Button>
                         <Button
                           variant={viewMode === "list" ? "default" : "outline"}
@@ -455,7 +455,7 @@ export default function Pantry() {
                           onClick={() => setViewMode("list")}
                           className="px-3"
                         >
-                          <List className="h-4 w-4" />
+                          <List className="size-4" />
                         </Button>
                       </div>
                     </div>
@@ -474,7 +474,7 @@ export default function Pantry() {
             {filteredItems.length === 0 ? (
               <Card className="bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-12 text-center">
-                  <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <Package className="size-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-foreground mb-2 text-center">No items found</h3>
                   <p className="text-muted-foreground mb-6 text-center max-w-md mx-auto">
                     {pantryItems.length === 0 
@@ -485,7 +485,7 @@ export default function Pantry() {
                   {pantryItems.length === 0 && (
                     <div className="flex justify-center">
                       <Button onClick={() => setShowAddDialog(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="size-4 mr-2" />
                         Add Your First Item
                       </Button>
                     </div>
@@ -526,14 +526,14 @@ export default function Pantry() {
                                   size="sm"
                                   onClick={() => handleEditItem(item)}
                                 >
-                                  <Edit className="h-4 w-4" />
+                                  <Edit className="size-4" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeleteItem(item.id, item.name)}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="size-4" />
                                 </Button>
                               </div>
                             </div>

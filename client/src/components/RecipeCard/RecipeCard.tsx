@@ -180,7 +180,7 @@ export const RecipeCard = React.memo(function RecipeCard({
                   onClick={handleSave}
                   data-testid={`save-recipe-${recipe.id}`}
                 >
-                  <Bookmark className={cn("h-4 w-4 mr-1", isSaved && "fill-current")} />
+                  <Bookmark className={cn("size-4 mr-1", isSaved && "fill-current")} />
                   {isSaved ? "Saved" : "Save"}
                 </Button>
                 <Button
@@ -191,7 +191,7 @@ export const RecipeCard = React.memo(function RecipeCard({
                   disabled={isLoading}
                   data-testid={`favorite-recipe-${recipe.id}`}
                 >
-                  <Heart className={cn("h-4 w-4 mr-1", isFavoritedState && "fill-current")} />
+                  <Heart className={cn("size-4 mr-1", isFavoritedState && "fill-current")} />
                   {isFavoritedState ? "Favorited" : "Favorite"}
                 </Button>
                 <Button
@@ -200,7 +200,7 @@ export const RecipeCard = React.memo(function RecipeCard({
                   onClick={handleUseSuggestion}
                   data-testid={`use-suggestion-${recipe.id}`}
                 >
-                  <ChefHat className="h-4 w-4 mr-1" />
+                  <ChefHat className="size-4 mr-1" />
                   Use This
                 </Button>
               </div>
@@ -235,7 +235,7 @@ export const RecipeCard = React.memo(function RecipeCard({
                 <Badge 
                   className="px-2 py-1 text-xs missing-ingredient"
                 >
-                  <AlertCircle className="h-3 w-3 mr-1" />
+                  <AlertCircle className="size-3 mr-1" />
                   {recipe.missingIngredients.length} missing
                 </Badge>
               </div>
@@ -247,7 +247,7 @@ export const RecipeCard = React.memo(function RecipeCard({
                 <Badge 
                   className="px-2 py-1 text-xs all-ingredients"
                 >
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  <CheckCircle2 className="size-3 mr-1" />
                   All ingredients
                 </Badge>
               </div>
@@ -269,15 +269,15 @@ export const RecipeCard = React.memo(function RecipeCard({
             <div className="flex items-center justify-between mb-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-3">
                 <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
+                  <Clock className="size-4 mr-1" />
                   <span>{recipe.prepTime + recipe.cookTime}m</span>
                 </div>
                 <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
+                  <Users className="size-4 mr-1" />
                   <span>{recipe.servings}</span>
                 </div>
                 <div className="flex items-center">
-                  <Star className="h-4 w-4 mr-1 text-accent fill-current" />
+                  <Star className="size-4 mr-1 text-accent fill-current" />
                   <span>{recipe.rating}</span>
                 </div>
               </div>
@@ -320,7 +320,7 @@ export const RecipeCard = React.memo(function RecipeCard({
                       key={ingredient} 
                       className="text-xs px-2 py-0.5 missing-ingredient"
                     >
-                      <X className="h-2 w-2 mr-1" />
+                      <X className="size-2 mr-1" />
                       {ingredient}
                     </Badge>
                   ))}
@@ -341,7 +341,7 @@ export const RecipeCard = React.memo(function RecipeCard({
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 data-testid={`view-recipe-${recipe.id}`}
               >
-                <Eye className="h-4 w-4 mr-1" />
+                <Eye className="size-4 mr-1" />
                 View Recipe
               </Button>
               <span className="text-xs text-muted-foreground">

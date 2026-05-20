@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { motion, useSpring, useTransform } from "framer-motion";
+import { m, useReducedMotion, useSpring, useTransform } from "framer-motion";
 
 interface TiltCardProps {
   children: React.ReactNode;
@@ -9,6 +9,7 @@ interface TiltCardProps {
 
 export function TiltCard({ children, className = "", intensity = 15 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   
   const x = useSpring(0, { stiffness: 300, damping: 30 });
   const y = useSpring(0, { stiffness: 300, damping: 30 });
@@ -39,8 +40,12 @@ export function TiltCard({ children, className = "", intensity = 15 }: TiltCardP
     y.set(0);
   };
 
+  if (shouldReduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
-    <motion.div
+    <m.div
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -51,9 +56,9 @@ export function TiltCard({ children, className = "", intensity = 15 }: TiltCardP
       }}
       className={`relative perspective-1000 ${className}`}
     >
-      <div style={{ transform: "translateZ(30px)" }} className="w-full h-full">
+      <div style={{ transform: "translateZ(30px)", willChange: "transform" }} className="w-full h-full">
         {children}
       </div>
-    </motion.div>
+    </m.div>
   );
 }
