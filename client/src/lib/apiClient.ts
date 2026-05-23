@@ -138,12 +138,6 @@ const realClient = {
   },
 } as const;
 
-export let apiClient: typeof realClient = realClient;
-
-if (import.meta.env.DEV) {
-  void import("./mockApi").then(({ createMockApiClient }) => {
-    apiClient = createMockApiClient();
-  });
-}
+export const apiClient = realClient;
 
 export { APIError };

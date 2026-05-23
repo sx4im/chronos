@@ -7,7 +7,18 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
-import { insertUserSchema, type User } from "../shared/schema";
+import {
+  collectionInputSchema,
+  collectionUpdateSchema,
+  insertUserSchema,
+  pantryItemInputSchema,
+  profileUpdateSchema,
+  settingsUpdateSchema,
+  shoppingListInputSchema,
+  shoppingListItemInputSchema,
+  shoppingListItemUpdateSchema,
+  type User,
+} from "../shared/schema";
 import { extractIngredientsFromImage, recommendRecipes } from "./lib/ai";
 
 const authRegisterSchema = insertUserSchema.pick({
@@ -24,14 +35,30 @@ const authLoginSchema = z.object({
   password: z.string().min(1),
 });
 
-function toClientUser(user: User) {
+function toClientUser(user: User, profile?: { bio?: string | null; location?: string | null; website?: string | null; avatarUrl?: string | null }) {
   const { password: _, ...userWithoutPassword } = user;
   return {
     ...userWithoutPassword,
     email: user.email ?? "",
     role: "user" as const,
     joinDate: new Date().toISOString(),
+    bio: profile?.bio ?? "",
+    location: profile?.location ?? "",
+    website: profile?.website ?? "",
+    avatar: profile?.avatarUrl ?? undefined,
   };
+}
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  const authenticated = typeof req.isAuthenticated === "function" && req.isAuthenticated();
+  if (!authenticated || !req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  return next();
+}
+
+function getAuthUserId(req: Request): string {
+  return (req.user as User).id;
 }
 
 // Passport configuration
@@ -358,20 +385,24 @@ const recipesDatabase = [
   }
 ];
 
-const userProfiles = [
-  {
-    id: "user1",
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    joinDate: "2024-01-15",
-    stats: {
-      savedRecipes: 24,
-      cookedRecipes: 18,
-      collections: 3,
-      followers: 45
-    }
-  }
-];
+function findRecipeSummary(recipeId: string) {
+  const recipe = recipesDatabase.find((r) => r.id === recipeId || r.slug === recipeId);
+  if (!recipe) return null;
+  return {
+    id: recipe.id,
+    slug: recipe.slug,
+    title: recipe.title,
+    description: recipe.description,
+    image: recipe.image,
+    cookTime: recipe.cookTime,
+    prepTime: recipe.prepTime,
+    servings: recipe.servings,
+    difficulty: recipe.difficulty,
+    rating: recipe.rating,
+    reviewCount: recipe.reviewCount,
+    tags: recipe.tags,
+  };
+}
 
 const ingredientsQuerySchema = z.object({
   q: z.string().min(1).optional()
@@ -445,6 +476,14 @@ function parseDelimitedQueryList(value: unknown): string[] {
     .map((item) => item.trim().toLowerCase().slice(0, MAX_QUERY_VALUE_LENGTH))
     .filter(Boolean)
     .slice(0, MAX_QUERY_ITEMS);
+}
+
+function csvEscape(value: unknown): string {
+  const str = String(value ?? "");
+  if (/[",\n\r]/.test(str)) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
 }
 
 function safeCompare(secret: string, provided: string): boolean {
@@ -720,19 +759,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save recipe endpoint
-  app.post("/api/recipe/:id/save", externalApiRateLimit, (req, res) => {
+  app.post("/api/recipe/:id/save", externalApiRateLimit, requireAuth, async (req, res, next) => {
     try {
+      const userId = getAuthUserId(req);
       const { id } = req.params;
-      const recipe = recipesDatabase.find(r => r.id === id);
-      
+      const recipe = recipesDatabase.find((r) => r.id === id || r.slug === id);
       if (!recipe) {
         return res.status(404).json({ message: "Recipe not found" });
       }
-      
-      // In a real app, this would save to user's favorites
-      res.json({ message: "Recipe saved successfully", recipeId: id });
+      await storage.addFavorite(userId, recipe.id);
+      res.json({ success: true, recipeId: recipe.id, saved: true });
     } catch (error) {
-      res.status(400).json({ message: "Invalid recipe ID" });
+      next(error);
+    }
+  });
+
+  app.post("/api/recipe/:id/unsave", externalApiRateLimit, requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const { id } = req.params;
+      const recipe = recipesDatabase.find((r) => r.id === id || r.slug === id);
+      const recipeId = recipe?.id ?? id;
+      await storage.removeFavorite(userId, recipeId);
+      res.json({ success: true, recipeId, saved: false });
+    } catch (error) {
+      next(error);
     }
   });
 
@@ -761,65 +812,569 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Profile endpoint
-  app.get("/api/profile", (req, res) => {
-    // In a real app, this would get the current user from session
-    const profile = userProfiles[0];
-    res.json(profile);
+  app.get("/api/profile", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const profile = await storage.getProfile(userId);
+      const [favoriteRows, collectionRows] = await Promise.all([
+        storage.listFavorites(userId),
+        storage.listCollections(userId),
+      ]);
+      res.json({
+        ...toClientUser(user, profile),
+        stats: {
+          savedRecipes: favoriteRows.length,
+          cookedRecipes: 0,
+          collections: collectionRows.length,
+          followers: 0,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
-  // User's saved recipes
-  app.get("/api/profile/saved-recipes", (req, res) => {
-    // Return subset of recipes as "saved"
-    const savedRecipes = recipesDatabase.slice(0, 2).map(recipe => ({
-      id: recipe.id,
-      title: recipe.title,
-      image: recipe.image,
-      cookTime: recipe.cookTime,
-      rating: recipe.rating,
-      reviewCount: recipe.reviewCount,
-      tags: recipe.tags
-    }));
-    
-    res.json(savedRecipes);
+  app.put("/api/profile", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const updates = profileUpdateSchema.parse(req.body);
+
+      const userPatch: { name?: string; email?: string | null } = {};
+      if (updates.name !== undefined) userPatch.name = updates.name;
+      if (updates.email !== undefined) userPatch.email = updates.email === "" ? null : updates.email;
+
+      const updatedUser = await storage.updateUser(userId, userPatch);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const profilePatch = {
+        bio: updates.bio,
+        location: updates.location,
+        website: updates.website,
+        avatarUrl: updates.avatarUrl,
+      };
+      const profile = await storage.upsertProfile(userId, profilePatch);
+
+      res.json(toClientUser(updatedUser, profile));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      next(error);
+    }
   });
 
-  // User's recent recipes
-  app.get("/api/profile/recent-recipes", (req, res) => {
-    const recentRecipes = recipesDatabase.slice(0, 3).map(recipe => ({
-      id: recipe.id,
-      title: recipe.title,
-      image: recipe.image,
-      cookTime: recipe.cookTime,
-      rating: recipe.rating,
-      reviewCount: recipe.reviewCount,
-      tags: recipe.tags,
-      lastCooked: "2 days ago"
-    }));
-    
-    res.json(recentRecipes);
+  // User's saved recipes (favorites)
+  app.get("/api/profile/saved-recipes", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const rows = await storage.listFavorites(userId);
+      const recipes = rows
+        .map((row) => {
+          const summary = findRecipeSummary(row.recipeId);
+          if (!summary) return null;
+          return { ...summary, savedAt: row.createdAt };
+        })
+        .filter((value): value is NonNullable<typeof value> => value !== null);
+      res.json(recipes);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // User's recent recipes — currently returns last saved recipes ordered by save time
+  app.get("/api/profile/recent-recipes", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const rows = await storage.listFavorites(userId);
+      const recipes = rows
+        .slice(0, 5)
+        .map((row) => {
+          const summary = findRecipeSummary(row.recipeId);
+          if (!summary) return null;
+          return { ...summary, lastCooked: row.createdAt };
+        })
+        .filter((value): value is NonNullable<typeof value> => value !== null);
+      res.json(recipes);
+    } catch (error) {
+      next(error);
+    }
   });
 
   // User's collections
-  app.get("/api/profile/collections", (req, res) => {
-    const collections = [
-      {
-        id: "quick-meals",
-        name: "Quick Weeknight Meals",
-        description: "Fast and easy recipes for busy weeknights",
-        recipeCount: 12,
-        isPublic: true
-      },
-      {
-        id: "healthy-options",
-        name: "Healthy Options",
-        description: "Nutritious recipes for a balanced diet",
-        recipeCount: 8,
-        isPublic: false
-      }
-    ];
-    
-    res.json(collections);
+  app.get("/api/profile/collections", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const rows = await storage.listCollections(userId);
+      const withCounts = await Promise.all(
+        rows.map(async (collection) => {
+          const recipeIds = await storage.listCollectionRecipes(collection.id);
+          return {
+            id: collection.id,
+            name: collection.name,
+            description: collection.description,
+            isPublic: collection.isPublic,
+            coverImage: collection.coverImage,
+            recipeCount: recipeIds.length,
+            createdAt: collection.createdAt,
+          };
+        }),
+      );
+      res.json(withCounts);
+    } catch (error) {
+      next(error);
+    }
   });
+
+  app.post("/api/profile/collections", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const input = collectionInputSchema.parse(req.body);
+      const collection = await storage.createCollection(userId, {
+        name: input.name,
+        description: input.description,
+        isPublic: input.isPublic,
+        coverImage: input.coverImage ?? null,
+      });
+      res.status(201).json({ ...collection, recipeCount: 0 });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid collection data", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.patch("/api/profile/collections/:id", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const input = collectionUpdateSchema.parse(req.body);
+      const patch: Record<string, unknown> = {};
+      if (input.name !== undefined) patch.name = input.name;
+      if (input.description !== undefined) patch.description = input.description;
+      if (input.isPublic !== undefined) patch.isPublic = input.isPublic;
+      if (input.coverImage !== undefined) patch.coverImage = input.coverImage ?? null;
+
+      const collection = await storage.updateCollection(userId, req.params.id, patch);
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const recipeIds = await storage.listCollectionRecipes(collection.id);
+      res.json({ ...collection, recipeCount: recipeIds.length });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid collection data", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.delete("/api/profile/collections/:id", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const removed = await storage.deleteCollection(userId, req.params.id);
+      if (!removed) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/profile/collections/:id/recipes", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const collection = await storage.getCollection(userId, req.params.id);
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const recipeIds = await storage.listCollectionRecipes(collection.id);
+      const recipes = recipeIds
+        .map((id) => findRecipeSummary(id))
+        .filter((value): value is NonNullable<typeof value> => value !== null);
+      res.json({ collection, recipes });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/profile/collections/:id/recipes", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const collection = await storage.getCollection(userId, req.params.id);
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const body = z.object({ recipeId: z.string().trim().min(1).max(200) }).parse(req.body);
+      await storage.addCollectionRecipe(collection.id, body.recipeId);
+      res.status(201).json({ success: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.delete("/api/profile/collections/:id/recipes/:recipeId", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const collection = await storage.getCollection(userId, req.params.id);
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      const removed = await storage.removeCollectionRecipe(collection.id, req.params.recipeId);
+      if (!removed) {
+        return res.status(404).json({ message: "Recipe not in collection" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Favorites
+  app.get("/api/favorites", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const rows = await storage.listFavorites(userId);
+      res.json(rows.map((row) => ({ recipeId: row.recipeId, savedAt: row.createdAt })));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Settings
+  app.get("/api/settings", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const settings = await storage.getSettings(userId);
+      if (!settings) {
+        return res.json({
+          notifications: {},
+          privacy: {},
+          cookingPreferences: {},
+          accessibility: {},
+          dataSync: {},
+          updatedAt: null,
+        });
+      }
+      res.json({
+        notifications: settings.notifications ?? {},
+        privacy: settings.privacy ?? {},
+        cookingPreferences: settings.cookingPreferences ?? {},
+        accessibility: settings.accessibility ?? {},
+        dataSync: settings.dataSync ?? {},
+        updatedAt: settings.updatedAt,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/settings", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const input = settingsUpdateSchema.parse(req.body);
+      const settings = await storage.upsertSettings(userId, input);
+      res.json({
+        notifications: settings.notifications ?? {},
+        privacy: settings.privacy ?? {},
+        cookingPreferences: settings.cookingPreferences ?? {},
+        accessibility: settings.accessibility ?? {},
+        dataSync: settings.dataSync ?? {},
+        updatedAt: settings.updatedAt,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid settings data", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  // Pantry
+  app.get("/api/pantry", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const items = await storage.listPantryItems(userId);
+      res.json(items);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/pantry", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const input = pantryItemInputSchema.parse(req.body);
+      const item = await storage.createPantryItem(userId, {
+        name: input.name,
+        quantity: input.quantity,
+        unit: input.unit,
+        category: input.category,
+        expiryDate: input.expiryDate ? new Date(input.expiryDate) : null,
+        thumbnail: input.thumbnail ?? null,
+      });
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid pantry item", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.patch("/api/pantry/:id", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const input = pantryItemInputSchema.partial().parse(req.body);
+      const patch: Record<string, unknown> = {};
+      if (input.name !== undefined) patch.name = input.name;
+      if (input.quantity !== undefined) patch.quantity = input.quantity;
+      if (input.unit !== undefined) patch.unit = input.unit;
+      if (input.category !== undefined) patch.category = input.category;
+      if (input.expiryDate !== undefined) patch.expiryDate = input.expiryDate ? new Date(input.expiryDate) : null;
+      if (input.thumbnail !== undefined) patch.thumbnail = input.thumbnail ?? null;
+
+      const item = await storage.updatePantryItem(userId, req.params.id, patch);
+      if (!item) {
+        return res.status(404).json({ message: "Pantry item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid pantry item", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.delete("/api/pantry/:id", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const removed = await storage.deletePantryItem(userId, req.params.id);
+      if (!removed) {
+        return res.status(404).json({ message: "Pantry item not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Shopping Lists
+  app.get("/api/shopping-lists", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const lists = await storage.listShoppingLists(userId);
+      const withCounts = await Promise.all(
+        lists.map(async (list) => {
+          const items = await storage.listShoppingListItems(list.id);
+          return {
+            id: list.id,
+            name: list.name,
+            recipeCount: (list.recipeIds ?? []).length,
+            itemCount: items.length,
+            createdAt: list.createdAt,
+          };
+        }),
+      );
+      res.json(withCounts);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/shopping-lists", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const input = shoppingListInputSchema.parse(req.body);
+      const list = await storage.createShoppingList(userId, input.name, input.recipeIds);
+      res.status(201).json({ ...list, items: [] });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid shopping list", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.get("/api/shopping-lists/:id", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const list = await storage.getShoppingList(userId, req.params.id);
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      const items = await storage.listShoppingListItems(list.id);
+      const recipes = (list.recipeIds ?? [])
+        .map((id) => {
+          const summary = findRecipeSummary(id);
+          if (summary) return { id: summary.id, title: summary.title };
+          return { id, title: "Unknown Recipe" };
+        });
+      const formattedItems = items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        normalizedName: item.name.toLowerCase(),
+        totalAmount: item.amount,
+        unit: item.unit,
+        category: item.category,
+        isPurchased: item.isPurchased,
+        recipes: [],
+        conversions: [],
+      }));
+      res.json({
+        id: list.id,
+        name: list.name,
+        recipes,
+        items: formattedItems,
+        createdAt: list.createdAt,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.patch("/api/shopping-lists/:id", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const input = shoppingListInputSchema.partial().parse(req.body);
+      const list = await storage.updateShoppingList(userId, req.params.id, input);
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      res.json(list);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid shopping list", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  app.delete("/api/shopping-lists/:id", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const removed = await storage.deleteShoppingList(userId, req.params.id);
+      if (!removed) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/shopping-lists/:id/items", requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      const list = await storage.getShoppingList(userId, req.params.id);
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      const input = shoppingListItemInputSchema.parse(req.body);
+      const item = await storage.createShoppingListItem(list.id, {
+        name: input.name,
+        amount: input.amount ?? "",
+        unit: input.unit,
+        category: input.category,
+        isPurchased: input.isPurchased,
+      });
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid shopping list item", errors: error.errors });
+      }
+      next(error);
+    }
+  });
+
+  // Accept both /api/shopping-lists/:id/items/:itemId and the legacy
+  // singular /api/shopping-list/:id/items/:itemId (used by existing
+  // shopping-list components / tests).
+  const shoppingItemUpdate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = getAuthUserId(req);
+      const list = await storage.getShoppingList(userId, req.params.id);
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      const input = shoppingListItemUpdateSchema.parse(req.body);
+      const patch: Record<string, unknown> = {};
+      if (input.name !== undefined) patch.name = input.name;
+      if (input.amount !== undefined) patch.amount = input.amount ?? "";
+      if (input.unit !== undefined) patch.unit = input.unit;
+      if (input.category !== undefined) patch.category = input.category;
+      if (input.isPurchased !== undefined) patch.isPurchased = input.isPurchased;
+
+      const item = await storage.updateShoppingListItem(list.id, req.params.itemId, patch);
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid shopping list item", errors: error.errors });
+      }
+      next(error);
+    }
+  };
+  app.patch("/api/shopping-lists/:id/items/:itemId", requireAuth, shoppingItemUpdate);
+  app.patch("/api/shopping-list/:id/items/:itemId", requireAuth, shoppingItemUpdate);
+
+  const shoppingItemDelete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = getAuthUserId(req);
+      const list = await storage.getShoppingList(userId, req.params.id);
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      const removed = await storage.deleteShoppingListItem(list.id, req.params.itemId);
+      if (!removed) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
+  app.delete("/api/shopping-lists/:id/items/:itemId", requireAuth, shoppingItemDelete);
+  app.delete("/api/shopping-list/:id/items/:itemId", requireAuth, shoppingItemDelete);
+
+  const shoppingListExport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = getAuthUserId(req);
+      const list = await storage.getShoppingList(userId, req.params.id);
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      const format = z.object({ format: z.enum(["csv", "email"]).default("csv") }).parse(req.body).format;
+      const items = await storage.listShoppingListItems(list.id);
+      if (format === "csv") {
+        const csv = ["name,amount,unit,category,purchased"]
+          .concat(items.map((item) => [item.name, item.amount, item.unit, item.category, item.isPurchased].map(csvEscape).join(",")))
+          .join("\n");
+        res.json({ success: true, format: "csv", filename: `shopping-list-${list.id}.csv`, content: csv });
+        return;
+      }
+      res.json({ success: true, format: "email", message: "Shopping list will be emailed to your account." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid export request", errors: error.errors });
+      }
+      next(error);
+    }
+  };
+  app.post("/api/shopping-lists/:id/export", requireAuth, shoppingListExport);
+  app.post("/api/shopping-list/:id/export", requireAuth, shoppingListExport);
 
   // Admin endpoints
   app.get("/api/admin/stats", adminRateLimit, requireAdmin, (req, res) => {
@@ -1040,11 +1595,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get('/api/auth/me', (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Unauthorized' });
+  app.get('/api/auth/me', async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const user = req.user as User;
+      const profile = await storage.getProfile(user.id);
+      res.json(toClientUser(user, profile));
+    } catch (error) {
+      next(error);
     }
-    res.json(toClientUser(req.user as User));
+  });
+
+  app.delete('/api/auth/account', requireAuth, async (req, res, next) => {
+    try {
+      const userId = getAuthUserId(req);
+      await storage.deleteUser(userId);
+      req.logout((err) => {
+        if (err) {
+          return next(err);
+        }
+        req.session.destroy((destroyErr) => {
+          if (destroyErr) {
+            return next(destroyErr);
+          }
+          res.json({ success: true });
+        });
+      });
+    } catch (error) {
+      next(error);
+    }
   });
 
   const httpServer = createServer(app);

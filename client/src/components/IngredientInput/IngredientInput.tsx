@@ -306,9 +306,8 @@ export function IngredientInput({
     });
   }, [addIngredient]);
 
-  const handleImageAttach = useCallback((imageId: string, chipIndex?: number) => {
-    // This could be used to attach images to specific ingredient chips
-    console.log(`Attaching image ${imageId} to chip at index ${chipIndex}`);
+  const handleImageAttach = useCallback((_imageId: string, _chipIndex?: number) => {
+    // Hook for future per-chip image attachment.
   }, []);
 
   const openImageModal = useCallback(() => {

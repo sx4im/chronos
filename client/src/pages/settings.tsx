@@ -7,9 +7,24 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { useAppStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useSettings,
+  useUpdateSettings,
+  useUpdateProfile,
+  useDeleteAccount,
+} from "@/lib/api-hooks";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   User, 
   Mail, 
@@ -48,16 +63,32 @@ import {
 } from "lucide-react";
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
-  
+  const { data: settings, isLoading: settingsLoading } = useSettings();
+  const updateSettings = useUpdateSettings();
+  const updateProfile = useUpdateProfile();
+  const deleteAccount = useDeleteAccount();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = React.useState("");
+
   const [profileData, setProfileData] = React.useState({
     name: user?.name || "",
     email: user?.email || "",
-    bio: "",
-    location: "",
-    website: "",
+    bio: (user as any)?.bio || "",
+    location: (user as any)?.location || "",
+    website: (user as any)?.website || "",
   });
+
+  React.useEffect(() => {
+    setProfileData({
+      name: user?.name || "",
+      email: user?.email || "",
+      bio: (user as any)?.bio || "",
+      location: (user as any)?.location || "",
+      website: (user as any)?.website || "",
+    });
+  }, [user]);
 
   const [notifications, setNotifications] = React.useState({
     emailNotifications: true,
@@ -107,48 +138,67 @@ export default function Settings() {
     lastSync: new Date().toISOString(),
   });
 
+  React.useEffect(() => {
+    if (!settings) return;
+    if (settings.notifications && Object.keys(settings.notifications).length > 0) {
+      setNotifications((prev) => ({ ...prev, ...(settings.notifications as any) }));
+    }
+    if (settings.privacy && Object.keys(settings.privacy).length > 0) {
+      setPrivacy((prev) => ({ ...prev, ...(settings.privacy as any) }));
+    }
+    if (settings.cookingPreferences && Object.keys(settings.cookingPreferences).length > 0) {
+      setCookingPreferences((prev) => ({ ...prev, ...(settings.cookingPreferences as any) }));
+    }
+    if (settings.accessibility && Object.keys(settings.accessibility).length > 0) {
+      setAccessibility((prev) => ({ ...prev, ...(settings.accessibility as any) }));
+    }
+    if (settings.dataSync && Object.keys(settings.dataSync).length > 0) {
+      setDataSync((prev) => ({ ...prev, ...(settings.dataSync as any) }));
+    }
+  }, [settings]);
+
+  const persistSection = (
+    key: "notifications" | "privacy" | "cookingPreferences" | "accessibility" | "dataSync",
+    value: Record<string, unknown>,
+    successTitle: string,
+  ) => {
+    updateSettings.mutate({ [key]: value } as any, {
+      onSuccess: () => toast({ title: successTitle }),
+      onError: () =>
+        toast({ title: "Could not save", description: "Please try again.", variant: "destructive" }),
+    });
+  };
+
   const handleSaveProfile = () => {
-    // In a real app, this would make an API call
-    toast({
-      title: "Profile updated!",
-      description: "Your profile has been saved successfully.",
-    });
+    updateProfile.mutate(
+      {
+        name: profileData.name.trim(),
+        email: profileData.email.trim(),
+        bio: profileData.bio.trim(),
+        location: profileData.location.trim(),
+        website: profileData.website.trim(),
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Profile updated!", description: "Your profile has been saved successfully." });
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Could not save profile",
+            description: error?.message ?? "Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
-  const handleSaveNotifications = () => {
-    toast({
-      title: "Notifications updated!",
-      description: "Your notification preferences have been saved.",
-    });
-  };
-
-  const handleSavePrivacy = () => {
-    toast({
-      title: "Privacy settings updated!",
-      description: "Your privacy preferences have been saved.",
-    });
-  };
-
-  const handleSaveCookingPreferences = () => {
-    toast({
-      title: "Cooking preferences updated!",
-      description: "Your cooking settings have been saved.",
-    });
-  };
-
-  const handleSaveAccessibility = () => {
-    toast({
-      title: "Accessibility settings updated!",
-      description: "Your accessibility preferences have been saved.",
-    });
-  };
-
-  const handleSaveDataSync = () => {
-    toast({
-      title: "Sync settings updated!",
-      description: "Your data sync preferences have been saved.",
-    });
-  };
+  const handleSaveNotifications = () => persistSection("notifications", notifications, "Notifications updated!");
+  const handleSavePrivacy = () => persistSection("privacy", privacy, "Privacy settings updated!");
+  const handleSaveCookingPreferences = () =>
+    persistSection("cookingPreferences", cookingPreferences, "Cooking preferences updated!");
+  const handleSaveAccessibility = () => persistSection("accessibility", accessibility, "Accessibility settings updated!");
+  const handleSaveDataSync = () => persistSection("dataSync", dataSync, "Sync settings updated!");
 
   const handleExportData = () => {
     const data = {
@@ -205,9 +255,35 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = () => {
-    toast({
-      title: "Feature coming soon",
-      description: "Account deletion will be available soon.",
+    setConfirmDeleteOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmation.trim().toUpperCase() !== "DELETE") {
+      toast({
+        title: "Confirmation required",
+        description: "Type DELETE to confirm.",
+        variant: "destructive",
+      });
+      return;
+    }
+    deleteAccount.mutate(undefined, {
+      onSuccess: () => {
+        toast({
+          title: "Account deleted",
+          description: "Your account and all data have been removed.",
+        });
+        setConfirmDeleteOpen(false);
+        logout();
+        window.location.href = "/";
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Could not delete account",
+          description: error?.message ?? "Please try again.",
+          variant: "destructive",
+        });
+      },
     });
   };
 
@@ -992,6 +1068,42 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      <AlertDialog
+        open={confirmDeleteOpen}
+        onOpenChange={(open) => {
+          setConfirmDeleteOpen(open);
+          if (!open) setDeleteConfirmation("");
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes your account, profile, favorites, pantry items, shopping lists, collections, and settings.
+              This action cannot be undone. Type DELETE below to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirmation}
+            onChange={(e) => setDeleteConfirmation(e.target.value)}
+            placeholder="Type DELETE to confirm"
+            aria-label="Type DELETE to confirm account deletion"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={deleteAccount.isPending}
+            >
+              {deleteAccount.isPending ? "Deleting…" : "Delete account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

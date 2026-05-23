@@ -7,27 +7,53 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  User, 
-  Heart, 
-  BookOpen, 
-  TrendingUp, 
-  Clock, 
-  Star, 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  useCreateCollection,
+  useDeleteCollection,
+  useUpdateProfile,
+} from "@/lib/api-hooks";
+import {
+  Heart,
+  BookOpen,
+  Clock,
+  Star,
   Settings,
   ChefHat,
-  ShoppingCart,
   Filter,
   SortAsc,
+  Trash2,
 } from "lucide-react";
 import { ShoppingListManager } from "@/components/ShoppingList/ShoppingListManager";
-import { ScrollReveal, FadeUp, FadeLeft, FadeRight, SlowFadeUp } from "@/components/ScrollReveal";
+import { ScrollReveal, FadeUp, SlowFadeUp } from "@/components/ScrollReveal";
 
 interface UserProfile {
   id: string;
   name: string;
   email: string;
   avatar?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
   joinDate: string;
   stats: {
     savedRecipes: number;
@@ -58,6 +84,10 @@ interface Collection {
 }
 
 export default function Profile() {
+  const { toast } = useToast();
+  const updateProfile = useUpdateProfile();
+  const createCollection = useCreateCollection();
+  const deleteCollection = useDeleteCollection();
 
   const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: ['/api/profile'],
@@ -74,6 +104,126 @@ export default function Profile() {
   const { data: collections, isLoading: collectionsLoading } = useQuery<Collection[]>({
     queryKey: ['/api/profile/collections'],
   });
+
+  const [editProfileOpen, setEditProfileOpen] = React.useState(false);
+  const [profileDraft, setProfileDraft] = React.useState({
+    name: "",
+    email: "",
+    bio: "",
+    location: "",
+    website: "",
+  });
+
+  React.useEffect(() => {
+    if (profile && editProfileOpen) {
+      setProfileDraft({
+        name: profile.name ?? "",
+        email: profile.email ?? "",
+        bio: profile.bio ?? "",
+        location: profile.location ?? "",
+        website: profile.website ?? "",
+      });
+    }
+  }, [profile, editProfileOpen]);
+
+  const [createCollectionOpen, setCreateCollectionOpen] = React.useState(false);
+  const [collectionDraft, setCollectionDraft] = React.useState({ name: "", description: "", isPublic: false });
+
+  const [savedDifficultyFilter, setSavedDifficultyFilter] = React.useState<string>("all");
+  const [savedSort, setSavedSort] = React.useState<string>("recent");
+  const [savedSortOrder, setSavedSortOrder] = React.useState<"asc" | "desc">("desc");
+
+  const filteredSavedRecipes = React.useMemo(() => {
+    if (!savedRecipes) return savedRecipes;
+    const filtered = savedRecipes.filter((recipe) => {
+      if (savedDifficultyFilter === "all") return true;
+      return (recipe as any).difficulty?.toLowerCase() === savedDifficultyFilter.toLowerCase();
+    });
+    const sorted = [...filtered].sort((a, b) => {
+      let comparison = 0;
+      switch (savedSort) {
+        case "title":
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case "cookTime":
+          comparison = (a.cookTime ?? 0) - (b.cookTime ?? 0);
+          break;
+        case "rating":
+          comparison = (a.rating ?? 0) - (b.rating ?? 0);
+          break;
+        case "recent":
+        default:
+          comparison = 0;
+          break;
+      }
+      return savedSortOrder === "asc" ? comparison : -comparison;
+    });
+    return sorted;
+  }, [savedRecipes, savedDifficultyFilter, savedSort, savedSortOrder]);
+
+  const submitProfile = () => {
+    updateProfile.mutate(
+      {
+        name: profileDraft.name.trim(),
+        email: profileDraft.email.trim(),
+        bio: profileDraft.bio.trim(),
+        location: profileDraft.location.trim(),
+        website: profileDraft.website.trim(),
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Profile updated!", description: "Your profile has been saved." });
+          setEditProfileOpen(false);
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Could not save profile",
+            description: error?.message ?? "Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  const submitCollection = () => {
+    if (!collectionDraft.name.trim()) {
+      toast({ title: "Name required", description: "Please give your collection a name.", variant: "destructive" });
+      return;
+    }
+    createCollection.mutate(
+      {
+        name: collectionDraft.name.trim(),
+        description: collectionDraft.description.trim(),
+        isPublic: collectionDraft.isPublic,
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Collection created", description: `${collectionDraft.name} is ready.` });
+          setCollectionDraft({ name: "", description: "", isPublic: false });
+          setCreateCollectionOpen(false);
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Could not create collection",
+            description: error?.message ?? "Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  const handleDeleteCollection = (id: string, name: string) => {
+    deleteCollection.mutate(id, {
+      onSuccess: () => {
+        toast({ title: "Collection deleted", description: `${name} has been removed.` });
+      },
+      onError: () => {
+        toast({ title: "Could not delete collection", variant: "destructive" });
+      },
+    });
+  };
 
   if (profileLoading) {
     return (
@@ -131,7 +281,7 @@ export default function Profile() {
               <p className="text-muted-foreground mb-4">{profile.email}</p>
             </div>
 
-            <Button data-testid="edit-profile" onClick={() => alert('Edit Profile functionality coming soon!')}>
+            <Button data-testid="edit-profile" onClick={() => setEditProfileOpen(true)}>
               <Settings className="mr-2 size-4" />
               Edit Profile
             </Button>
@@ -201,21 +351,36 @@ export default function Profile() {
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-serif font-medium text-foreground">Saved Recipes</h2>
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Select value={savedDifficultyFilter} onValueChange={setSavedDifficultyFilter}>
+                    <SelectTrigger className="w-36">
+                      <Filter className="size-4 mr-2" />
+                      <SelectValue placeholder="Difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={savedSort} onValueChange={setSavedSort}>
+                    <SelectTrigger className="w-36">
+                      <SortAsc className="size-4 mr-2" />
+                      <SelectValue placeholder="Sort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Recently saved</SelectItem>
+                      <SelectItem value="title">Title</SelectItem>
+                      <SelectItem value="cookTime">Cook time</SelectItem>
+                      <SelectItem value="rating">Rating</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
                     size="sm"
-                    onClick={() => alert('Filter functionality coming soon!')}
+                    onClick={() => setSavedSortOrder((order) => (order === "asc" ? "desc" : "asc"))}
                   >
-                    <Filter className="size-4 mr-2" />
-                    Filter
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => alert('Sort functionality coming soon!')}
-                  >
-                    <SortAsc className="size-4 mr-2" />
-                    Sort
+                    {savedSortOrder === "asc" ? "Asc" : "Desc"}
                   </Button>
                 </div>
               </div>
@@ -233,9 +398,9 @@ export default function Profile() {
                   </Card>
                 ))}
               </div>
-            ) : savedRecipes && savedRecipes.length > 0 ? (
+            ) : filteredSavedRecipes && filteredSavedRecipes.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {savedRecipes.map((recipe, index) => (
+                {filteredSavedRecipes.map((recipe, index) => (
                   <ScrollReveal key={recipe.id} preset="fadeUp" >
                     <Card className="overflow-hidden hover:shadow-md transition-shadow">
                       {recipe.image && (
@@ -371,7 +536,7 @@ export default function Profile() {
                 <h2 className="text-2xl font-bold text-white">My Collections</h2>
                 <Button 
                   data-testid="create-collection"
-                  onClick={() => alert('Create collection functionality coming soon!')}
+                  onClick={() => setCreateCollectionOpen(true)}
                 >
                   <BookOpen className="mr-2 size-4" />
                   New Collection
@@ -410,9 +575,20 @@ export default function Profile() {
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="font-semibold">{collection.name}</h3>
-                          <Badge variant={collection.isPublic ? "default" : "secondary"} className="text-xs">
-                            {collection.isPublic ? "Public" : "Private"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={collection.isPublic ? "default" : "secondary"} className="text-xs">
+                              {collection.isPublic ? "Public" : "Private"}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              onClick={() => handleDeleteCollection(collection.id, collection.name)}
+                              aria-label={`Delete ${collection.name}`}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                           {collection.description}
@@ -436,7 +612,7 @@ export default function Profile() {
                     </p>
                     <Button 
                       data-testid="create-first-collection"
-                      onClick={() => alert('Create collection functionality coming soon!')}
+                      onClick={() => setCreateCollectionOpen(true)}
                     >
                       Create Your First Collection
                     </Button>
@@ -455,6 +631,126 @@ export default function Profile() {
         </FadeUp>
         </div>
       </div>
+
+      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit profile</DialogTitle>
+            <DialogDescription>Update your profile details. These are visible on your public profile.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="profile-name">Name</Label>
+              <Input
+                id="profile-name"
+                value={profileDraft.name}
+                onChange={(e) => setProfileDraft((d) => ({ ...d, name: e.target.value }))}
+                maxLength={80}
+              />
+            </div>
+            <div>
+              <Label htmlFor="profile-email">Email</Label>
+              <Input
+                id="profile-email"
+                type="email"
+                value={profileDraft.email}
+                onChange={(e) => setProfileDraft((d) => ({ ...d, email: e.target.value }))}
+                maxLength={254}
+              />
+            </div>
+            <div>
+              <Label htmlFor="profile-bio">Bio</Label>
+              <Textarea
+                id="profile-bio"
+                value={profileDraft.bio}
+                onChange={(e) => setProfileDraft((d) => ({ ...d, bio: e.target.value }))}
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="profile-location">Location</Label>
+                <Input
+                  id="profile-location"
+                  value={profileDraft.location}
+                  onChange={(e) => setProfileDraft((d) => ({ ...d, location: e.target.value }))}
+                  maxLength={120}
+                />
+              </div>
+              <div>
+                <Label htmlFor="profile-website">Website</Label>
+                <Input
+                  id="profile-website"
+                  type="url"
+                  value={profileDraft.website}
+                  onChange={(e) => setProfileDraft((d) => ({ ...d, website: e.target.value }))}
+                  placeholder="https://example.com"
+                  maxLength={255}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditProfileOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitProfile} disabled={updateProfile.isPending}>
+              {updateProfile.isPending ? "Saving…" : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createCollectionOpen} onOpenChange={setCreateCollectionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create collection</DialogTitle>
+            <DialogDescription>Group recipes together for easier discovery.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="collection-name">Name</Label>
+              <Input
+                id="collection-name"
+                value={collectionDraft.name}
+                onChange={(e) => setCollectionDraft((d) => ({ ...d, name: e.target.value }))}
+                placeholder="e.g., Weeknight dinners"
+                maxLength={120}
+              />
+            </div>
+            <div>
+              <Label htmlFor="collection-description">Description</Label>
+              <Textarea
+                id="collection-description"
+                value={collectionDraft.description}
+                onChange={(e) => setCollectionDraft((d) => ({ ...d, description: e.target.value }))}
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="collection-public">Public</Label>
+                <p className="text-xs text-muted-foreground">Public collections can be shared with anyone via link.</p>
+              </div>
+              <Switch
+                id="collection-public"
+                checked={collectionDraft.isPublic}
+                onCheckedChange={(checked) => setCollectionDraft((d) => ({ ...d, isPublic: checked }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCreateCollectionOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitCollection} disabled={createCollection.isPending}>
+              {createCollection.isPending ? "Creating…" : "Create collection"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

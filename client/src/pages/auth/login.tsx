@@ -188,7 +188,13 @@ export default function Login() {
                 <button
                   type="button"
                   className="text-sm text-primary hover:text-primary/80 transition-colors"
-                  onClick={() => toast({ title: "Feature coming soon", description: "Password reset will be available soon." })}
+                  onClick={() =>
+                    toast({
+                      title: "Password reset",
+                      description:
+                        "Self-serve password reset is not configured for this deployment. Contact an administrator to reset your password.",
+                    })
+                  }
                 >
                   Forgot password?
                 </button>

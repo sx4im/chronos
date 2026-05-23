@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAppStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth-context";
+import { useFavorites, usePantryItems, useShoppingLists, type PantryItem } from "@/lib/api-hooks";
 import { 
   ChefHat, 
   Heart, 
@@ -51,18 +51,20 @@ interface ExpiringItem {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const favoriteRecipes = useAppStore(state => state.favoriteRecipes);
-  const pantryItems = useAppStore(state => state.pantryItems);
-  const shoppingList = useAppStore(state => state.shoppingList);
-  const getExpiringItems = useAppStore(state => state.getExpiringItems);
-  
+  const { data: favorites = [] } = useFavorites();
+  const { data: pantryItems = [] } = usePantryItems();
+  const { data: shoppingLists = [] } = useShoppingLists();
+  const shoppingItemsTotal = React.useMemo(
+    () => shoppingLists.reduce((sum, list) => sum + (list.itemCount ?? 0), 0),
+    [shoppingLists],
+  );
 
-  const [quickStats] = React.useState<QuickStats>({
-    savedRecipes: favoriteRecipes.length,
-    cookedRecipes: 12, // Mock data
+  const quickStats: QuickStats = {
+    savedRecipes: favorites.length,
+    cookedRecipes: favorites.length,
     pantryItems: pantryItems.length,
-    shoppingItems: shoppingList.length,
-  });
+    shoppingItems: shoppingItemsTotal,
+  };
 
   const [recentActivity] = React.useState<RecentActivity[]>([
     {
@@ -99,7 +101,20 @@ export default function Dashboard() {
     }
   ]);
 
-  const expiringItems = getExpiringItems();
+  const expiringItems: Array<PantryItem & { daysLeft: number }> = React.useMemo(() => {
+    const now = Date.now();
+    const horizon = now + 3 * 24 * 60 * 60 * 1000;
+    return pantryItems
+      .filter((item) => !!item.expiryDate)
+      .map((item) => {
+        const expiry = new Date(item.expiryDate as string).getTime();
+        const daysLeft = Math.ceil((expiry - now) / (24 * 60 * 60 * 1000));
+        return { ...item, daysLeft };
+      })
+      .filter(({ daysLeft }) => daysLeft >= 0 && new Date().getTime() <= horizon || daysLeft >= 0)
+      .sort((a, b) => a.daysLeft - b.daysLeft)
+      .slice(0, 10);
+  }, [pantryItems]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
