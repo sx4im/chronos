@@ -66,6 +66,44 @@ describe("server security routes", () => {
     expect(response.status).toBe(200);
   });
 
+  it("requires authentication for the new personal data endpoints", async () => {
+    process.env.NODE_ENV = "test";
+    delete process.env.ADMIN_API_KEY;
+
+    const { server, baseUrl } = await createTestServer();
+
+    const protectedEndpoints: Array<{ method: string; path: string }> = [
+      { method: "GET", path: "/api/profile" },
+      { method: "PUT", path: "/api/profile" },
+      { method: "GET", path: "/api/profile/saved-recipes" },
+      { method: "GET", path: "/api/profile/collections" },
+      { method: "POST", path: "/api/profile/collections" },
+      { method: "GET", path: "/api/favorites" },
+      { method: "GET", path: "/api/pantry" },
+      { method: "POST", path: "/api/pantry" },
+      { method: "GET", path: "/api/shopping-lists" },
+      { method: "POST", path: "/api/shopping-lists" },
+      { method: "GET", path: "/api/settings" },
+      { method: "PUT", path: "/api/settings" },
+      { method: "DELETE", path: "/api/auth/account" },
+    ];
+
+    try {
+      for (const { method, path } of protectedEndpoints) {
+        const response = await fetch(`${baseUrl}${path}`, {
+          method,
+          headers: { "content-type": "application/json" },
+          body: ["GET", "DELETE"].includes(method) ? undefined : JSON.stringify({}),
+        });
+        expect(response.status, `${method} ${path} should require auth`).toBe(401);
+      }
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      });
+    }
+  });
+
   it("creates non-predictable hex image ids for upload signing", async () => {
     process.env.NODE_ENV = "test";
     delete process.env.ADMIN_API_KEY;

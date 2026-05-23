@@ -43,6 +43,24 @@ ALTER TABLE "user_sessions"
 CREATE INDEX IF NOT EXISTS "IDX_user_sessions_expire" ON "user_sessions" ("expire");
 ```
 
+Then push the app schema (users, profiles, settings, favorites, pantry items, shopping lists, collections, etc.) with Drizzle:
+
+```bash
+npm run db:push
+```
+
+## API Surface
+
+Beyond the recipe discovery endpoints, the server persists per-user data through these REST routes (all require an authenticated session):
+
+- `GET/PUT /api/profile` — current user's profile (name, bio, location, website, avatar) plus aggregate stats.
+- `GET/PUT /api/settings` — per-user notification/privacy/cooking/accessibility/sync preferences.
+- `DELETE /api/auth/account` — irreversibly deletes the account and all related rows.
+- `GET /api/favorites`, `POST /api/recipe/:id/save`, `POST /api/recipe/:id/unsave` — favorites.
+- `GET/POST/PATCH/DELETE /api/pantry[/:id]` — pantry items.
+- `GET/POST/PATCH/DELETE /api/shopping-lists[/:id]` and `…/items[/:itemId]` — shopping lists.
+- `GET/POST/PATCH/DELETE /api/profile/collections[/:id]` and `…/recipes[/:recipeId]` — recipe collections.
+
 ## Local Setup
 
 1. Install dependencies:

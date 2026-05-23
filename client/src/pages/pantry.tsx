@@ -7,8 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
+import {
+  usePantryItems,
+  useCreatePantryItem,
+  useUpdatePantryItem,
+  useDeletePantryItem,
+  type PantryItem as ApiPantryItem,
+} from "@/lib/api-hooks";
 import { 
   Plus, 
   Search, 
@@ -26,21 +32,13 @@ import {
   List,
 } from "lucide-react";
 
-interface PantryItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  expiryDate: string;
-  category: string;
-  thumbnail?: string;
-}
+type PantryItem = ApiPantryItem;
 
 export default function Pantry() {
-  const pantryItems = useAppStore(state => state.pantryItems);
-  const addPantryItem = useAppStore(state => state.addPantryItem);
-  const updatePantryItem = useAppStore(state => state.updatePantryItem);
-  const removePantryItem = useAppStore(state => state.removePantryItem);
+  const { data: pantryItems = [] } = usePantryItems();
+  const createPantryItem = useCreatePantryItem();
+  const patchPantryItem = useUpdatePantryItem();
+  const deletePantryItem = useDeletePantryItem();
   const { toast } = useToast();
   
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -83,14 +81,17 @@ export default function Pantry() {
         case "name":
           comparison = a.name.localeCompare(b.name);
           break;
-        case "expiry":
-          comparison = new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+        case "expiry": {
+          const aTime = a.expiryDate ? new Date(a.expiryDate).getTime() : Number.POSITIVE_INFINITY;
+          const bTime = b.expiryDate ? new Date(b.expiryDate).getTime() : Number.POSITIVE_INFINITY;
+          comparison = aTime - bTime;
           break;
+        }
         case "category":
           comparison = a.category.localeCompare(b.category);
           break;
         case "quantity":
-          comparison = a.quantity - b.quantity;
+          comparison = Number(a.quantity || 0) - Number(b.quantity || 0);
           break;
       }
       
@@ -101,40 +102,59 @@ export default function Pantry() {
   }, [pantryItems, searchQuery, selectedCategory, sortBy, sortOrder]);
 
   // Get expiry status
-  const getExpiryStatus = (expiryDate: string): { status: string; color: "default" | "secondary" | "destructive" | "outline"; days: number } => {
+  const getExpiryStatus = (expiryDate: string | null | undefined): { status: string; color: "default" | "secondary" | "destructive" | "outline"; days: number } => {
+    if (!expiryDate) return { status: "unset", color: "outline", days: Number.POSITIVE_INFINITY };
     const today = new Date();
     const expiry = new Date(expiryDate);
     const diffTime = expiry.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return { status: "expired", color: "destructive", days: diffDays };
     if (diffDays <= 1) return { status: "expiring", color: "destructive", days: diffDays };
     if (diffDays <= 3) return { status: "soon", color: "secondary", days: diffDays };
     return { status: "fresh", color: "default", days: diffDays };
   };
 
+  const buildPayload = () => ({
+    name: newItem.name.trim(),
+    quantity: String(newItem.quantity ?? 1),
+    unit: newItem.unit,
+    category: newItem.category,
+    expiryDate: newItem.expiryDate ? new Date(newItem.expiryDate).toISOString() : null,
+  });
+
   const handleAddItem = () => {
-    if (!newItem.name || !newItem.expiryDate) {
+    if (!newItem.name) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields.",
+        description: "Please provide an item name.",
         variant: "destructive",
       });
       return;
     }
 
-    addPantryItem(newItem);
-    setNewItem({
-      name: "",
-      quantity: 1,
-      unit: "pieces",
-      expiryDate: "",
-      category: "vegetables",
-    });
-    setShowAddDialog(false);
-    toast({
-      title: "Item added!",
-      description: `${newItem.name} has been added to your pantry.`,
+    createPantryItem.mutate(buildPayload(), {
+      onSuccess: () => {
+        setNewItem({
+          name: "",
+          quantity: 1,
+          unit: "pieces",
+          expiryDate: "",
+          category: "vegetables",
+        });
+        setShowAddDialog(false);
+        toast({
+          title: "Item added!",
+          description: `${newItem.name} has been added to your pantry.`,
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Could not add item",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+      },
     });
   };
 
@@ -142,43 +162,66 @@ export default function Pantry() {
     setEditingItem(item);
     setNewItem({
       name: item.name,
-      quantity: item.quantity,
+      quantity: Number(item.quantity) || 1,
       unit: item.unit,
-      expiryDate: item.expiryDate,
+      expiryDate: item.expiryDate ? item.expiryDate.slice(0, 10) : "",
       category: item.category,
     });
     setShowAddDialog(true);
   };
 
   const handleUpdateItem = () => {
-    if (!editingItem || !newItem.name || !newItem.expiryDate) return;
+    if (!editingItem || !newItem.name) return;
 
-    updatePantryItem(editingItem.id, newItem);
-    setEditingItem(null);
-    setNewItem({
-      name: "",
-      quantity: 1,
-      unit: "pieces",
-      expiryDate: "",
-      category: "vegetables",
-    });
-    setShowAddDialog(false);
-    toast({
-      title: "Item updated!",
-      description: `${newItem.name} has been updated.`,
-    });
+    patchPantryItem.mutate(
+      { id: editingItem.id, updates: buildPayload() },
+      {
+        onSuccess: () => {
+          setEditingItem(null);
+          setNewItem({
+            name: "",
+            quantity: 1,
+            unit: "pieces",
+            expiryDate: "",
+            category: "vegetables",
+          });
+          setShowAddDialog(false);
+          toast({
+            title: "Item updated!",
+            description: `${newItem.name} has been updated.`,
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Could not update item",
+            description: "Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const handleDeleteItem = (itemId: string, itemName: string) => {
-    removePantryItem(itemId);
-    toast({
-      title: "Item removed",
-      description: `${itemName} has been removed from your pantry.`,
+    deletePantryItem.mutate(itemId, {
+      onSuccess: () => {
+        toast({
+          title: "Item removed",
+          description: `${itemName} has been removed from your pantry.`,
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Could not remove item",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+      },
     });
   };
 
   const getExpiringCount = () => {
-    return pantryItems.filter(item => {
+    return pantryItems.filter((item: PantryItem) => {
       const status = getExpiryStatus(item.expiryDate);
       return status.status === "expiring" || status.status === "expired";
     }).length;
@@ -545,7 +588,7 @@ export default function Pantry() {
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Expires:</span>
-                                <span className="font-medium">{new Date(item.expiryDate).toLocaleDateString()}</span>
+                                <span className="font-medium">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : "—"}</span>
                               </div>
                             </div>
                             

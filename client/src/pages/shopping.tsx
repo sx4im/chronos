@@ -8,8 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useShoppingLists,
+  useCreateShoppingList,
+  useShoppingListItems,
+  useAddShoppingListItem,
+  useUpdateShoppingListItem,
+  useDeleteShoppingListItem,
+  type ShoppingListItem as ApiShoppingItem,
+} from "@/lib/api-hooks";
 import { 
   Plus, 
   Search, 
@@ -39,14 +47,49 @@ interface ShoppingListItem {
   addedDate: string;
 }
 
+const DEFAULT_LIST_NAME = "My Shopping List";
+
 export default function Shopping() {
-  const shoppingList = useAppStore(state => state.shoppingList);
-  const addToShoppingList = useAppStore(state => state.addToShoppingList);
-  const updateShoppingListItem = useAppStore(state => state.updateShoppingListItem);
-  const removeFromShoppingList = useAppStore(state => state.removeFromShoppingList);
-  const togglePurchased = useAppStore(state => state.togglePurchased);
-  const clearPurchased = useAppStore(state => state.clearPurchased);
   const { toast } = useToast();
+  const { data: lists, isLoading: listsLoading } = useShoppingLists();
+  const createList = useCreateShoppingList();
+  const [activeListId, setActiveListId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!lists) return;
+    if (lists.length > 0) {
+      setActiveListId((current) => current ?? lists[0].id);
+    } else if (!createList.isPending) {
+      createList.mutate({ name: DEFAULT_LIST_NAME }, {
+        onSuccess: (created: any) => {
+          if (created?.id) setActiveListId(created.id);
+        },
+      });
+    }
+  }, [lists, createList]);
+
+  const { data: listDetail } = useShoppingListItems(activeListId);
+  const apiItems: ApiShoppingItem[] = React.useMemo(() => {
+    if (!listDetail || !Array.isArray((listDetail as any).items)) return [];
+    return (listDetail as any).items as ApiShoppingItem[];
+  }, [listDetail]);
+
+  const addItemMutation = useAddShoppingListItem(activeListId ?? "");
+  const updateItemMutation = useUpdateShoppingListItem(activeListId ?? "");
+  const deleteItemMutation = useDeleteShoppingListItem(activeListId ?? "");
+
+  const shoppingList: ShoppingListItem[] = React.useMemo(() =>
+    apiItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      quantity: Number(item.amount) || 1,
+      unit: item.unit,
+      category: item.category || "other",
+      isPurchased: item.isPurchased,
+      addedDate: item.createdAt,
+    })),
+    [apiItems],
+  );
   
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState("all");
@@ -122,20 +165,30 @@ export default function Shopping() {
       });
       return;
     }
+    if (!activeListId) {
+      toast({ title: "List not ready", description: "Hold on while we set up your list.", variant: "destructive" });
+      return;
+    }
 
-    addToShoppingList(newItem);
-    setNewItem({
-      name: "",
-      quantity: 1,
-      unit: "pieces",
-      category: "vegetables",
-      isPurchased: false,
-    });
-    setShowAddDialog(false);
-    toast({
-      title: "Item added!",
-      description: `${newItem.name} has been added to your shopping list.`,
-    });
+    addItemMutation.mutate(
+      {
+        name: newItem.name,
+        amount: String(newItem.quantity),
+        unit: newItem.unit,
+        category: newItem.category,
+        isPurchased: newItem.isPurchased,
+      },
+      {
+        onSuccess: () => {
+          setNewItem({ name: "", quantity: 1, unit: "pieces", category: "vegetables", isPurchased: false });
+          setShowAddDialog(false);
+          toast({ title: "Item added!", description: `${newItem.name} has been added to your shopping list.` });
+        },
+        onError: () => {
+          toast({ title: "Could not add item", description: "Please try again.", variant: "destructive" });
+        },
+      },
+    );
   };
 
   const handleEditItem = (item: ShoppingListItem) => {
@@ -153,45 +206,55 @@ export default function Shopping() {
   const handleUpdateItem = () => {
     if (!editingItem) return;
 
-    updateShoppingListItem(editingItem.id, {
-      name: newItem.name,
-      quantity: newItem.quantity,
-      unit: newItem.unit,
-      category: newItem.category,
-    });
-    setEditingItem(null);
-    setNewItem({
-      name: "",
-      quantity: 1,
-      unit: "pieces",
-      category: "vegetables",
-      isPurchased: false,
-    });
-    setShowAddDialog(false);
-    toast({
-      title: "Item updated!",
-      description: `${newItem.name} has been updated.`,
-    });
+    updateItemMutation.mutate(
+      {
+        itemId: editingItem.id,
+        updates: {
+          name: newItem.name,
+          amount: String(newItem.quantity),
+          unit: newItem.unit,
+          category: newItem.category,
+        },
+      },
+      {
+        onSuccess: () => {
+          setEditingItem(null);
+          setNewItem({ name: "", quantity: 1, unit: "pieces", category: "vegetables", isPurchased: false });
+          setShowAddDialog(false);
+          toast({ title: "Item updated!", description: `${newItem.name} has been updated.` });
+        },
+        onError: () => {
+          toast({ title: "Could not update item", description: "Please try again.", variant: "destructive" });
+        },
+      },
+    );
   };
 
   const handleDeleteItem = (itemId: string, itemName: string) => {
-    removeFromShoppingList(itemId);
-    toast({
-      title: "Item removed",
-      description: `${itemName} has been removed from your shopping list.`,
+    deleteItemMutation.mutate(itemId, {
+      onSuccess: () => {
+        toast({ title: "Item removed", description: `${itemName} has been removed from your shopping list.` });
+      },
+      onError: () => {
+        toast({ title: "Could not remove item", description: "Please try again.", variant: "destructive" });
+      },
     });
   };
 
   const handleTogglePurchased = (itemId: string) => {
-    togglePurchased(itemId);
+    const current = shoppingList.find((item) => item.id === itemId);
+    if (!current) return;
+    updateItemMutation.mutate({ itemId, updates: { isPurchased: !current.isPurchased } });
   };
 
-  const handleClearPurchased = () => {
-    clearPurchased();
-    toast({
-      title: "Cleared completed items",
-      description: "All purchased items have been removed from your list.",
-    });
+  const handleClearPurchased = async () => {
+    const purchased = shoppingList.filter((item) => item.isPurchased);
+    if (purchased.length === 0) {
+      toast({ title: "Nothing to clear", description: "Mark items as purchased first." });
+      return;
+    }
+    await Promise.allSettled(purchased.map((item) => deleteItemMutation.mutateAsync(item.id)));
+    toast({ title: "Cleared completed items", description: "All purchased items have been removed from your list." });
   };
 
   const exportToText = () => {

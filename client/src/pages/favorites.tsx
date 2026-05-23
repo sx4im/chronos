@@ -6,8 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAppStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
+import { useSavedRecipes, useToggleFavorite, useCollections, useAddRecipeToCollection } from "@/lib/api-hooks";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Heart, 
   Search, 
@@ -47,79 +55,37 @@ interface Recipe {
 }
 
 export default function Favorites() {
-  const favoriteRecipes = useAppStore(state => state.favoriteRecipes);
-  const removeFromFavorites = useAppStore(state => state.removeFromFavorites);
   const { toast } = useToast();
-  
+  const { data: savedRecipes = [], isLoading } = useSavedRecipes();
+  const toggleFavorite = useToggleFavorite();
+  const { data: collections = [] } = useCollections();
+  const addToCollection = useAddRecipeToCollection();
+
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedDifficulty, setSelectedDifficulty] = React.useState("all");
   const [sortBy, setSortBy] = React.useState("added");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const [collectionDialog, setCollectionDialog] = React.useState<{ recipeId: string; title: string } | null>(null);
 
-  // Mock favorite recipes data - in real app, this would come from API
-  const [favoriteRecipesData] = React.useState<Recipe[]>([
-    {
-      id: "1",
-      title: "Fresh Caprese Salad",
-      description: "A classic Italian salad with fresh tomatoes, mozzarella, and basil.",
-      image: "https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?ixlib=rb-4.0.3&w=600&h=400&fit=crop",
-      cookTime: 0,
-      prepTime: 15,
-      servings: 4,
-      difficulty: "Easy",
-      rating: 4.8,
-      reviewCount: 124,
-      tags: ["Quick", "Fresh", "Vegetarian"],
-      author: { name: "Chef Maria" },
-      addedDate: "2024-01-15"
-    },
-    {
-      id: "2",
-      title: "Garden Vegetable Stir Fry",
-      description: "Quick and nutritious stir fry with seasonal vegetables and aromatic spices.",
-      image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?ixlib=rb-4.0.3&w=600&h=400&fit=crop",
-      cookTime: 15,
-      prepTime: 10,
-      servings: 4,
-      difficulty: "Easy",
-      rating: 4.6,
-      reviewCount: 89,
-      tags: ["Healthy", "Vegetarian", "Quick"],
-      author: { name: "Chef Alex" },
-      addedDate: "2024-01-14"
-    },
-    {
-      id: "3",
-      title: "Classic Pasta Marinara",
-      description: "Authentic Italian pasta with homemade marinara sauce and fresh herbs.",
-      image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?ixlib=rb-4.0.3&w=600&h=400&fit=crop",
-      cookTime: 30,
-      prepTime: 15,
-      servings: 6,
-      difficulty: "Medium",
-      rating: 4.9,
-      reviewCount: 203,
-      tags: ["Comfort", "Italian", "Pasta"],
-      author: { name: "Chef Giovanni" },
-      addedDate: "2024-01-13"
-    },
-    {
-      id: "4",
-      title: "Chocolate Lava Cake",
-      description: "Decadent chocolate cake with a molten center, perfect for special occasions.",
-      image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?ixlib=rb-4.0.3&w=600&h=400&fit=crop",
-      cookTime: 12,
-      prepTime: 20,
-      servings: 4,
-      difficulty: "Hard",
-      rating: 4.7,
-      reviewCount: 156,
-      tags: ["Dessert", "Chocolate", "Special"],
-      author: { name: "Chef Sophie" },
-      addedDate: "2024-01-12"
-    }
-  ]);
+  const favoriteRecipesData: Recipe[] = React.useMemo(() =>
+    savedRecipes.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      image: r.image,
+      cookTime: r.cookTime,
+      prepTime: r.prepTime,
+      servings: r.servings,
+      difficulty: (r.difficulty as Recipe["difficulty"]) ?? "Easy",
+      rating: r.rating,
+      reviewCount: r.reviewCount,
+      tags: r.tags,
+      author: { name: "Chef" },
+      addedDate: r.savedAt ?? new Date().toISOString(),
+    })),
+    [savedRecipes],
+  );
 
   const difficulties = ["Easy", "Medium", "Hard"];
 
@@ -162,18 +128,51 @@ export default function Favorites() {
   }, [favoriteRecipesData, searchQuery, selectedDifficulty, sortBy, sortOrder]);
 
   const handleRemoveFavorite = (recipeId: string, recipeTitle: string) => {
-    removeFromFavorites(recipeId);
-    toast({
-      title: "Removed from favorites",
-      description: `${recipeTitle} has been removed from your favorites.`,
-    });
+    toggleFavorite.mutate(
+      { recipeId, save: false },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Removed from favorites",
+            description: `${recipeTitle} has been removed from your favorites.`,
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Could not remove recipe",
+            description: "Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const handleAddToCollection = (recipeId: string, recipeTitle: string) => {
-    toast({
-      title: "Feature coming soon",
-      description: "Collection management will be available soon.",
-    });
+    setCollectionDialog({ recipeId, title: recipeTitle });
+  };
+
+  const handleConfirmAddToCollection = (collectionId: string) => {
+    if (!collectionDialog) return;
+    addToCollection.mutate(
+      { collectionId, recipeId: collectionDialog.recipeId },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Added to collection",
+            description: `${collectionDialog.title} was added to the collection.`,
+          });
+          setCollectionDialog(null);
+        },
+        onError: () => {
+          toast({
+            title: "Could not add recipe",
+            description: "Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -373,7 +372,9 @@ export default function Favorites() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            {filteredRecipes.length === 0 ? (
+            {isLoading ? (
+              <Card><CardContent className="p-12 text-center text-muted-foreground">Loading favorites…</CardContent></Card>
+            ) : filteredRecipes.length === 0 ? (
               <Card className="bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-12 text-center">
                   <Heart className="size-16 text-muted-foreground mx-auto mb-4" />
@@ -505,6 +506,49 @@ export default function Favorites() {
           </motion.div>
         </div>
       </div>
+      <Dialog
+        open={!!collectionDialog}
+        onOpenChange={(open) => {
+          if (!open) setCollectionDialog(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add to collection</DialogTitle>
+            <DialogDescription>
+              {collectionDialog ? `Choose a collection for ${collectionDialog.title}.` : null}
+            </DialogDescription>
+          </DialogHeader>
+          {collections.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              You don't have any collections yet. Create one from your profile to start grouping recipes.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {collections.map((collection) => (
+                <Button
+                  key={collection.id}
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled={addToCollection.isPending}
+                  onClick={() => handleConfirmAddToCollection(collection.id)}
+                >
+                  <BookOpen className="size-4 mr-2" />
+                  {collection.name}
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {collection.recipeCount}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCollectionDialog(null)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

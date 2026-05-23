@@ -109,14 +109,14 @@ export default function Recipe() {
   // Fetch recipe data
   const { data: recipe, isLoading, error } = useQuery<Recipe>({
     queryKey: ['recipe', slug],
-    queryFn: () => apiClient.get(`/api/recipe/${slug}`).then((res: any) => res.data),
+    queryFn: () => apiClient.get<Recipe>(`/api/recipe/${slug}`),
     enabled: !!slug,
   });
 
   // Fetch similar recipes
   const { data: similarRecipes } = useQuery<SimilarRecipe[]>({
     queryKey: ['similar-recipes', recipe?.id],
-    queryFn: () => apiClient.get(`/api/recipe/${recipe?.id}/similar`).then((res: any) => res.data),
+    queryFn: () => apiClient.get<SimilarRecipe[]>(`/api/recipe/${recipe?.id}/similar`),
     enabled: !!recipe?.id,
   });
 
