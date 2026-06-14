@@ -50,28 +50,33 @@ export function ScrollReveal({
     setIsAllowed(false);
   }, [allowedSections]);
 
-  const offset = shouldReduceMotion || !isAllowed ? '0px' : distance;
+  const reduce = shouldReduceMotion || !isAllowed;
+  const offset = reduce ? '0px' : distance;
   const initial = {
-    opacity: shouldReduceMotion || !isAllowed ? 1 : 0,
+    opacity: reduce ? 1 : 0,
     x: direction === 'left' ? offset : direction === 'right' ? `-${offset}` : 0,
     y: direction === 'up' ? offset : direction === 'down' ? `-${offset}` : 0,
-    scale: direction === 'scale' && !shouldReduceMotion && isAllowed ? 0.8 : 1,
-    rotate: direction === 'rotate' && !shouldReduceMotion && isAllowed ? -5 : 0,
+    scale: direction === 'scale' && !reduce ? 0.94 : 1,
+    rotate: direction === 'rotate' && !reduce ? -4 : 0,
   };
   const visible = { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 };
 
+  // Render a real framer-motion element so the props actually animate.
+  const motionTags = m as unknown as Record<string, React.ElementType>;
+  const Motion: React.ElementType =
+    typeof Component === 'string' ? (motionTags[Component] ?? m.div) : Component;
+
   return (
-    <Component
-      as={m.div}
+    <Motion
       ref={ref}
       initial={initial}
-      whileInView={shouldReduceMotion || !isAllowed ? initial : visible}
-      viewport={{ once: true, amount: threshold }}
-      transition={{ duration: duration / 1000, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
+      whileInView={reduce ? initial : visible}
+      viewport={{ once: true, amount: threshold, margin: '0px 0px -8% 0px' }}
+      transition={{ duration: duration / 1000, delay: delay / 1000, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
-    </Component>
+    </Motion>
   );
 }
 

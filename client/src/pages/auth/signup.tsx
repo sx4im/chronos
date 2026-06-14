@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const shouldReduceMotion = useReducedMotion();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -95,14 +96,16 @@ export default function Signup() {
 
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-deep-olive)' }}>
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-surface-soft overflow-hidden">
+      <div className="absolute -top-24 -left-16 size-72 rounded-full bg-brand-peach/20 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-16 size-80 rounded-full bg-brand-mint/25 blur-3xl pointer-events-none" />
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-md"
       >
-        <Card className="bg-[var(--bg-cream)] border-0 shadow-2xl">
+        <Card className="relative bg-canvas clay-shadow">
           <CardHeader className="space-y-2 text-center pb-8">
             <motion.div
               initial={{ scale: 0 }}
@@ -112,10 +115,10 @@ export default function Signup() {
             >
               <img src="/logo.svg" alt="Ingredo" className="size-16 sm:size-20" />
             </motion.div>
-            <CardTitle className="font-serif text-2xl font-medium text-foreground">
+            <CardTitle className="display-sm">
               Join Ingredo
             </CardTitle>
-            <p className="text-muted-foreground italic font-serif">
+            <p className="text-muted-foreground">
               Create your account and start cooking amazing meals
             </p>
           </CardHeader>
@@ -148,7 +151,7 @@ export default function Signup() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-sm text-red-500"
+                      className="text-sm text-error"
                     >
                       {errors.name}
                     </motion.p>
@@ -183,7 +186,7 @@ export default function Signup() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-sm text-red-500"
+                      className="text-sm text-error"
                     >
                       {errors.username}
                     </motion.p>
@@ -225,7 +228,7 @@ export default function Signup() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-sm text-red-500"
+                      className="text-sm text-error"
                     >
                       {errors.password}
                     </motion.p>
@@ -267,7 +270,7 @@ export default function Signup() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-sm text-red-500"
+                      className="text-sm text-error"
                     >
                       {errors.confirmPassword}
                     </motion.p>

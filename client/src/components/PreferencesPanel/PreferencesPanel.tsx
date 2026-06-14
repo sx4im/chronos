@@ -465,7 +465,7 @@ export const PreferencesPanel = React.memo(function PreferencesPanel({ onFilters
                 checked={filters.allowSubstitutions}
                 onCheckedChange={(checked) => updateFilter("allowSubstitutions", checked)}
                 data-testid="substitutions-switch"
-                className="data-[state=checked]:bg-green-600"
+                className="data-[state=checked]:bg-success"
               />
             </div>
           </CardContent>

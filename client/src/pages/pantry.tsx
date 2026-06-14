@@ -244,7 +244,7 @@ export default function Pantry() {
                   My Pantry
                 </h1>
                 <div className="w-12 h-0.5 mb-6" style={{ background: 'var(--accent-gold)' }} />
-                <p className="text-muted-foreground text-lg italic font-serif">
+                <p className="text-muted-foreground text-lg">
                   Manage your ingredients and track expiry dates
                 </p>
               </div>
@@ -371,51 +371,51 @@ export default function Pantry() {
             transition={{ delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
           >
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Package className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Package className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{pantryItems.length}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Total Items</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{pantryItems.length}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Total Items</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <AlertTriangle className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <AlertTriangle className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{getExpiringCount()}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Expiring Soon</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{getExpiringCount()}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Expiring Soon</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <CheckCircle className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <CheckCircle className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{new Set(pantryItems.map(item => item.category)).size}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Categories</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{new Set(pantryItems.map(item => item.category)).size}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Categories</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Clock className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Clock className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>
                       {pantryItems.filter(item => getExpiryStatus(item.expiryDate).status === "fresh").length}
                     </p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Fresh Items</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Fresh Items</p>
                   </div>
                 </div>
               </CardContent>
@@ -553,7 +553,7 @@ export default function Pantry() {
                         transition={{ delay: index * 0.05 }}
                       >
                         <Card className={`hover:shadow-lg transition-all duration-300 ${
-                          expiryStatus.status === "expired" ? "border-red-200 bg-red-50" :
+                          expiryStatus.status === "expired" ? "border-error/30 bg-error/10" :
                           expiryStatus.status === "expiring" ? "border-secondary/30 bg-secondary/10" :
                            "border-border"
                         }`}>
@@ -561,7 +561,7 @@ export default function Pantry() {
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex-1">
                                 <h3 className="font-semibold text-foreground mb-1">{item.name}</h3>
-                                <p className="text-sm text-gray-600 capitalize">{item.category}</p>
+                                <p className="text-sm text-muted-foreground capitalize">{item.category}</p>
                               </div>
                               <div className="flex gap-1">
                                 <Button
@@ -583,12 +583,12 @@ export default function Pantry() {
                             
                             <div className="space-y-2 mb-4">
                               <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Quantity:</span>
+                                <span className="text-muted-foreground">Quantity:</span>
                                 <span className="font-medium">{item.quantity} {item.unit}</span>
                               </div>
                               <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Expires:</span>
-                                <span className="font-medium">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : "—"}</span>
+                                <span className="text-muted-foreground">Expires:</span>
+                                <span className="font-medium">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : "Not set"}</span>
                               </div>
                             </div>
                             

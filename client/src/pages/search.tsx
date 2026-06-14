@@ -60,10 +60,10 @@ export default function Search() {
           transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
         >
           <div className="text-left mb-12">
-            <h1 className="font-serif text-4xl lg:text-5xl font-medium tracking-tight text-foreground mb-4">Find Recipes</h1>
-            <div className="w-12 h-0.5 mb-6" style={{ background: 'var(--accent-gold)' }} />
-            <p className="text-muted-foreground text-left text-lg italic font-serif">
-              Add ingredients you have and discover delicious recipes you can make
+            <span className="caption-label text-muted-foreground">Recipe search</span>
+            <h1 className="display-lg mt-4 mb-4">Find recipes</h1>
+            <p className="body-lead max-w-xl">
+              Add the ingredients you have and discover delicious recipes you can make right now.
             </p>
           </div>
         </motion.div>

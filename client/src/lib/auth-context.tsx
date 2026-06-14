@@ -135,21 +135,22 @@ export function ProtectedRoute({ children, fallback, requireRole }: ProtectedRou
 
   if (!isAuthenticated || (requireRole === 'admin' && user?.role !== 'admin')) {
     return fallback || (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">{!isAuthenticated ? "Authentication Required" : "Unauthorized"}</h2>
-          <p className="text-gray-600">{!isAuthenticated ? "Please log in to access this page." : "You do not have permission to access this page."}</p>
+      <div className="min-h-screen flex items-center justify-center bg-surface-soft px-6">
+        <div className="text-center max-w-md">
+          <p className="caption-label text-muted-foreground">{!isAuthenticated ? "Members only" : "No access"}</p>
+          <h2 className="display-sm mt-3 mb-3">{!isAuthenticated ? "Authentication required" : "Unauthorized"}</h2>
+          <p className="text-muted-foreground">{!isAuthenticated ? "Please log in to access this page." : "You do not have permission to access this page."}</p>
           {!isAuthenticated && (
-            <div className="mt-6 flex items-center justify-center gap-3">
+            <div className="mt-8 flex items-center justify-center gap-3">
               <Link
                 href="/auth/signup"
-                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-[var(--primary-active)]"
               >
-                Create account
+                Try free
               </Link>
               <Link
                 href="/auth/login"
-                className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-hairline bg-canvas px-5 text-sm font-semibold text-ink transition-colors hover:bg-surface-card"
               >
                 Sign in
               </Link>

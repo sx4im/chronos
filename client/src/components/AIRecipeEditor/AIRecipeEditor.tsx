@@ -214,7 +214,7 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <HelpCircle className="size-4" />
-                <span>This recipe was generated using your ingredients as a base — you can tweak quantities or steps.</span>
+                <span>This recipe was generated using your ingredients as a base, so you can tweak quantities or steps.</span>
               </div>
             </div>
           </div>
@@ -259,18 +259,18 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
                   placeholder="Edit the recipe JSON..."
                 />
                 {jsonError && (
-                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-red-800">
+                  <div className="mt-2 p-3 bg-error/10 border border-error/30 rounded-lg">
+                    <div className="flex items-center gap-2 text-error">
                       <AlertTriangle className="size-4" />
                       <span className="font-medium">JSON Error:</span>
                     </div>
-                    <p className="text-red-700 text-sm mt-1">{jsonError}</p>
+                    <p className="text-error text-sm mt-1">{jsonError}</p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex-1 overflow-auto">
-                <pre className="p-4 bg-gray-50 rounded-lg text-sm font-mono overflow-auto">
+                <pre className="p-4 bg-surface-soft rounded-lg text-sm font-mono overflow-auto">
                   {formatJson(editedRecipe)}
                 </pre>
               </div>

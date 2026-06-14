@@ -1,76 +1,113 @@
 import type { Config } from "tailwindcss";
 
+// Lets opacity modifiers (e.g. bg-success/12, hover:bg-primary/90) work on
+// colors defined as plain hex CSS vars, while keeping `var(--x)` usable directly.
+const c =
+  (name: string) =>
+  ({ opacityValue }: { opacityValue?: string | number }) =>
+    opacityValue === undefined || opacityValue === 1 || opacityValue === "1"
+      ? `var(${name})`
+      : `color-mix(in srgb, var(${name}) calc(${opacityValue} * 100%), transparent)`;
+
 export default {
   darkMode: ["class"],
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: c("--background"),
+        foreground: c("--foreground"),
         card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
+          DEFAULT: c("--card"),
+          foreground: c("--card-foreground"),
         },
         popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
+          DEFAULT: c("--popover"),
+          foreground: c("--popover-foreground"),
         },
         primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
+          DEFAULT: c("--primary"),
+          foreground: c("--primary-foreground"),
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
+          DEFAULT: c("--secondary"),
+          foreground: c("--secondary-foreground"),
         },
         muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
+          DEFAULT: c("--muted"),
+          foreground: c("--muted-foreground"),
         },
         accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
+          DEFAULT: c("--accent"),
+          foreground: c("--accent-foreground"),
         },
         destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
+          DEFAULT: c("--destructive"),
+          foreground: c("--destructive-foreground"),
         },
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
+        border: c("--border"),
+        input: c("--input"),
+        ring: c("--ring"),
         chart: {
-          "1": "var(--chart-1)",
-          "2": "var(--chart-2)",
-          "3": "var(--chart-3)",
-          "4": "var(--chart-4)",
-          "5": "var(--chart-5)",
+          "1": c("--chart-1"),
+          "2": c("--chart-2"),
+          "3": c("--chart-3"),
+          "4": c("--chart-4"),
+          "5": c("--chart-5"),
         },
         sidebar: {
-          DEFAULT: "var(--sidebar)",
-          foreground: "var(--sidebar-foreground)",
-          primary: "var(--sidebar-primary)",
-          "primary-foreground": "var(--sidebar-primary-foreground)",
-          accent: "var(--sidebar-accent)",
-          "accent-foreground": "var(--sidebar-accent-foreground)",
-          border: "var(--sidebar-border)",
-          ring: "var(--sidebar-ring)",
+          DEFAULT: c("--sidebar"),
+          foreground: c("--sidebar-foreground"),
+          primary: c("--sidebar-primary"),
+          "primary-foreground": c("--sidebar-primary-foreground"),
+          accent: c("--sidebar-accent"),
+          "accent-foreground": c("--sidebar-accent-foreground"),
+          border: c("--sidebar-border"),
+          ring: c("--sidebar-ring"),
         },
         vintage: {
-          "dark-green": "var(--accent-olive)",
-          "warm-brown": "var(--accent-terracotta)",
-          "light-beige": "var(--bg-cream)",
+          "dark-green": c("--accent-olive"),
+          "warm-brown": c("--accent-terracotta"),
+          "light-beige": c("--bg-cream"),
         },
+        canvas: c("--canvas"),
+        ink: c("--ink"),
+        hairline: c("--hairline"),
+        "on-primary": c("--on-primary"),
+        brand: {
+          pink: c("--brand-pink"),
+          teal: c("--brand-teal"),
+          lavender: c("--brand-lavender"),
+          peach: c("--brand-peach"),
+          ochre: c("--brand-ochre"),
+          mint: c("--brand-mint"),
+          coral: c("--brand-coral"),
+        },
+        surface: {
+          soft: c("--surface-soft"),
+          card: c("--surface-card"),
+          strong: c("--surface-strong"),
+          dark: c("--surface-dark"),
+          "dark-elevated": c("--surface-dark-elevated"),
+        },
+        success: c("--success"),
+        warning: c("--warning"),
+        error: c("--error"),
       },
       fontFamily: {
-        sans: ["Manrope", "sans-serif"],
-        serif: ["'Cormorant Garamond'", "serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)"],
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 8px)",
+        xl: "20px",
+        "2xl": "24px",
+        "3xl": "32px",
+        pill: "9999px",
       },
       keyframes: {
         "accordion-down": {

@@ -292,13 +292,13 @@ export default function Profile() {
         <FadeUp>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <ScrollReveal preset="fadeLeft" >
-              <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+              <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <Heart className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                    <Heart className="size-5" style={{ color: 'var(--brand-teal)' }} />
                     <div>
-                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{profile.stats.savedRecipes}</p>
-                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Saved Recipes</p>
+                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{profile.stats.savedRecipes}</p>
+                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Saved Recipes</p>
                     </div>
                   </div>
                 </CardContent>
@@ -306,13 +306,13 @@ export default function Profile() {
             </ScrollReveal>
             
             <ScrollReveal preset="fadeUp" >
-              <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+              <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <ChefHat className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                    <ChefHat className="size-5" style={{ color: 'var(--brand-teal)' }} />
                     <div>
-                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{profile.stats.cookedRecipes}</p>
-                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Recipes Cooked</p>
+                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{profile.stats.cookedRecipes}</p>
+                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Recipes Cooked</p>
                     </div>
                   </div>
                 </CardContent>
@@ -320,13 +320,13 @@ export default function Profile() {
             </ScrollReveal>
             
             <ScrollReveal preset="fadeRight" >
-              <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+              <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <BookOpen className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                    <BookOpen className="size-5" style={{ color: 'var(--brand-teal)' }} />
                     <div>
-                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{profile.stats.collections}</p>
-                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Collections</p>
+                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{profile.stats.collections}</p>
+                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Collections</p>
                     </div>
                   </div>
                 </CardContent>
@@ -533,7 +533,7 @@ export default function Profile() {
           <TabsContent value="collections" className="space-y-4">
             <FadeUp >
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">My Collections</h2>
+                <h2 className="display-sm">My Collections</h2>
                 <Button 
                   data-testid="create-collection"
                   onClick={() => setCreateCollectionOpen(true)}

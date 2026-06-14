@@ -311,7 +311,7 @@ export default function Settings() {
                 <h1 className="font-serif text-4xl lg:text-5xl font-medium tracking-tight text-foreground mb-3">
                   Settings
                 </h1>
-                <p className="text-muted-foreground text-lg italic font-serif">
+                <p className="text-muted-foreground text-lg">
                   Manage your account preferences and app settings
                 </p>
               </div>
@@ -345,7 +345,7 @@ export default function Settings() {
                         <Camera className="size-4 mr-2" />
                         Change Avatar
                       </Button>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-muted-foreground mt-1">
                         JPG, PNG or JPEG. Max size 2MB.
                       </p>
                     </div>
@@ -499,8 +499,8 @@ export default function Settings() {
                   <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                        <Label htmlFor="auto-start-timer" className="text-gray-900 font-semibold">Auto Start Timer</Label>
-                      <p className="text-sm text-gray-600">
+                        <Label htmlFor="auto-start-timer" className="text-ink font-semibold">Auto Start Timer</Label>
+                      <p className="text-sm text-muted-foreground">
                           Automatically start cooking timer when viewing recipes
                       </p>
                     </div>
@@ -513,8 +513,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="show-nutrition" className="text-gray-900 font-semibold">Show Nutrition Info</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="show-nutrition" className="text-ink font-semibold">Show Nutrition Info</Label>
+                        <p className="text-sm text-muted-foreground">
                           Display nutritional information for recipes
                         </p>
                       </div>
@@ -527,8 +527,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="show-cooking-tips" className="text-gray-900 font-semibold">Show Cooking Tips</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="show-cooking-tips" className="text-ink font-semibold">Show Cooking Tips</Label>
+                        <p className="text-sm text-muted-foreground">
                           Display helpful cooking tips and techniques
                         </p>
                       </div>
@@ -541,8 +541,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="voice-instructions" className="text-gray-900 font-semibold">Voice Instructions</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="voice-instructions" className="text-ink font-semibold">Voice Instructions</Label>
+                        <p className="text-sm text-muted-foreground">
                           Enable voice-guided cooking instructions
                         </p>
                       </div>
@@ -555,8 +555,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sound-effects" className="text-gray-900 font-semibold">Sound Effects</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="sound-effects" className="text-ink font-semibold">Sound Effects</Label>
+                        <p className="text-sm text-muted-foreground">
                           Play sound effects for timer alerts and notifications
                         </p>
                       </div>
@@ -593,8 +593,8 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="email-notifications" className="text-gray-900 font-semibold">Email Notifications</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="email-notifications" className="text-ink font-semibold">Email Notifications</Label>
+                        <p className="text-sm text-muted-foreground">
                           Receive notifications via email
                         </p>
                       </div>
@@ -607,8 +607,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="push-notifications" className="text-gray-900 font-semibold">Push Notifications</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="push-notifications" className="text-ink font-semibold">Push Notifications</Label>
+                        <p className="text-sm text-muted-foreground">
                           Receive push notifications in your browser
                         </p>
                       </div>
@@ -623,8 +623,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="recipe-updates" className="text-gray-900 font-semibold">Recipe Updates</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="recipe-updates" className="text-ink font-semibold">Recipe Updates</Label>
+                        <p className="text-sm text-muted-foreground">
                           Get notified when your saved recipes are updated
                         </p>
                       </div>
@@ -637,8 +637,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="pantry-reminders" className="text-gray-900 font-semibold">Pantry Reminders</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="pantry-reminders" className="text-ink font-semibold">Pantry Reminders</Label>
+                        <p className="text-sm text-muted-foreground">
                           Get reminded about expiring ingredients
                         </p>
                       </div>
@@ -651,8 +651,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="shopping-reminders" className="text-gray-900 font-semibold">Shopping Reminders</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="shopping-reminders" className="text-ink font-semibold">Shopping Reminders</Label>
+                        <p className="text-sm text-muted-foreground">
                           Get reminded about your shopping list
                         </p>
                       </div>
@@ -665,8 +665,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="weekly-digest" className="text-gray-900 font-semibold">Weekly Digest</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="weekly-digest" className="text-ink font-semibold">Weekly Digest</Label>
+                        <p className="text-sm text-muted-foreground">
                           Receive a weekly summary of your cooking activity
                         </p>
                       </div>
@@ -679,8 +679,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="cooking-timer" className="text-gray-900 font-semibold">Cooking Timer Alerts</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="cooking-timer" className="text-ink font-semibold">Cooking Timer Alerts</Label>
+                        <p className="text-sm text-muted-foreground">
                           Get notified when cooking timers finish
                         </p>
                       </div>
@@ -693,8 +693,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="ingredient-alerts" className="text-gray-900 font-semibold">Ingredient Alerts</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="ingredient-alerts" className="text-ink font-semibold">Ingredient Alerts</Label>
+                        <p className="text-sm text-muted-foreground">
                           Get notified about missing or expiring ingredients
                         </p>
                       </div>
@@ -723,7 +723,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Shield className="size-5 text-green-600" />
+                    <Shield className="size-5 text-success" />
                     Privacy & Security
                   </CardTitle>
                 </CardHeader>
@@ -731,8 +731,8 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="profile-visibility" className="text-gray-900 font-semibold">Profile Visibility</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="profile-visibility" className="text-ink font-semibold">Profile Visibility</Label>
+                        <p className="text-sm text-muted-foreground">
                           Control who can see your profile
                         </p>
                       </div>
@@ -758,8 +758,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="show-email" className="text-gray-900 font-semibold">Show Email</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="show-email" className="text-ink font-semibold">Show Email</Label>
+                        <p className="text-sm text-muted-foreground">
                           Display your email address on your profile
                         </p>
                       </div>
@@ -772,8 +772,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="show-location" className="text-gray-900 font-semibold">Show Location</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="show-location" className="text-ink font-semibold">Show Location</Label>
+                        <p className="text-sm text-muted-foreground">
                           Display your location on your profile
                         </p>
                       </div>
@@ -786,8 +786,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="allow-messages" className="text-gray-900 font-semibold">Allow Messages</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="allow-messages" className="text-ink font-semibold">Allow Messages</Label>
+                        <p className="text-sm text-muted-foreground">
                           Allow other users to send you messages
                         </p>
                       </div>
@@ -800,8 +800,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="data-sharing" className="text-gray-900 font-semibold">Data Sharing</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="data-sharing" className="text-ink font-semibold">Data Sharing</Label>
+                        <p className="text-sm text-muted-foreground">
                           Allow anonymous usage data to improve the app
                         </p>
                       </div>
@@ -816,14 +816,14 @@ export default function Settings() {
                   <div className="space-y-4">
                     <Separator />
                     <div className="space-y-2">
-                      <Button variant="outline" size="sm" className="border-2 border-gray-300">
+                      <Button variant="outline" size="sm" className="border-2 border-hairline">
                         <Key className="size-4 mr-2" />
                         Update Password
                       </Button>
                     </div>
                   </div>
                   
-                  <Button onClick={handleSavePrivacy} className="bg-green-600 hover:bg-green-700">
+                  <Button onClick={handleSavePrivacy} className="bg-success hover:bg-success">
                     <Save className="size-4 mr-2" />
                     Save Privacy Settings
                   </Button>
@@ -848,8 +848,8 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="high-contrast" className="text-gray-900 font-semibold">High Contrast Mode</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="high-contrast" className="text-ink font-semibold">High Contrast Mode</Label>
+                        <p className="text-sm text-muted-foreground">
                           Increase contrast for better visibility
                         </p>
                       </div>
@@ -862,8 +862,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="large-text" className="text-gray-900 font-semibold">Large Text</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="large-text" className="text-ink font-semibold">Large Text</Label>
+                        <p className="text-sm text-muted-foreground">
                           Increase text size for better readability
                         </p>
                       </div>
@@ -876,8 +876,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="screen-reader" className="text-gray-900 font-semibold">Screen Reader Support</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="screen-reader" className="text-ink font-semibold">Screen Reader Support</Label>
+                        <p className="text-sm text-muted-foreground">
                           Optimize interface for screen readers
                         </p>
                       </div>
@@ -890,8 +890,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="reduced-motion" className="text-gray-900 font-semibold">Reduce Motion</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="reduced-motion" className="text-ink font-semibold">Reduce Motion</Label>
+                        <p className="text-sm text-muted-foreground">
                           Minimize animations and transitions
                         </p>
                       </div>
@@ -904,8 +904,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="keyboard-navigation" className="text-gray-900 font-semibold">Keyboard Navigation</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="keyboard-navigation" className="text-ink font-semibold">Keyboard Navigation</Label>
+                        <p className="text-sm text-muted-foreground">
                           Enable full keyboard navigation support
                         </p>
                       </div>
@@ -934,7 +934,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Cloud className="size-5 text-green-600" />
+                    <Cloud className="size-5 text-success" />
                     Data Sync & Backup
                   </CardTitle>
                 </CardHeader>
@@ -942,8 +942,8 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="auto-sync" className="text-gray-900 font-semibold">Auto Sync</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label htmlFor="auto-sync" className="text-ink font-semibold">Auto Sync</Label>
+                        <p className="text-sm text-muted-foreground">
                           Automatically sync your data across devices
                         </p>
                       </div>
@@ -956,8 +956,8 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                        <Label htmlFor="cloud-backup" className="text-gray-900 font-semibold">Cloud Backup</Label>
-                      <p className="text-sm text-gray-600">
+                        <Label htmlFor="cloud-backup" className="text-ink font-semibold">Cloud Backup</Label>
+                      <p className="text-sm text-muted-foreground">
                           Backup your data to the cloud
                       </p>
                     </div>
@@ -970,8 +970,8 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                        <Label htmlFor="offline-mode" className="text-gray-900 font-semibold">Offline Mode</Label>
-                      <p className="text-sm text-gray-600">
+                        <Label htmlFor="offline-mode" className="text-ink font-semibold">Offline Mode</Label>
+                      <p className="text-sm text-muted-foreground">
                           Enable offline access to your recipes
                       </p>
                     </div>
@@ -983,10 +983,10 @@ export default function Settings() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-surface-soft rounded-lg">
                     <div>
-                      <Label className="text-gray-900 font-semibold">Last Sync</Label>
-                      <p className="text-sm text-gray-600">
+                      <Label className="text-ink font-semibold">Last Sync</Label>
+                      <p className="text-sm text-muted-foreground">
                         {new Date(dataSync.lastSync).toLocaleString()}
                       </p>
                     </div>
@@ -996,7 +996,7 @@ export default function Settings() {
                     </Button>
                   </div>
                   
-                  <Button onClick={handleSaveDataSync} className="bg-green-600 hover:bg-green-700">
+                  <Button onClick={handleSaveDataSync} className="bg-success hover:bg-success">
                     <Save className="size-4 mr-2" />
                     Save Sync Settings
                   </Button>
@@ -1013,7 +1013,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Download className="size-5 text-gray-600" />
+                    <Download className="size-5 text-muted-foreground" />
                     Data Management
                   </CardTitle>
                 </CardHeader>
@@ -1021,8 +1021,8 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label className="text-gray-900 font-semibold">Export Data</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label className="text-ink font-semibold">Export Data</Label>
+                        <p className="text-sm text-muted-foreground">
                           Download all your data including recipes, collections, and settings
                         </p>
                       </div>
@@ -1034,8 +1034,8 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label className="text-gray-900 font-semibold">Import Data</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label className="text-ink font-semibold">Import Data</Label>
+                        <p className="text-sm text-muted-foreground">
                           Import data from a previously exported file
                         </p>
                       </div>
@@ -1051,8 +1051,8 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label className="text-red-600 font-semibold">Delete Account</Label>
-                        <p className="text-sm text-gray-600">
+                        <Label className="text-error font-semibold">Delete Account</Label>
+                        <p className="text-sm text-muted-foreground">
                           Permanently delete your account and all associated data
                         </p>
                       </div>

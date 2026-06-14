@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import {
   Facebook,
   Twitter,
   Instagram,
+  ArrowLeft,
 } from "lucide-react";
 
 interface Recipe {
@@ -77,14 +78,7 @@ interface Recipe {
   };
 }
 
-interface SimilarRecipe {
-  id: string;
-  slug: string;
-  title: string;
-  image?: string;
-  cookTime: number;
-  rating: number;
-}
+
 
 interface TimerState {
   isRunning: boolean;
@@ -96,6 +90,7 @@ interface TimerState {
 export default function Recipe() {
   const params = useParams();
   const slug = params.slug;
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   
   // State management
@@ -113,12 +108,7 @@ export default function Recipe() {
     enabled: !!slug,
   });
 
-  // Fetch similar recipes
-  const { data: similarRecipes } = useQuery<SimilarRecipe[]>({
-    queryKey: ['similar-recipes', recipe?.id],
-    queryFn: () => apiClient.get<SimilarRecipe[]>(`/api/recipe/${recipe?.id}/similar`),
-    enabled: !!recipe?.id,
-  });
+
 
   // Save recipe mutation
   const saveRecipeMutation = useMutation({
@@ -372,46 +362,52 @@ export default function Recipe() {
     <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-12">
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="max-w-6xl mx-auto">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            className="mb-6 text-muted-foreground hover:text-foreground -ml-2"
+            onClick={() => navigate('/search')}
+            data-testid="back-to-search"
+          >
+            <ArrowLeft className="mr-2 size-4" />
+            Back to Recipes
+          </Button>
+
           {/* Hero Section */}
-        <div className="mb-8">
-          {recipe.image && (
-              <div className="relative mb-6">
-            <img 
-              src={recipe.image}
-              alt={recipe.title}
-                  className="w-full h-64 md:h-80 object-cover rounded-lg"
-                />
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => saveRecipeMutation.mutate(recipe.id)}
-                    data-testid="save-recipe"
-                  >
-                    <Heart className="mr-2 size-4" />
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setShowShareModal(true)}
-                    data-testid="share-recipe"
-                  >
-                    <Share2 className="mr-2 size-4" />
-                    Share
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handlePrint}
-                    data-testid="print-recipe"
-                  >
-                    <Printer className="mr-2 size-4" />
-                    Print
-                  </Button>
-                </div>
-              </div>
-          )}
+          <div className="mb-8">
+            {/* Action buttons */}
+            <div className="flex gap-2 mb-6">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-vintage-warm-brown/30 text-vintage-warm-brown"
+                onClick={() => saveRecipeMutation.mutate(recipe.id)}
+                data-testid="save-recipe"
+              >
+                <Heart className="mr-2 size-4" />
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-vintage-warm-brown/30 text-vintage-warm-brown"
+                onClick={() => setShowShareModal(true)}
+                data-testid="share-recipe"
+              >
+                <Share2 className="mr-2 size-4" />
+                Share
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-vintage-warm-brown/30 text-vintage-warm-brown"
+                onClick={handlePrint}
+                data-testid="print-recipe"
+              >
+                <Printer className="mr-2 size-4" />
+                Print
+              </Button>
+            </div>
           
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2 mb-4">
@@ -566,13 +562,6 @@ export default function Recipe() {
                           className="data-[state=checked]:bg-vintage-warm-brown data-[state=checked]:border-vintage-warm-brown"
                         />
                         <div className="flex-1 flex items-center gap-3">
-                          {ingredient.thumbnail && (
-                            <img 
-                              src={ingredient.thumbnail} 
-                              alt={ingredient.name}
-                              className="size-8 rounded object-cover"
-                            />
-                          )}
                           <div className="flex-1">
                             <span className={`font-medium ${completedIngredients.has(ingredient.id) ? 'line-through text-muted-foreground/60' : 'text-foreground'}`}>
                               {substitutions[ingredient.id] || ingredient.name}
@@ -611,45 +600,47 @@ export default function Recipe() {
               <CardContent>
                   <div className="space-y-6">
                   {recipe.instructions.map((instruction) => (
-                      <div key={instruction.step} className="flex gap-4">
-                        <div className="flex flex-col items-center">
-                      <button
-                        onClick={() => toggleStep(instruction.step)}
+                      <div key={instruction.step} className="flex items-start justify-between gap-4 p-3 rounded-lg hover:bg-vintage-warm-brown/5 transition-colors">
+                        <div className="flex items-start gap-4 flex-1">
+                          <button
+                            onClick={() => toggleStep(instruction.step)}
                             className={`flex-shrink-0 size-10 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          completedSteps.has(instruction.step)
-                                ? 'bg-vintage-warm-brown border-vintage-warm-brown text-foreground'
-                                : 'border-vintage-light-beige/30 hover:border-vintage-warm-brown text-foreground'
-                        }`}
-                        data-testid={`step-${instruction.step}`}
-                      >
-                        {completedSteps.has(instruction.step) ? (
-                              <CheckCircle2 className="size-5" />
-                        ) : (
-                          <span className="text-sm font-medium">{instruction.step}</span>
-                        )}
-                      </button>
-                          {instruction.time_min && (
+                              completedSteps.has(instruction.step)
+                                    ? 'bg-vintage-warm-brown border-vintage-warm-brown text-foreground'
+                                    : 'border-vintage-light-beige/30 hover:border-vintage-warm-brown text-foreground'
+                            }`}
+                            data-testid={`step-${instruction.step}`}
+                          >
+                            {completedSteps.has(instruction.step) ? (
+                                  <CheckCircle2 className="size-5" />
+                            ) : (
+                              <span className="text-sm font-medium">{instruction.step}</span>
+                            )}
+                          </button>
+                          <div className="flex-1 pt-1.5">
+                            <p className={`text-foreground leading-relaxed ${
+                              completedSteps.has(instruction.step) 
+                                  ? 'line-through text-muted-foreground/60' 
+                                : ''
+                            }`}>
+                              {instruction.description}
+                            </p>
+                          </div>
+                        </div>
+                        {instruction.time_min && (
+                          <div className="flex-shrink-0 pt-1.5">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => startTimer(instruction.step, instruction.time_min!)}
-                              className="mt-2 text-xs h-6"
+                              className="text-xs h-7 border-vintage-warm-brown/30 hover:bg-vintage-warm-brown/10 hover:text-foreground"
                               disabled={!!activeTimer}
                             >
-                              <Timer className="size-3 mr-1" />
+                              <Timer className="size-3.5 mr-1" />
                               {instruction.time_min}m
                             </Button>
-                          )}
-                        </div>
-                      <div className="flex-1">
-                          <p className={`text-foreground leading-relaxed ${
-                          completedSteps.has(instruction.step) 
-                              ? 'line-through text-muted-foreground/60' 
-                            : ''
-                        }`}>
-                          {instruction.description}
-                        </p>
-                      </div>
+                          </div>
+                        )}
                       </div>
                   ))}
                   </div>
@@ -737,65 +728,7 @@ export default function Recipe() {
             </div>
           </div>
 
-          {/* Similar Recipes */}
-          {recipe && !similarRecipes && (
-            <Card className="mt-12 bg-vintage-light-beige/10 backdrop-blur-sm border-vintage-warm-brown/20">
-              <CardHeader>
-                <CardTitle className="text-foreground">Similar Recipes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <Card key={index} className="bg-vintage-warm-brown/10 border-vintage-warm-brown/20">
-                      <CardContent className="p-4 space-y-3">
-                        <Skeleton className="h-32 w-full rounded" />
-                        <Skeleton className="h-5 w-3/4" />
-                        <div className="flex justify-between">
-                          <Skeleton className="h-4 w-12" />
-                          <Skeleton className="h-4 w-10" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          {similarRecipes && similarRecipes.length > 0 && (
-            <Card className="mt-12 bg-vintage-light-beige/10 backdrop-blur-sm border-vintage-warm-brown/20">
-              <CardHeader>
-                <CardTitle className="text-foreground">Similar Recipes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {similarRecipes.map((similar) => (
-                    <Card key={similar.id} className="bg-vintage-warm-brown/10 border-vintage-warm-brown/20 hover:bg-vintage-warm-brown/20 transition-colors">
-                      <CardContent className="p-4">
-                        {similar.image && (
-                          <img 
-                            src={similar.image} 
-                            alt={similar.title}
-                            className="w-full h-32 object-cover rounded mb-3"
-                          />
-                        )}
-                        <h3 className="font-medium text-foreground mb-2">{similar.title}</h3>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="size-3" />
-                            {similar.cookTime}m
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Star className="size-3 text-yellow-400 fill-current" />
-                            {similar.rating}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
         </div>
       </div>
 

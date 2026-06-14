@@ -22,7 +22,7 @@ async function handleResponse(response: Response) {
         variant: "destructive",
       });
       // In a real app, you might redirect to login page
-      window.location.href = "/login";
+      window.location.href = "/auth/login";
       throw new APIError("Authentication required", 401);
     }
     

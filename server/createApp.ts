@@ -1,4 +1,5 @@
 import express, { type NextFunction, type Request, type Response } from "express";
+import cookieParser from "cookie-parser";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import helmet from "helmet";
@@ -19,7 +20,7 @@ if (!ADMIN_API_KEY) {
 
 const { generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: () => sessionSecret,
-  getSessionIdentifier: (req) => req.sessionID ?? "",
+  getSessionIdentifier: () => "",
   cookieName: "x-csrf-token",
   cookieOptions: {
     httpOnly: true,
@@ -48,6 +49,7 @@ function csrfMiddleware(req: Request, res: Response, next: NextFunction) {
 export function createApp() {
   const app = express();
   app.set("trust proxy", 1);
+  app.use(cookieParser(sessionSecret));
 
   app.use(
     helmet({
@@ -78,7 +80,7 @@ export function createApp() {
       store: new PgSession({
         pool,
         tableName: "user_sessions",
-        createTableIfMissing: false,
+        createTableIfMissing: true,
       }),
       secret: sessionSecret,
       resave: false,

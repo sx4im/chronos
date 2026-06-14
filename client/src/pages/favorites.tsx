@@ -177,10 +177,10 @@ export default function Favorites() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Easy": return "bg-green-100 text-green-800";
-      case "Medium": return "bg-yellow-100 text-yellow-800";
-      case "Hard": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Easy": return "bg-success/12 text-success";
+      case "Medium": return "bg-warning/15 text-warning";
+      case "Hard": return "bg-error/12 text-error";
+      default: return "bg-surface-card text-ink";
     }
   };
 
@@ -201,7 +201,7 @@ export default function Favorites() {
                   My Favorites
                 </h1>
                 <div className="w-12 h-0.5 mb-6" style={{ background: 'var(--accent-gold)' }} />
-                <p className="text-muted-foreground text-lg italic font-serif">
+                <p className="text-muted-foreground text-lg">
                   Your saved recipes and culinary inspirations
                 </p>
               </div>
@@ -229,55 +229,55 @@ export default function Favorites() {
             transition={{ delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
           >
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Heart className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Heart className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{favoriteRecipesData.length}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Total Favorites</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{favoriteRecipesData.length}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Total Favorites</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <ChefHat className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <ChefHat className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>
                       {favoriteRecipesData.filter(r => r.difficulty === "Easy").length}
                     </p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Easy Recipes</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Easy Recipes</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Clock className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Clock className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>
                       {favoriteRecipesData.filter(r => r.tags.includes("Quick")).length}
                     </p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Quick Recipes</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Quick Recipes</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Star className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Star className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>
                       {(favoriteRecipesData.reduce((sum, r) => sum + r.rating, 0) / favoriteRecipesData.length).toFixed(1)}
                     </p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Avg Rating</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Avg Rating</p>
                   </div>
                 </div>
               </CardContent>
@@ -429,7 +429,7 @@ export default function Favorites() {
                                 onClick={() => handleRemoveFavorite(recipe.id, recipe.title)}
                                 className="size-8 p-0 rounded-full bg-white/90 hover:bg-white"
                               >
-                                <Heart className="size-4 text-red-500 fill-current" />
+                                <Heart className="size-4 text-error fill-current" />
                               </Button>
                               <Button
                                 size="sm"
@@ -457,15 +457,15 @@ export default function Favorites() {
                             </Badge>
                           </div>
                           
-                          <h3 className="font-semibold text-lg mb-2 group-hover:text-red-600 transition-colors">
+                          <h3 className="font-semibold text-lg mb-2 group-hover:text-error transition-colors">
                             {recipe.title}
                           </h3>
                           
-                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
                             {recipe.description}
                           </p>
                           
-                          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-1">
                                 <Clock className="size-4" />

@@ -336,7 +336,7 @@ export default function Shopping() {
                   Shopping List
                 </h1>
                 <div className="w-12 h-0.5 mb-6" style={{ background: 'var(--accent-gold)' }} />
-                <p className="text-muted-foreground text-lg italic font-serif">
+                <p className="text-muted-foreground text-lg">
                   Plan your shopping and never forget an ingredient
                 </p>
               </div>
@@ -452,49 +452,49 @@ export default function Shopping() {
             transition={{ delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
           >
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <ShoppingCart className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <ShoppingCart className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{totalCount}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Total Items</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{totalCount}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Total Items</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <CheckCircle2 className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <CheckCircle2 className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{purchasedCount}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Purchased</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{purchasedCount}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Purchased</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <List className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <List className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{remainingCount}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Remaining</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{remainingCount}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Remaining</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+            <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
               <CardContent className="p-8">
                 <div className="flex flex-col items-start gap-4">
-                  <Filter className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                  <Filter className="size-5" style={{ color: 'var(--brand-teal)' }} />
                   <div>
-                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{new Set(shoppingList.map(item => item.category)).size}</p>
-                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Categories</p>
+                    <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{new Set(shoppingList.map(item => item.category)).size}</p>
+                    <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Categories</p>
                   </div>
                 </div>
               </CardContent>
@@ -642,7 +642,7 @@ export default function Shopping() {
                     >
                       <Card className={`transition-all duration-300 ${
                         item.isPurchased 
-                          ? "bg-green-50 border-green-200 opacity-75" 
+                          ? "bg-success/10 border-success/30 opacity-75" 
                           : "hover:shadow-md"
                       }`}>
                         <CardContent className="p-4">
@@ -650,17 +650,17 @@ export default function Shopping() {
                             <Checkbox
                               checked={item.isPurchased}
                               onCheckedChange={() => handleTogglePurchased(item.id)}
-                              className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                              className="data-[state=checked]:bg-success data-[state=checked]:border-success"
                             />
                             
                             <div className="flex-1">
-                              <div className={`flex items-center gap-2 ${item.isPurchased ? "line-through text-gray-500" : ""}`}>
-                                <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                              <div className={`flex items-center gap-2 ${item.isPurchased ? "line-through text-muted-foreground" : ""}`}>
+                                <h3 className="font-semibold text-ink">{item.name}</h3>
                                 <Badge variant="secondary" className="text-xs">
                                   {item.category}
                                 </Badge>
                               </div>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-muted-foreground">
                                 {item.quantity} {item.unit}
                               </p>
                             </div>

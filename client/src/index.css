@@ -1,79 +1,111 @@
-@import '@fontsource/cormorant-garamond/300.css';
-@import '@fontsource/cormorant-garamond/400.css';
-@import '@fontsource/cormorant-garamond/500.css';
-@import '@fontsource/cormorant-garamond/600.css';
-@import '@fontsource/cormorant-garamond/700.css';
-@import '@fontsource/manrope/300.css';
-@import '@fontsource/manrope/400.css';
-@import '@fontsource/manrope/500.css';
-@import '@fontsource/manrope/600.css';
-@import '@fontsource/manrope/700.css';
-@import '@fontsource/manrope/800.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/800.css';
+@import '@fontsource/inter/400-italic.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 
 :root {
-  /* Culinary Editorial Color Palette */
-  --bg-cream: #F9F8F6;
-  --text-charcoal: #2B2A28;
-  --accent-olive: #5B6447;
-  --accent-terracotta: #A65D46;
-  --accent-gold: #C8A97E;
-  
-  /* Deep section backgrounds — the atmosphere layer */
-  --bg-deep-olive: #3A3F2F;
-  --bg-warm-brown: #4A3728;
-  --bg-olive-surface: #4A5240;
-  --text-on-dark: #F5F0E8;
-  --text-on-dark-muted: #B8B0A0;
-  
-  /* Main theme colors */
-  --background: var(--bg-cream);
-  --foreground: var(--text-charcoal);
-  --card: #FDFCFB;
-  --card-foreground: var(--text-charcoal);
-  --popover: #FDFCFB;
-  --popover-foreground: var(--text-charcoal);
-  --primary: var(--accent-olive);
-  --primary-foreground: var(--bg-cream);
-  --secondary: var(--accent-terracotta);
-  --secondary-foreground: var(--text-on-dark);
-  --muted: #EBEAE6;
-  --muted-foreground: #6B6A66;
-  --accent: var(--accent-gold);
-  --accent-foreground: var(--text-charcoal);
-  --destructive: #8B3A3A;
-  --destructive-foreground: var(--text-on-dark);
-  --border: #E0DFDB;
-  --input: #EBEAE6;
-  --ring: var(--accent-olive);
-  
-  /* Chart Colors */
-  --chart-1: var(--accent-olive);
-  --chart-2: var(--accent-terracotta);
-  --chart-3: var(--accent-gold);
-  --chart-4: #8B6B5D;
-  --chart-5: #6B7B61;
-  
+  /* ─── Clay Design System ─── */
+
+  /* Brand & accent — saturated single-color feature surfaces */
+  --brand-pink: #ff4d8b;
+  --brand-teal: #1a3a3a;
+  --brand-lavender: #b8a4ed;
+  --brand-peach: #ffb084;
+  --brand-ochre: #e8b94a;
+  --brand-mint: #a4d4c5;
+  --brand-coral: #ff6b5a;
+
+  /* Surfaces — cream-tinted, warm throughout */
+  --canvas: #fffaf0;
+  --surface-soft: #faf5e8;
+  --surface-card: #f5f0e0;
+  --surface-strong: #ebe6d6;
+  --surface-dark: #0a1a1a;
+  --surface-dark-elevated: #1a2a2a;
+
+  /* Ink & text */
+  --ink: #0a0a0a;
+  --body-strong: #1a1a1a;
+  --body-text: #3a3a3a;
+  --muted-ink: #6a6a6a;
+  --muted-soft: #9a9a9a;
+  --hairline: #e5e5e5;
+  --hairline-soft: #f0f0f0;
+  --on-primary: #ffffff;
+
+  /* Semantic */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* ── shadcn token mapping ── */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--canvas);
+  --card-foreground: var(--ink);
+  --popover: #fffdf7;
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-active: #1f1f1f;
+  --primary-foreground: var(--on-primary);
+  --secondary: var(--surface-card);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-card);
+  --muted-foreground: var(--muted-ink);
+  --accent: var(--surface-strong);
+  --accent-foreground: var(--ink);
+  --destructive: var(--error);
+  --destructive-foreground: var(--on-primary);
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--ink);
+
+  /* Chart colors → brand palette */
+  --chart-1: var(--brand-pink);
+  --chart-2: var(--brand-teal);
+  --chart-3: var(--brand-ochre);
+  --chart-4: var(--brand-lavender);
+  --chart-5: var(--brand-peach);
+
   /* Sidebar */
-  --sidebar: var(--bg-cream);
-  --sidebar-foreground: var(--text-charcoal);
-  --sidebar-primary: var(--accent-olive);
-  --sidebar-primary-foreground: var(--bg-cream);
-  --sidebar-accent: var(--accent-terracotta);
-  --sidebar-accent-foreground: var(--text-on-dark);
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--accent-olive);
-  
-  /* Fonts */
-  --font-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-serif);
-  
-  --radius: 0.25rem; /* Much sharper radius for editorial look */
-  --shadow-2xs: 0px 1px 2px 0px rgba(43, 42, 40, 0.05);
+  --sidebar: var(--canvas);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--ink);
+  --sidebar-primary-foreground: var(--on-primary);
+  --sidebar-accent: var(--surface-card);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--hairline);
+  --sidebar-ring: var(--ink);
+
+  /* ── Back-compat aliases (legacy "culinary/vintage" names → Clay) ── */
+  --bg-cream: var(--canvas);
+  --text-charcoal: var(--ink);
+  --accent-olive: var(--ink);
+  --accent-terracotta: var(--brand-teal);
+  --accent-gold: var(--brand-ochre);
+  --bg-deep-olive: var(--brand-teal);
+  --bg-warm-brown: var(--surface-dark-elevated);
+  --bg-olive-surface: var(--surface-dark);
+  --text-on-dark: var(--on-primary);
+  --text-on-dark-muted: #a0a0a0;
+  --vintage-dark-green: var(--ink);
+  --vintage-warm-brown: var(--brand-teal);
+  --vintage-light-beige: var(--surface-card);
+
+  /* Fonts — Inter carries both display (500 + negative tracking) and body */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font-sans);
+  --font-serif: var(--font-sans);
+
+  --radius: 1rem; /* 16px — Clay content-card radius */
+  --shadow-2xs: 0px 1px 2px 0px rgba(10, 10, 10, 0.04);
+  --shadow-soft: 0 12px 40px -12px rgba(10, 10, 10, 0.12);
 }
 
 /* Subtle grain overlay */
@@ -98,6 +130,8 @@
 html {
   transition: all 0.4s ease;
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 
@@ -112,98 +146,89 @@ html {
     line-height: 1.6;
   }
 
-  /* Professional Typography Hierarchy */
+  /* ─── Clay Type Hierarchy — Inter at 500 with negative tracking ─── */
   h1, .h1 {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    text-align: left;
-  }
+    font-weight: 500;
+    font-size: clamp(2.25rem, 6vw, 4.5rem); /* 36 → 72 */
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    color: var(--ink);  }
 
   h2, .h2 {
     font-family: var(--font-display);
-    font-weight: 600;
-    font-size: clamp(2rem, 4vw, 3rem);
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    text-align: left;
-  }
+    font-weight: 500;
+    font-size: clamp(2rem, 4.5vw, 3.5rem); /* 32 → 56 */
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--ink);  }
 
   h3, .h3 {
     font-family: var(--font-display);
-    font-weight: 600;
-    font-size: clamp(1.5rem, 3vw, 2.25rem);
-    line-height: 1.3;
-    text-align: left;
-  }
+    font-weight: 500;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem); /* 28 → 40 */
+    line-height: 1.1;
+    letter-spacing: -0.022em;
+    color: var(--ink);  }
 
   h4, .h4 {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(1.25rem, 2.5vw, 1.875rem);
-    line-height: 1.4;
-    text-align: left;
-  }
+    font-size: clamp(1.5rem, 2.5vw, 2rem); /* 24 → 32 */
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--ink);  }
 
   h5, .h5 {
     font-family: var(--font-sans);
     font-weight: 600;
-    font-size: clamp(1.125rem, 2vw, 1.5rem);
-    line-height: 1.4;
-    text-align: left;
-  }
+    font-size: 1.5rem;
+    line-height: 1.3;
+    letter-spacing: -0.012em;  }
 
   h6, .h6 {
     font-family: var(--font-sans);
     font-weight: 600;
-    font-size: clamp(1rem, 1.5vw, 1.25rem);
-    line-height: 1.5;
-    text-align: left;
-  }
+    font-size: 1.125rem;
+    line-height: 1.4;  }
 
   /* Display text for hero sections */
   .display-text {
     font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 500;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
     line-height: 1;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     text-align: center;
   }
 
   /* Subtitle text */
   .subtitle {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-size: clamp(1.125rem, 2vw, 1.5rem);
-    line-height: 1.4;
-    text-align: left;
-    color: var(--muted-foreground);
+    font-family: var(--font-sans);
+    font-size: clamp(1.125rem, 2vw, 1.375rem);
+    line-height: 1.5;    color: var(--muted-foreground);
   }
 
   /* Lead text for introductions */
   .lead {
-    font-family: var(--font-serif);
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
-    line-height: 1.6;
-    text-align: left;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+    line-height: 1.6;    font-weight: 400;
+    color: var(--body-text);
   }
 
-  /* Body text improvements */
+  /* Body text */
   p {
     font-family: var(--font-sans);
     font-size: 1rem;
-    line-height: 1.7;
+    line-height: 1.55;
   }
 
   /* Button text styling */
   button, .btn {
     font-family: var(--font-sans);
     font-weight: 600;
-    letter-spacing: 0.025em;
+    letter-spacing: 0;
   }
 
   /* Card titles */
@@ -211,9 +236,7 @@ html {
     font-family: var(--font-display);
     font-weight: 600;
     font-size: 1.25rem;
-    line-height: 1.3;
-    text-align: left;
-  }
+    line-height: 1.3;  }
 
   /* Recipe card titles */
   .recipe-title {
@@ -1296,4 +1319,40 @@ html {
   .hover\:after\:w-full:hover::after {
     width: 0;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Clay Design System — type scale + surface utilities
+   ───────────────────────────────────────────────────────────── */
+@layer components {
+  .display-xl { font-family: var(--font-display); font-weight: 500; font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 1; letter-spacing: -0.04em; color: var(--ink); }
+  .display-lg { font-family: var(--font-display); font-weight: 500; font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.05; letter-spacing: -0.032em; color: var(--ink); }
+  .display-md { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.875rem, 3.5vw, 2.5rem); line-height: 1.1; letter-spacing: -0.022em; color: var(--ink); }
+  .display-sm { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.5rem, 2.5vw, 2rem); line-height: 1.15; letter-spacing: -0.015em; color: var(--ink); }
+  .title-lg { font-weight: 600; font-size: 1.5rem; line-height: 1.3; letter-spacing: -0.012em; }
+  .title-md { font-weight: 600; font-size: 1.125rem; line-height: 1.4; }
+  .title-sm { font-weight: 600; font-size: 1rem; line-height: 1.4; }
+  .body-lead { font-size: 1.125rem; line-height: 1.6; color: var(--body-text); }
+  .caption-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    letter-spacing: 0.125em;
+    text-transform: uppercase;
+  }
+
+  /* Saturated feature-card base — pair with a brand bg utility */
+  .feature-card {
+    border-radius: 24px;
+    padding: 2rem;
+  }
+
+  /* Cream content card — hairline border, no shadow */
+  .clay-card {
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+  }
+
+  .clay-shadow { box-shadow: var(--shadow-soft); }
 }

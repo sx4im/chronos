@@ -267,7 +267,7 @@ export function ShoppingListMobile({ listId, onClose, className }: ShoppingListM
               key={item.id}
               className={cn(
                 "relative overflow-hidden",
-                swipedItem === item.id && "bg-red-50"
+                swipedItem === item.id && "bg-error/10"
               )}
               onTouchStart={(e) => handleTouchStart(e, item.id)}
               onTouchMove={handleTouchMove}

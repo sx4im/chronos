@@ -127,28 +127,28 @@ export const scrollRevealPresets = {
   fadeUp: {
     direction: 'up' as const,
     distance: '30px',
-    duration: 1200,
+    duration: 700,
     easing: 'ease-out' as const,
     delay: 0
   },
   fadeDown: {
     direction: 'down' as const,
     distance: '30px',
-    duration: 1200,
+    duration: 700,
     easing: 'ease-out' as const,
     delay: 0
   },
   fadeLeft: {
     direction: 'left' as const,
     distance: '30px',
-    duration: 1200,
+    duration: 700,
     easing: 'ease-out' as const,
     delay: 0
   },
   fadeRight: {
     direction: 'right' as const,
     distance: '30px',
-    duration: 1200,
+    duration: 700,
     easing: 'ease-out' as const,
     delay: 0
   },
@@ -169,7 +169,7 @@ export const scrollRevealPresets = {
   slowFadeUp: {
     direction: 'up' as const,
     distance: '35px',
-    duration: 1400,
+    duration: 950,
     easing: 'ease-out' as const,
     delay: 150
   },
@@ -191,14 +191,14 @@ export const scrollRevealPresets = {
   modernFadeUp: {
     direction: 'up' as const,
     distance: '30px',
-    duration: 1200,
+    duration: 700,
     easing: 'ease-out' as const,
     delay: 0
   },
   modernFadeDown: {
     direction: 'down' as const,
     distance: '30px',
-    duration: 1200,
+    duration: 700,
     easing: 'ease-out' as const,
     delay: 0
   },

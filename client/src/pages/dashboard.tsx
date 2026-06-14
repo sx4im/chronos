@@ -73,7 +73,7 @@ export default function Dashboard() {
       title: "Saved Caprese Salad",
       description: "Added to your favorites",
       timestamp: "2 hours ago",
-      icon: <Heart className="size-4 text-red-500" />
+      icon: <Heart className="size-4 text-error" />
     },
     {
       id: "2",
@@ -81,7 +81,7 @@ export default function Dashboard() {
       title: "Added Tomatoes",
       description: "Added to your pantry",
       timestamp: "4 hours ago",
-      icon: <Package className="size-4 text-green-500" />
+      icon: <Package className="size-4 text-success" />
     },
     {
       id: "3",
@@ -164,7 +164,7 @@ export default function Dashboard() {
                   {getGreeting()}{user?.name?.split(' ')[0] ? `, ${user.name.split(' ')[0]}` : ''}.
                 </h1>
                 <div className="w-12 h-0.5 mb-6" style={{ background: 'var(--accent-gold)' }} />
-                <p className="text-muted-foreground text-lg italic font-serif">
+                <p className="text-muted-foreground text-lg">
                   Your culinary digest for today.
                 </p>
               </div>
@@ -190,13 +190,13 @@ export default function Dashboard() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
           >
             <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+              <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <Heart className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                    <Heart className="size-5" style={{ color: 'var(--brand-teal)' }} />
                     <div>
-                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.savedRecipes}</p>
-                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Saved Recipes</p>
+                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{quickStats.savedRecipes}</p>
+                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Saved Recipes</p>
                     </div>
                   </div>
                 </CardContent>
@@ -204,13 +204,13 @@ export default function Dashboard() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+              <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <ChefHat className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                    <ChefHat className="size-5" style={{ color: 'var(--brand-teal)' }} />
                     <div>
-                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.cookedRecipes}</p>
-                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Recipes Cooked</p>
+                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{quickStats.cookedRecipes}</p>
+                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Recipes Cooked</p>
                     </div>
                   </div>
                 </CardContent>
@@ -218,13 +218,13 @@ export default function Dashboard() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+              <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <Package className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                    <Package className="size-5" style={{ color: 'var(--brand-teal)' }} />
                     <div>
-                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.pantryItems}</p>
-                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Pantry Items</p>
+                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{quickStats.pantryItems}</p>
+                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Pantry Items</p>
                     </div>
                   </div>
                 </CardContent>
@@ -232,13 +232,13 @@ export default function Dashboard() {
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-sm transition-colors" style={{ background: 'var(--bg-deep-olive)' }}>
+              <Card className="transition-all hover:shadow-[0_18px_40px_-18px_rgba(10,10,10,0.18)] hover:-translate-y-0.5">
                 <CardContent className="p-8">
                   <div className="flex flex-col items-start gap-4">
-                    <ShoppingCart className="size-5" style={{ color: 'var(--accent-gold)' }} />
+                    <ShoppingCart className="size-5" style={{ color: 'var(--brand-teal)' }} />
                     <div>
-                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--text-on-dark)' }}>{quickStats.shoppingItems}</p>
-                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--text-on-dark-muted)' }}>Shopping Items</p>
+                      <p className="text-3xl font-serif font-medium mb-1" style={{ color: 'var(--ink)' }}>{quickStats.shoppingItems}</p>
+                      <p className="text-xs uppercase tracking-widest font-bold" style={{ color: 'var(--muted-ink)' }}>Shopping Items</p>
                     </div>
                   </div>
                 </CardContent>
@@ -321,16 +321,16 @@ export default function Dashboard() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.4 + index * 0.1 }}
-                          className="recent-activity-item-mobile flex items-center rounded-lg hover:bg-gray-50 transition-colors"
+                          className="recent-activity-item-mobile flex items-center rounded-lg hover:bg-surface-soft transition-colors"
                         >
-                          <div className="recent-activity-icon-mobile bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <div className="recent-activity-icon-mobile bg-surface-card rounded-full flex items-center justify-center flex-shrink-0">
                             {activity.icon}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="recent-activity-text-mobile font-medium text-gray-900 truncate">{activity.title}</p>
-                            <p className="recent-activity-desc-mobile text-gray-600 truncate">{activity.description}</p>
+                            <p className="recent-activity-text-mobile font-medium text-ink truncate">{activity.title}</p>
+                            <p className="recent-activity-desc-mobile text-muted-foreground truncate">{activity.description}</p>
                           </div>
-                          <span className="recent-activity-time-mobile text-gray-500 flex-shrink-0 ml-2">{activity.timestamp}</span>
+                          <span className="recent-activity-time-mobile text-muted-foreground flex-shrink-0 ml-2">{activity.timestamp}</span>
                         </motion.div>
                       ))}
                     </div>
@@ -360,8 +360,8 @@ export default function Dashboard() {
                           {expiringItems.slice(0, 5).map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg">
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 truncate text-sm">{item.name}</p>
-                                <p className="text-xs text-gray-600">Expires in {item.daysLeft ?? 0} days</p>
+                                <p className="font-medium text-ink truncate text-sm">{item.name}</p>
+                                <p className="text-xs text-muted-foreground">Expires in {item.daysLeft ?? 0} days</p>
                               </div>
                               <Badge variant={(item.daysLeft ?? 0) <= 1 ? "destructive" : "secondary"} className="ml-2 flex-shrink-0 text-xs">
                                 {item.daysLeft ?? 0}d
@@ -372,9 +372,9 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       <div className="flex-1 flex flex-col justify-center items-center text-center min-h-[145px]">
-                        <Package className="size-8 text-gray-300 mx-auto" />
-                        <p className="text-gray-600 text-sm">No items expiring soon</p>
-                        <p className="text-xs text-gray-500 mt-1">Great job managing your pantry!</p>
+                        <Package className="size-8 text-muted-foreground mx-auto" />
+                        <p className="text-muted-foreground text-sm">No items expiring soon</p>
+                        <p className="text-xs text-muted-foreground mt-1">Great job managing your pantry!</p>
                       </div>
                     )}
                   </CardContent>
@@ -395,9 +395,9 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent className="cooking-tips-content">
                     <div className="space-y-4">
-                      <div className="p-4 bg-green-50 rounded-lg cooking-tips-item">
-                        <h4 className="font-medium text-green-700 mb-1 text-2xl">Pro Tip</h4>
-                        <p className="text-xs text-green-800">
+                      <div className="p-4 bg-success/10 rounded-lg cooking-tips-item">
+                        <h4 className="font-medium text-success mb-1 text-2xl">Pro Tip</h4>
+                        <p className="text-xs text-success">
                           Store fresh herbs in a glass of water in the fridge to keep them fresh longer.
                         </p>
                       </div>
@@ -407,9 +407,9 @@ export default function Dashboard() {
                           One-pot meals are perfect for busy weeknights and easy cleanup.
                         </p>
                       </div>
-                      <div className="p-4 bg-amber-50 rounded-lg cooking-tips-item">
-                        <h4 className="font-medium text-amber-700 mb-1 text-2xl">Quick Tip</h4>
-                        <p className="text-xs text-amber-800">
+                      <div className="p-4 bg-warning/15 rounded-lg cooking-tips-item">
+                        <h4 className="font-medium text-warning mb-1 text-2xl">Quick Tip</h4>
+                        <p className="text-xs text-warning">
                           Always taste and season your food at each cooking stage for best flavor.
                         </p>
                       </div>

@@ -321,9 +321,9 @@ export function IngredientInput({
   return (
     <div className="space-y-2">
       <div className="relative">
-        <div className="relative flex min-h-[40px] w-full border border-vintage-warm-brown/50 focus-within:border-vintage-warm-brown focus-within:ring-0 focus-within:ring-offset-0 bg-transparent px-3 py-2 text-sm rounded-md flex-wrap gap-1">
+        <div className="relative flex min-h-[44px] w-full items-center border border-hairline focus-within:border-ink bg-canvas pl-9 pr-3 py-2 text-sm rounded-xl flex-wrap gap-1 transition-colors">
           {/* Search Icon */}
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-vintage-warm-brown size-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4" />
           
           {/* Chips */}
           {ingredients.length > 0 && (
@@ -371,7 +371,7 @@ export function IngredientInput({
               setTimeout(() => setShowSuggestions(false), 150);
             }}
             placeholder={ingredients.length === 0 ? placeholder : ""}
-            className="flex-1 bg-transparent outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground pl-10 pr-10 text-sm font-medium"
+            className="flex-1 min-w-[6rem] bg-transparent outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground pl-1 pr-10 text-sm font-medium"
             disabled={ingredients.length >= maxItems}
             aria-label="Add ingredients"
             data-testid="ingredient-input"
@@ -381,9 +381,10 @@ export function IngredientInput({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
+            disableMotion
             onClick={openImageModal}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 size-6 p-0 text-vintage-warm-brown"
+            className="absolute right-2 top-1/2 -translate-y-1/2 size-8 shrink-0 rounded-lg p-0 text-muted-foreground hover:text-ink hover:bg-surface-card"
             aria-label="Add photo"
             data-testid="add-photo-button"
           >
@@ -436,7 +437,9 @@ export function IngredientInput({
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>
           {ingredients.length === 0 
-            ? "Type ingredients or paste a list separated by commas"
+            ? "Add at least 5 ingredients to generate recipes"
+            : ingredients.length < 5
+            ? `${ingredients.length}/${maxItems} ingredients, need ${5 - ingredients.length} more to search`
             : `${ingredients.length}/${maxItems} ingredients`
           }
         </span>

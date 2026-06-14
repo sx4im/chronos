@@ -10,6 +10,7 @@ interface EmptyStateProps {
   action?: {
     label: string;
     onClick: () => void;
+    disabled?: boolean;
   };
   className?: string;
 }
@@ -27,15 +28,17 @@ export function EmptyState({
         <div className="text-muted-foreground mb-4">
           {icon}
         </div>
-        <h3 className="text-lg font-medium mb-2 text-center">{title}</h3>
-        <p className="text-black mb-4">{description}</p>
+        <h3 className="title-md mb-2 text-center">{title}</h3>
+        <p className="text-muted-foreground mb-4 max-w-md mx-auto">{description}</p>
         {action && (
-          <div 
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground h-10 px-4 py-2 mt-2 select-none cursor-default"
+          <Button
+            onClick={action.onClick}
+            disabled={action.disabled}
+            className="mt-2"
             data-testid="empty-state-action"
           >
             {action.label}
-          </div>
+          </Button>
         )}
       </CardContent>
     </Card>
