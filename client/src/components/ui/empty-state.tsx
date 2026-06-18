@@ -23,18 +23,19 @@ export function EmptyState({
   className 
 }: EmptyStateProps) {
   return (
-    <Card className={cn("w-full", className)}>
-      <CardContent className="p-8 text-center">
-        <div className="text-muted-foreground mb-4">
-          {icon}
-        </div>
-        <h3 className="title-md mb-2 text-center">{title}</h3>
-        <p className="text-muted-foreground mb-4 max-w-md mx-auto">{description}</p>
+    <Card className={cn("w-full border-dashed", className)}>
+      <CardContent className="flex flex-col items-center px-6 py-12 text-center sm:py-16">
+        {icon && (
+          <div className="mb-5 flex size-16 items-center justify-center rounded-full bg-surface-card text-muted-foreground">
+            {icon}
+          </div>
+        )}
+        <h3 className="title-md mb-1.5 text-ink">{title}</h3>
+        <p className="mb-6 max-w-sm text-sm leading-relaxed text-muted-foreground">{description}</p>
         {action && (
           <Button
             onClick={action.onClick}
             disabled={action.disabled}
-            className="mt-2"
             data-testid="empty-state-action"
           >
             {action.label}

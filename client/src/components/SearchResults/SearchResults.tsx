@@ -149,7 +149,7 @@ export const SearchResults = React.memo(function SearchResults({
   if (ingredients.length === 0) {
     return (
       <EmptyState
-        icon={<Search className="mx-auto size-12 mb-4 text-primary" />}
+        icon={<Search className="size-7" />}
         title="No ingredients yet"
         description="Add at least 5 ingredients to start generating recipes from our AI model."
         action={{
@@ -164,7 +164,7 @@ export const SearchResults = React.memo(function SearchResults({
   if (ingredients.length < 5) {
     return (
       <EmptyState
-        icon={<Sparkles className="mx-auto size-12 mb-4 text-primary" />}
+        icon={<Sparkles className="size-7" />}
         title={`${5 - ingredients.length} more ingredient${5 - ingredients.length === 1 ? '' : 's'} needed`}
         description={`You need at least 5 ingredients to generate recipes from our AI model. You currently have ${ingredients.length}.`}
         action={{
@@ -179,7 +179,7 @@ export const SearchResults = React.memo(function SearchResults({
   if (error) {
     return (
       <EmptyState
-        icon={<RefreshCw className="mx-auto size-12 mb-4 text-primary" />}
+        icon={<RefreshCw className="size-7" />}
         title="We couldn't reach the recipe service"
         description="Please check your connection and try the search again."
         action={{
@@ -254,7 +254,7 @@ export const SearchResults = React.memo(function SearchResults({
         </div>
       ) : !isGeneratingCreative && (
         <EmptyState
-          icon={<Sparkles className="mx-auto size-12 mb-4 opacity-50" />}
+          icon={<Sparkles className="size-7" />}
           title="Create Custom AI Recipes"
           description="Type at least 5 ingredients in your pantry above, then click below to let our AI craft custom recipes tailored exactly to your ingredients."
           action={{
