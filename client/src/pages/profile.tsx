@@ -227,7 +227,7 @@ export default function Profile() {
 
   if (profileLoading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative min-h-screen bg-grain bg-background container mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-12">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex items-center space-x-4">
             <Skeleton className="size-20 rounded-full" />
@@ -248,7 +248,7 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative min-h-screen bg-grain bg-background container mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-12">
         <Card className="max-w-md mx-auto">
           <CardContent className="p-8 text-center">
             <h2 className="text-xl font-semibold mb-2">Profile not found</h2>
@@ -262,8 +262,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-12">
-      <div className="container mx-auto px-6 lg:px-12 relative z-10">
+    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-10 sm:py-12">
+      <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-6xl mx-auto">
         {/* Profile Header */}
         <SlowFadeUp>

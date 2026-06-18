@@ -185,8 +185,8 @@ export default function Favorites() {
   };
 
   return (
-    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-12">
-      <div className="relative z-20 container mx-auto px-6 lg:px-12">
+    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-10 sm:py-12">
+      <div className="relative z-20 container mx-auto px-5 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
         <motion.div

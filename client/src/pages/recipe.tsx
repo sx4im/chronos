@@ -314,7 +314,7 @@ export default function Recipe() {
           className="fixed inset-0 z-0"
           style={{ backgroundColor: 'rgba(30, 64, 175, 0.8)' }}
         />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="container mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-12 relative z-10">
           <div className="max-w-6xl mx-auto space-y-8">
           <Skeleton className="h-64 w-full rounded-lg" />
           <div className="space-y-4">
@@ -344,7 +344,7 @@ export default function Recipe() {
           className="fixed inset-0 z-0"
           style={{ backgroundColor: 'rgba(30, 64, 175, 0.8)' }}
         />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="container mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-12 relative z-10">
         <Card className="max-w-md mx-auto">
           <CardContent className="p-8 text-center">
               <h2 className="text-xl font-semibold mb-2 text-foreground">Recipe not found</h2>
@@ -359,8 +359,8 @@ export default function Recipe() {
   }
 
   return (
-    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-12">
-      <div className="container mx-auto px-6 lg:px-12 relative z-10">
+    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-10 sm:py-12">
+      <div className="container mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-6xl mx-auto">
           {/* Back Button */}
           <Button

@@ -78,7 +78,7 @@ export default function Admin() {
 
   if (statsLoading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative min-h-screen bg-grain bg-background container mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-12">
         <div className="max-w-6xl mx-auto space-y-8">
           <Skeleton className="h-8 w-48" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -92,8 +92,8 @@ export default function Admin() {
   }
 
   return (
-    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-12">
-      <div className="container mx-auto px-6 lg:px-12">
+    <div className="relative min-h-screen bg-grain bg-background font-sans text-foreground py-10 sm:py-12">
+      <div className="container mx-auto px-5 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-serif text-4xl lg:text-5xl font-medium tracking-tight text-foreground">Admin Dashboard</h1>
