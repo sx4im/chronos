@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -49,6 +50,9 @@ export function ImagePreviewModal({ image, onClose, onSave }: ImagePreviewModalP
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>Edit Image</DialogTitle>
+          <DialogDescription className="sr-only">
+            Preview and adjust your image before using it.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">

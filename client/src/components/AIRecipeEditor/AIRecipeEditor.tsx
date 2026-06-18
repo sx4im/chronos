@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -206,6 +206,9 @@ export default function AIRecipeEditor({ isOpen, onClose, recipe, onSave }: AIRe
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <DialogTitle className="text-2xl font-bold">AI-Generated Recipe</DialogTitle>
+              <DialogDescription className="sr-only">
+                Review, edit, and save this AI-generated recipe.
+              </DialogDescription>
               <Badge variant="secondary" className="bg-primary/10 text-primary uppercase tracking-widest font-bold text-[10px]">
                 <ChefHat className="size-3 mr-1" />
                 AI Generated

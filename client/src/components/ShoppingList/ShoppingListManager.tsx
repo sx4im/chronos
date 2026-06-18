@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   ShoppingCart, 
   Plus, 
@@ -99,6 +99,9 @@ export function ShoppingListManager({ className }: ShoppingListManagerProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Shopping List</DialogTitle>
+              <DialogDescription>
+                Name your list and start adding ingredients to it.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>

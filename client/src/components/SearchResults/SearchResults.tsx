@@ -29,8 +29,6 @@ import {
 interface SearchResultsProps {
   ingredients: string[];
   filters: SearchFilters;
-  onRecipeSave?: (recipeId: string) => void;
-  onUseSuggestion?: (recipeId: string) => void;
   className?: string;
 }
 
@@ -43,12 +41,10 @@ const SORT_OPTIONS = [
   { value: "popularity", label: "Most Popular", icon: TrendingUp },
 ] as const;
 
-export const SearchResults = React.memo(function SearchResults({ 
-  ingredients, 
-  filters, 
-  onRecipeSave, 
-  onUseSuggestion,
-  className 
+export const SearchResults = React.memo(function SearchResults({
+  ingredients,
+  filters,
+  className
 }: SearchResultsProps) {
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [isGeneratingCreative, setIsGeneratingCreative] = useState(false);
@@ -245,8 +241,6 @@ export const SearchResults = React.memo(function SearchResults({
             >
               <RecipeCard
                 recipe={recipe}
-                onSave={onRecipeSave}
-                onUseSuggestion={onUseSuggestion}
                 priority={index < 3}
               />
             </motion.div>

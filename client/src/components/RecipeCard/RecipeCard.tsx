@@ -8,7 +8,6 @@ import {
   Clock,
   Users,
   Star,
-  Bookmark,
   AlertCircle,
   CheckCircle2,
   X,
@@ -44,40 +43,22 @@ export interface RecipeCardData {
 
 interface RecipeCardProps {
   recipe: RecipeCardData;
-  onSave?: (recipeId: string) => void;
-  onUseSuggestion?: (recipeId: string) => void;
   onFavorite?: (recipeId: string, isFavorited: boolean) => void;
   className?: string;
   priority?: boolean;
   isFavorited?: boolean;
 }
 
-export const RecipeCard = React.memo(function RecipeCard({ 
-  recipe, 
-  onSave, 
-  onUseSuggestion, 
+export const RecipeCard = React.memo(function RecipeCard({
+  recipe,
   onFavorite,
   className,
   priority = false,
   isFavorited = false
 }: RecipeCardProps) {
   const [isHovered, setIsHovered] = React.useState(false);
-  const [isSaved, setIsSaved] = React.useState(false);
   const [isFavoritedState, setIsFavoritedState] = React.useState(isFavorited);
   const [isLoading, setIsLoading] = React.useState(false);
-
-  const handleSave = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsSaved(!isSaved);
-    onSave?.(recipe.id);
-  };
-
-  const handleUseSuggestion = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onUseSuggestion?.(recipe.id);
-  };
 
   const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -137,7 +118,9 @@ export const RecipeCard = React.memo(function RecipeCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/recipe/${recipe.id}`}>
+      {/* Clickable preview + details. Action buttons are kept OUTSIDE this
+          link so we never nest an interactive <button> inside an <a>. */}
+      <Link href={`/recipe/${recipe.id}`} className="block cursor-pointer">
         <div className="relative">
           {recipe.image && (
             <div className="relative aspect-[16/10] overflow-hidden bg-surface-card">
@@ -154,7 +137,7 @@ export const RecipeCard = React.memo(function RecipeCard({
               )}
             </div>
           )}
-          <CardContent className="p-5">
+          <CardContent className="p-5 pb-3">
             {/* Status badges */}
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               {!recipe.image && recipe.matchPercentage !== undefined && (
@@ -213,7 +196,7 @@ export const RecipeCard = React.memo(function RecipeCard({
             </div>
 
             {/* Tags */}
-            <div className="flex flex-wrap gap-1 mb-3">
+            <div className="flex flex-wrap gap-1">
               {recipe.diet && (
                 <Badge variant="outline" className="text-xs">
                   {recipe.diet}
@@ -233,7 +216,7 @@ export const RecipeCard = React.memo(function RecipeCard({
 
             {/* Missing ingredients pills */}
             {recipe.missingIngredients && recipe.missingIngredients.length > 0 && (
-              <div className="mb-3">
+              <div className="mt-3">
                 <p className="text-xs text-muted-foreground mb-1">Missing ingredients:</p>
                 <div className="flex flex-wrap gap-1">
                   {recipe.missingIngredients.slice(0, 3).map((ingredient) => (
@@ -254,38 +237,28 @@ export const RecipeCard = React.memo(function RecipeCard({
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 px-2"
-                  onClick={handleSave}
-                  data-testid={`save-recipe-${recipe.id}`}
-                >
-                  <Bookmark className={cn("size-4 mr-1", isSaved && "fill-current")} />
-                  {isSaved ? "Saved" : "Save"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 px-2"
-                  onClick={handleFavorite}
-                  disabled={isLoading}
-                  data-testid={`favorite-recipe-${recipe.id}`}
-                >
-                  <Heart className={cn("size-4 mr-1", isFavoritedState && "fill-current")} />
-                  {isFavoritedState ? "Liked" : "Like"}
-                </Button>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {recipe.reviewCount} reviews
-              </span>
-            </div>
           </CardContent>
         </div>
       </Link>
+
+      {/* Actions — siblings of the link (valid markup, keyboard-accessible) */}
+      <div className="flex items-center justify-between px-5 pb-5 pt-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 px-2"
+          onClick={handleFavorite}
+          disabled={isLoading}
+          aria-pressed={isFavoritedState}
+          data-testid={`favorite-recipe-${recipe.id}`}
+        >
+          <Heart className={cn("size-4 mr-1", isFavoritedState && "fill-current")} />
+          {isFavoritedState ? "Saved" : "Save"}
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {recipe.reviewCount} reviews
+        </span>
+      </div>
     </Card>
   );
 });

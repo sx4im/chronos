@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Clock, 
@@ -737,6 +737,9 @@ export default function Recipe() {
         <DialogContent className="bg-vintage-light-beige border-vintage-warm-brown/20">
           <DialogHeader>
             <DialogTitle className="text-primary">Share Recipe</DialogTitle>
+            <DialogDescription>
+              Share this recipe with friends and family.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-2">

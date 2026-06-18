@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -360,6 +360,11 @@ export default function Shopping() {
                       <DialogTitle>
                         {editingItem ? "Edit Shopping Item" : "Add New Item"}
                       </DialogTitle>
+                      <DialogDescription>
+                        {editingItem
+                          ? "Update the details of this item."
+                          : "Add a new item to your shopping list."}
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>

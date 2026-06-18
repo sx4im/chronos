@@ -7,7 +7,6 @@ import { IngredientInput } from "@/components/IngredientInput";
 import { PreferencesPanel } from "@/components/PreferencesPanel";
 import { SearchResults } from "@/components/SearchResults";
 import { type IngredientChip, type SearchFilters } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
 import { Search as SearchIcon } from "lucide-react";
 
 export default function Search() {
@@ -24,8 +23,6 @@ export default function Search() {
       servings: 4
     };
   });
-  
-  const { toast } = useToast();
 
   const handleIngredientsChange = (newIngredients: IngredientChip[]) => {
     setSelectedIngredients(newIngredients);
@@ -33,20 +30,6 @@ export default function Search() {
 
   const handleFiltersChange = (filters: SearchFilters) => {
     setSearchFilters(filters);
-  };
-
-  const handleRecipeSave = (recipeId: string) => {
-    toast({
-      title: "Recipe saved!",
-      description: "Recipe has been added to your favorites.",
-    });
-  };
-
-  const handleUseSuggestion = (recipeId: string) => {
-    toast({
-      title: "Great choice!",
-      description: "Recipe has been added to your meal plan.",
-    });
   };
 
   return (
@@ -106,8 +89,6 @@ export default function Search() {
           <SearchResults
             ingredients={selectedIngredients.map(ing => ing.name)}
             filters={searchFilters}
-            onRecipeSave={handleRecipeSave}
-            onUseSuggestion={handleUseSuggestion}
           />
         </motion.div>
               </div>
