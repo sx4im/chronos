@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   name: text("name").notNull(),
   email: text("email").unique(),
+  role: text("role").notNull().default("user"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -125,6 +126,16 @@ export const collectionRecipes = pgTable(
 );
 
 export type CollectionRecipe = typeof collectionRecipes.$inferSelect;
+
+// AI-generated recipes are persisted so they survive across serverless
+// instances (recipe detail, favorites, and collections can resolve them).
+export const generatedRecipes = pgTable("generated_recipes", {
+  id: text("id").primaryKey(),
+  data: jsonb("data").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type GeneratedRecipe = typeof generatedRecipes.$inferSelect;
 
 // IngredientChip type for the IngredientInput component
 export const ingredientChipSchema = z.object({

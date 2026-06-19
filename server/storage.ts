@@ -8,6 +8,7 @@ import {
   shoppingListItems,
   collections,
   collectionRecipes,
+  generatedRecipes,
   type User,
   type InsertUser,
   type UserProfile,
@@ -19,7 +20,7 @@ import {
   type Collection,
 } from "../shared/schema";
 import { db } from "./db";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 
 export interface PantryItemInputData {
   name: string;
@@ -87,6 +88,10 @@ export interface IStorage {
   listCollectionRecipes(collectionId: string): Promise<string[]>;
   addCollectionRecipe(collectionId: string, recipeId: string): Promise<void>;
   removeCollectionRecipe(collectionId: string, recipeId: string): Promise<boolean>;
+
+  saveGeneratedRecipe(id: string, data: unknown): Promise<void>;
+  getGeneratedRecipe(id: string): Promise<unknown | undefined>;
+  getGeneratedRecipesByIds(ids: string[]): Promise<Array<{ id: string; data: unknown }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -363,6 +368,27 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(collectionRecipes.collectionId, collectionId), eq(collectionRecipes.recipeId, recipeId)))
       .returning({ recipeId: collectionRecipes.recipeId });
     return result.length > 0;
+  }
+
+  async saveGeneratedRecipe(id: string, data: unknown): Promise<void> {
+    await db
+      .insert(generatedRecipes)
+      .values({ id, data })
+      .onConflictDoUpdate({ target: generatedRecipes.id, set: { data } });
+  }
+
+  async getGeneratedRecipe(id: string): Promise<unknown | undefined> {
+    const [row] = await db.select().from(generatedRecipes).where(eq(generatedRecipes.id, id));
+    return row?.data;
+  }
+
+  async getGeneratedRecipesByIds(ids: string[]): Promise<Array<{ id: string; data: unknown }>> {
+    if (ids.length === 0) return [];
+    const rows = await db
+      .select()
+      .from(generatedRecipes)
+      .where(inArray(generatedRecipes.id, ids));
+    return rows.map((row) => ({ id: row.id, data: row.data }));
   }
 }
 

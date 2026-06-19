@@ -43,11 +43,22 @@ ALTER TABLE "user_sessions"
 CREATE INDEX IF NOT EXISTS "IDX_user_sessions_expire" ON "user_sessions" ("expire");
 ```
 
-Then push the app schema (users, profiles, settings, favorites, pantry items, shopping lists, collections, etc.) with Drizzle:
+Then push the app schema (users, profiles, settings, favorites, pantry items, shopping lists, collections, persisted AI recipes, etc.) with Drizzle:
 
 ```bash
 npm run db:push
 ```
+
+Notes:
+
+- The `users` table includes a `role` column (defaults to `user`). To grant a
+  user access to the admin dashboard, set their role to `admin` directly in the
+  database (`UPDATE users SET role = 'admin' WHERE username = '…';`).
+- AI-generated recipes are persisted to a `generated_recipes` table so recipe
+  detail pages, favorites, and collections keep working across serverless
+  instances.
+- The `rate_limit_hits` table used by the shared (cross-instance) rate limiter
+  is created automatically on first use; no manual step is required.
 
 ## API Surface
 

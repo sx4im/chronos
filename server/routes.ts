@@ -20,6 +20,7 @@ import {
   type User,
 } from "../shared/schema";
 import { extractIngredientsFromImage, recommendRecipes } from "./lib/ai";
+import { createPgRateLimitStore } from "./lib/pgRateLimitStore";
 
 const authRegisterSchema = insertUserSchema.pick({
   name: true,
@@ -40,7 +41,7 @@ function toClientUser(user: User, profile?: { bio?: string | null; location?: st
   return {
     ...userWithoutPassword,
     email: user.email ?? "",
-    role: "user" as const,
+    role: user.role === "admin" ? ("admin" as const) : ("user" as const),
     joinDate: user.createdAt.toISOString(),
     bio: profile?.bio ?? "",
     location: profile?.location ?? "",
@@ -128,23 +129,64 @@ const ingredientsDatabase = [
 ];
 import { recipesDatabase } from "./lib/recipesDatabase";
 
-function findRecipeSummary(recipeId: string) {
-  const recipe = recipesDatabase.find((r) => r.id === recipeId || r.slug === recipeId);
-  if (!recipe) return null;
+type RecipeSummary = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  image: string;
+  cookTime: number;
+  prepTime: number;
+  servings: number;
+  difficulty: string;
+  rating: number;
+  reviewCount: number;
+  tags: string[];
+};
+
+function toRecipeSummary(recipe: any): RecipeSummary {
   return {
     id: recipe.id,
-    slug: recipe.slug,
+    slug: recipe.slug ?? recipe.id,
     title: recipe.title,
     description: recipe.description,
-    image: recipe.image,
+    image: recipe.image ?? "",
     cookTime: recipe.cookTime,
     prepTime: recipe.prepTime,
     servings: recipe.servings,
     difficulty: recipe.difficulty,
     rating: recipe.rating,
     reviewCount: recipe.reviewCount,
-    tags: recipe.tags,
+    tags: recipe.tags ?? [],
   };
+}
+
+function findRecipeSummary(recipeId: string): RecipeSummary | null {
+  const recipe = recipesDatabase.find((r) => r.id === recipeId || r.slug === recipeId);
+  return recipe ? toRecipeSummary(recipe) : null;
+}
+
+// Resolve summaries for a set of recipe ids, falling back to the persisted
+// AI-generated recipes for any id not present in the static catalogue. Returns
+// a map keyed by the requested id.
+async function resolveRecipeSummaries(ids: string[]): Promise<Map<string, RecipeSummary>> {
+  const summaries = new Map<string, RecipeSummary>();
+  const missing: string[] = [];
+  for (const id of ids) {
+    const summary = findRecipeSummary(id);
+    if (summary) {
+      summaries.set(id, summary);
+    } else {
+      missing.push(id);
+    }
+  }
+  if (missing.length > 0) {
+    const generated = await storage.getGeneratedRecipesByIds(missing);
+    for (const row of generated) {
+      summaries.set(row.id, toRecipeSummary(row.data));
+    }
+  }
+  return summaries;
 }
 
 const ingredientsQuerySchema = z.object({
@@ -257,6 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     max: 300,
     standardHeaders: true,
     legacyHeaders: false,
+    store: createPgRateLimitStore("external"),
     message: {
       status: 429,
       message: "Too many requests. Please try again in a minute.",
@@ -269,6 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
+    store: createPgRateLimitStore("upload"),
     message: {
       status: 429,
       message: "Too many upload requests. Please try again later."
@@ -280,6 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     max: 30,
     standardHeaders: true,
     legacyHeaders: false,
+    store: createPgRateLimitStore("admin"),
     message: {
       status: 429,
       message: "Too many admin requests. Please try again later."
@@ -291,6 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
+    store: createPgRateLimitStore("ai-recipe"),
     keyGenerator: (req) => {
       const user = req.user as User | undefined;
       if (req.isAuthenticated() && user?.id) {
@@ -467,6 +513,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return fullRecipe;
       });
 
+      // Persist so the recipe survives across serverless instances (detail
+      // page, favorites, collections) rather than living only in memory.
+      await Promise.all(mappedRecipes.map((recipe) => storage.saveGeneratedRecipe(recipe.id, recipe)));
+
       res.json({ recipes: mappedRecipes });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -477,19 +527,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Single recipe endpoint
-  app.get("/api/recipe/:slug", externalApiRateLimit, (req, res) => {
+  app.get("/api/recipe/:slug", externalApiRateLimit, async (req, res, next) => {
     try {
       const { slug } = recipeParamsSchema.parse(req.params);
-      
+
       const recipe = recipesDatabase.find(r => r.slug === slug || r.id === slug);
-      
-      if (!recipe) {
-        return res.status(404).json({ message: "Recipe not found" });
+      if (recipe) {
+        return res.json(recipe);
       }
-      
-      res.json(recipe);
+
+      // Fall back to a persisted AI-generated recipe.
+      const generated = await storage.getGeneratedRecipe(slug);
+      if (generated) {
+        return res.json(generated);
+      }
+
+      return res.status(404).json({ message: "Recipe not found" });
     } catch (error) {
-      res.status(400).json({ message: "Invalid recipe ID" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid recipe ID" });
+      }
+      next(error);
     }
   });
 
@@ -532,11 +590,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = getAuthUserId(req);
       const { id } = req.params;
       const recipe = recipesDatabase.find((r) => r.id === id || r.slug === id);
-      if (!recipe) {
+      let recipeId = recipe?.id;
+      if (!recipeId) {
+        const generated = (await storage.getGeneratedRecipe(id)) as { id?: string } | undefined;
+        recipeId = generated?.id ?? (generated ? id : undefined);
+      }
+      if (!recipeId) {
         return res.status(404).json({ message: "Recipe not found" });
       }
-      await storage.addFavorite(userId, recipe.id);
-      res.json({ success: true, recipeId: recipe.id, saved: true });
+      await storage.addFavorite(userId, recipeId);
+      res.json({ success: true, recipeId, saved: true });
     } catch (error) {
       next(error);
     }
@@ -642,9 +705,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = getAuthUserId(req);
       const rows = await storage.listFavorites(userId);
+      const summaries = await resolveRecipeSummaries(rows.map((row) => row.recipeId));
       const recipes = rows
         .map((row) => {
-          const summary = findRecipeSummary(row.recipeId);
+          const summary = summaries.get(row.recipeId);
           if (!summary) return null;
           return { ...summary, savedAt: row.createdAt };
         })
@@ -659,11 +723,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/profile/recent-recipes", requireAuth, async (req, res, next) => {
     try {
       const userId = getAuthUserId(req);
-      const rows = await storage.listFavorites(userId);
+      const rows = (await storage.listFavorites(userId)).slice(0, 5);
+      const summaries = await resolveRecipeSummaries(rows.map((row) => row.recipeId));
       const recipes = rows
-        .slice(0, 5)
         .map((row) => {
-          const summary = findRecipeSummary(row.recipeId);
+          const summary = summaries.get(row.recipeId);
           if (!summary) return null;
           return { ...summary, lastCooked: row.createdAt };
         })
@@ -763,9 +827,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Collection not found" });
       }
       const recipeIds = await storage.listCollectionRecipes(collection.id);
+      const summaries = await resolveRecipeSummaries(recipeIds);
       const recipes = recipeIds
-        .map((id) => findRecipeSummary(id))
-        .filter((value): value is NonNullable<typeof value> => value !== null);
+        .map((id) => summaries.get(id))
+        .filter((value): value is NonNullable<typeof value> => value !== undefined);
       res.json({ collection, recipes });
     } catch (error) {
       next(error);
@@ -982,12 +1047,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Shopping list not found" });
       }
       const items = await storage.listShoppingListItems(list.id);
-      const recipes = (list.recipeIds ?? [])
-        .map((id) => {
-          const summary = findRecipeSummary(id);
-          if (summary) return { id: summary.id, title: summary.title };
-          return { id, title: "Unknown Recipe" };
-        });
+      const recipeIds = list.recipeIds ?? [];
+      const recipeSummaries = await resolveRecipeSummaries(recipeIds);
+      const recipes = recipeIds.map((id) => {
+        const summary = recipeSummaries.get(id);
+        return summary ? { id: summary.id, title: summary.title } : { id, title: "Unknown Recipe" };
+      });
       const formattedItems = items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -1284,6 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     max: 5,              // 5 requests per window
     standardHeaders: true,
     legacyHeaders: false,
+    store: createPgRateLimitStore("login"),
     message: {
       status: 429,
       message: "Too many login attempts. Please try again later."
@@ -1295,6 +1361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     max: 3,              // 3 requests per window
     standardHeaders: true,
     legacyHeaders: false,
+    store: createPgRateLimitStore("register"),
     message: {
       status: 429,
       message: "Too many registration attempts. Please try again later."
