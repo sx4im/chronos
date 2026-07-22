@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Defense-in-depth CSP. `connect-src 'self'` is the load-bearing clause for
+      A2: it makes a crafted `?capsule=https://attacker/` link unfetchable at
+      the browser layer even if the App.tsx same-origin check were bypassed.
+      `script-src 'self' 'unsafe-inline'` allows the Vite + React-refresh inline
+      preamble in DEV; on the built dist served by `chronos open`, a STRICTER
+      `script-src 'self'` header is sent by open.ts, and a response carrying
+      both policies enforces the intersection — so inline scripts are blocked
+      in production while dev keeps working. `style-src 'unsafe-inline'` is
+      needed because React renders timeline/diagram swatch colors via inline
+      `style` attributes. `base-uri 'self'` + `form-action 'none'` close the
+      remaining injection vectors.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self'; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; base-uri 'self'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+    <title>Chronos Inspector</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

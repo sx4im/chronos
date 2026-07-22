@@ -1,0 +1,182 @@
+{
+  "chronosVersion": "0.0.0",
+  "seed": "0",
+  "nodes": [
+    "node-0",
+    "node-1",
+    "node-2"
+  ],
+  "config": {
+    "network": {
+      "minLatency": 1,
+      "maxLatency": 10,
+      "dropProb": 0.15,
+      "dupProb": 0.15
+    },
+    "chaos": {
+      "partitionProb": 0.02,
+      "crashProb": 0.02,
+      "restartProb": 0.05,
+      "maxPartitionMs": 50,
+      "maxCrashFraction": 0.34
+    }
+  },
+  "maxSteps": 10000,
+  "invariant": {
+    "name": "all counts equal",
+    "detail": "check() returned false"
+  },
+  "trace": {
+    "seed": "0",
+    "config": {
+      "network": {
+        "minLatency": 1,
+        "maxLatency": 10,
+        "dropProb": 0.15,
+        "dupProb": 0.15
+      },
+      "chaos": {
+        "partitionProb": 0.02,
+        "crashProb": 0.02,
+        "restartProb": 0.05,
+        "maxPartitionMs": 50,
+        "maxCrashFraction": 0.34
+      }
+    },
+    "nodes": [
+      "node-0",
+      "node-1",
+      "node-2"
+    ],
+    "events": [
+      {
+        "kind": "send",
+        "from": "node-0",
+        "to": "node-0",
+        "summary": "\"inc\"",
+        "t": 0,
+        "seq": 0
+      },
+      {
+        "kind": "send",
+        "from": "node-0",
+        "to": "node-1",
+        "summary": "\"inc\"",
+        "t": 0,
+        "seq": 1
+      },
+      {
+        "kind": "send",
+        "from": "node-0",
+        "to": "node-2",
+        "summary": "\"inc\"",
+        "t": 0,
+        "seq": 2
+      },
+      {
+        "kind": "send",
+        "from": "node-1",
+        "to": "node-0",
+        "summary": "dropped \"inc\"",
+        "t": 0,
+        "seq": 3
+      },
+      {
+        "kind": "send",
+        "from": "node-1",
+        "to": "node-1",
+        "summary": "dropped \"inc\"",
+        "t": 0,
+        "seq": 4
+      },
+      {
+        "kind": "send",
+        "from": "node-1",
+        "to": "node-2",
+        "summary": "dropped \"inc\"",
+        "t": 0,
+        "seq": 5
+      },
+      {
+        "kind": "send",
+        "from": "node-2",
+        "to": "node-0",
+        "summary": "\"inc\"",
+        "t": 0,
+        "seq": 6
+      },
+      {
+        "kind": "send",
+        "from": "node-2",
+        "to": "node-1",
+        "summary": "\"inc\"",
+        "t": 0,
+        "seq": 7
+      },
+      {
+        "kind": "send",
+        "from": "node-2",
+        "to": "node-2",
+        "summary": "dropped \"inc\"",
+        "t": 0,
+        "seq": 8
+      },
+      {
+        "kind": "deliver",
+        "from": "node-2",
+        "to": "node-1",
+        "summary": "\"inc\"",
+        "t": 2,
+        "seq": 9
+      },
+      {
+        "kind": "deliver",
+        "from": "node-0",
+        "to": "node-0",
+        "summary": "\"inc\"",
+        "t": 5,
+        "seq": 10
+      },
+      {
+        "kind": "deliver",
+        "from": "node-2",
+        "to": "node-0",
+        "summary": "\"inc\"",
+        "t": 5,
+        "seq": 11
+      },
+      {
+        "kind": "deliver",
+        "from": "node-0",
+        "to": "node-0",
+        "summary": "\"inc\"",
+        "t": 8,
+        "seq": 12
+      },
+      {
+        "kind": "deliver",
+        "from": "node-0",
+        "to": "node-2",
+        "summary": "\"inc\"",
+        "t": 9,
+        "seq": 13
+      },
+      {
+        "kind": "deliver",
+        "from": "node-0",
+        "to": "node-1",
+        "summary": "\"inc\"",
+        "t": 10,
+        "seq": 14
+      },
+      {
+        "kind": "invariant-violation",
+        "name": "all counts equal",
+        "detail": "check() returned false",
+        "t": 10,
+        "seq": 15
+      }
+    ],
+    "result": "violation"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sx4im/chronos-core": ["packages/core/src/index.ts"],
+      "@sx4im/chronos-core/*": ["packages/core/src/*"],
+      "@sx4im/chronos-net": ["packages/net/src/index.ts"],
+      "@sx4im/chronos-net/*": ["packages/net/src/*"],
+      "@sx4im/chronos-vitest": ["packages/vitest/src/index.ts"],
+      "@sx4im/chronos-vitest/*": ["packages/vitest/src/*"],
+      "@sx4im/chronos-cli": ["packages/cli/src/index.ts"],
+      "@sx4im/chronos-cli/*": ["packages/cli/src/*"]
+    }
+  },
+  "include": ["vitest.config.ts", "packages/**/*.ts", "examples/**/*.ts"],
+  "exclude": ["**/dist/**", "**/node_modules/**", "packages/inspector/**"]
+}

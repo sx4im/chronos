@@ -1,0 +1,14 @@
+{
+  "name": "chronos-docs-site",
+  "private": true,
+  "type": "module",
+  "description": "VitePress docs site for Chronos. Self-contained: NOT a pnpm-workspace member, so the root pnpm typecheck && pnpm lint && pnpm test && pnpm build green bar never depends on it. Built and deployed by .github/workflows/docs.yml (GitHub Pages).",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}

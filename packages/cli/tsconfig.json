@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@sx4im/chronos-core": ["../core/src/index.ts"],
+      "@sx4im/chronos-net": ["../net/src/index.ts"],
+      "@sx4im/chronos-vitest": ["../vitest/src/index.ts"],
+      "@sx4im/chronos-vitest/engine": ["../vitest/src/engine.ts"]
+    }
+  },
+  "include": ["src/**/*", "test/**/*"]
+}

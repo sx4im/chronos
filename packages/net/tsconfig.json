@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@sx4im/chronos-core": ["../core/dist/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*", "test/**/*"]
+}

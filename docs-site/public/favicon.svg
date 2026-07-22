@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Chronos: a clock face with a deterministic "seed" tick -->
+  <circle cx="32" cy="32" r="28" fill="#3aa676"/>
+  <circle cx="32" cy="32" r="23" fill="#0f2e21"/>
+  <!-- hour hand at a fixed, reproducible position -->
+  <line x1="32" y1="32" x2="32" y2="16" stroke="#3aa676" stroke-width="4" stroke-linecap="round"/>
+  <!-- minute hand -->
+  <line x1="32" y1="32" x2="44" y2="38" stroke="#7fd4ab" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="3" fill="#3aa676"/>
+</svg>

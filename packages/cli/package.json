@@ -1,0 +1,50 @@
+{
+  "name": "@sx4im/chronos-cli",
+  "description": "Chronos CLI: replay, trace, sweep, shrink, open, explain. Distributed-systems DST on a single thread.",
+  "version": "0.1.5",
+  "type": "module",
+  "keywords": [
+    "chronos",
+    "dst-cli",
+    "failure-replay",
+    "trace-viewer",
+    "simulation-testing",
+    "capsule-inspector"
+  ],
+  "author": "sx4im <msaimshafique4664@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sx4im/chronos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sx4im/chronos/issues"
+  },
+  "homepage": "https://github.com/sx4im/chronos#readme",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "bin": {
+    "chronos": "dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sx4im/chronos-core": "workspace:*",
+    "@sx4im/chronos-vitest": "workspace:*"
+  }
+}

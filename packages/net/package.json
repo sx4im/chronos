@@ -1,0 +1,50 @@
+{
+  "name": "@sx4im/chronos-net",
+  "description": "Fault-injecting simulated network for Chronos: seeded latency, drops, duplicates, partition- and crash-awareness. Pluggable via the Simulator's NetworkFactory seam.",
+  "version": "0.1.5",
+  "type": "module",
+  "keywords": [
+    "chronos",
+    "deterministic-simulation-testing",
+    "dst",
+    "simulated-network",
+    "chaos-engineering",
+    "fault-injection",
+    "partition-testing",
+    "network-simulation"
+  ],
+  "author": "sx4im <msaimshafique4664@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sx4im/chronos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sx4im/chronos/issues"
+  },
+  "homepage": "https://github.com/sx4im/chronos#readme",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean"
+  },
+  "dependencies": {
+    "@sx4im/chronos-core": "workspace:*"
+  }
+}

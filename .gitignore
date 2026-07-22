@@ -1,0 +1,8 @@
+node_modules/
+dist/
+config.js
+.env
+.env.local
+.env.*.local
+.github-pages/
+

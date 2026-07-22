@@ -1,0 +1,38 @@
+{
+  "name": "@sx4im/chronos-inspector",
+  "version": "0.1.5",
+  "private": true,
+  "type": "module",
+  "keywords": [
+    "chronos",
+    "chronos-inspector",
+    "time-travel-debugger",
+    "trace-visualizer",
+    "sequence-diagram",
+    "react"
+  ],
+  "author": "sx4im <msaimshafique4664@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sx4im/chronos.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@sx4im/chronos-core": "workspace:*",
+    "gsap": "^3.15.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.0"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "@sx4im/chronos-vitest",
+  "description": "Vitest integration for Chronos: simTest, expectInvariant, replayTest, failure capsules, failure shrinking. Reproduce distributed-systems bugs from a single integer seed.",
+  "version": "0.1.5",
+  "type": "module",
+  "keywords": [
+    "chronos",
+    "deterministic-simulation-testing",
+    "dst",
+    "vitest",
+    "testing-framework",
+    "failure-replay",
+    "race-conditions",
+    "vitest-plugin"
+  ],
+  "author": "sx4im <msaimshafique4664@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sx4im/chronos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sx4im/chronos/issues"
+  },
+  "homepage": "https://github.com/sx4im/chronos#readme",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./engine": {
+      "types": "./dist/engine.d.ts",
+      "import": "./dist/engine.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/engine.ts --format esm --dts --clean"
+  },
+  "dependencies": {
+    "@sx4im/chronos-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "vitest": ">=2"
+  }
+}
