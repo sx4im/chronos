@@ -64,6 +64,16 @@ describe("runCommand — dispatch surface", () => {
     // --seeds= flag form hits the same validation.
     const flag = await runCommand("sweep", ["scenario.ts", "--seeds=-3"]);
     expect(flag.code).toBe(2);
+    expect(flag.err).toContain("positive integer");
+
+    // A leading dash used to make the seeds argument silently vanish (the
+    // dispatcher skipped any seedsArg starting with "-"), so `sweep <scen> -3`
+    // quietly ran the default 1000 seeds with exit 0. Assert the usage error
+    // fires instead — on err, before any scenario is even imported.
+    const neg = await runCommand("sweep", ["scenario.ts", "-3"]);
+    expect(neg.code).toBe(2);
+    expect(neg.err).toContain("positive integer");
+    expect(neg.out).toBeUndefined();
   });
 });
 
@@ -91,8 +101,11 @@ describe("doctorCommand", () => {
   }, 30_000);
 
   it("flags a dirty fixture as needing attention (exit 1)", async () => {
-    // noBodyScenario.ts contains a deliberate DST violation pattern; if the
-    // static checker flags it, doctor must NOT report HEALTHY.
+    // noBodyScenario.ts is a minimal module missing `body` (used elsewhere to
+    // assert the graceful "did not export a `body`" error); it contains no DST
+    // violation pattern, so the static checker passes it and the doctor is
+    // expected to report HEALTHY — unless some other check (e.g. unbuilt
+    // inspector dist) legitimately flags ATTENTION with exit 1 instead.
     const r = await doctorCommand([
       join(__dirname, "..", "test", "fixtures", "noBodyScenario.ts"),
     ]);
