@@ -129,7 +129,7 @@ export async function runCommand(
         if (arg.startsWith("--seeds=")) seedsArg = arg.split("=")[1];
       }
       let seeds: number | undefined;
-      if (seedsArg !== undefined && !seedsArg.startsWith("-")) {
+      if (seedsArg !== undefined) {
         const n = Number(seedsArg);
         if (!Number.isInteger(n) || n <= 0) {
           return usageError("sweep seeds must be a positive integer");
