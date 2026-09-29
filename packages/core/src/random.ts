@@ -68,6 +68,27 @@ export class Rng {
     return arr[this.nextInt(0, arr.length)]!;
   }
 
+  /** Deterministic RFC 4122 v4 UUID. */
+  uuid(): string {
+    const u1 = this.nextU64();
+    const u2 = this.nextU64();
+    const bytes = new Uint8Array(16);
+    for (let i = 0; i < 8; i++) {
+      bytes[i] = Number((u1 >> BigInt(56 - i * 8)) & 0xFFn);
+      bytes[i + 8] = Number((u2 >> BigInt(56 - i * 8)) & 0xFFn);
+    }
+    bytes[6] = (bytes[6]! & 0x0f) | 0x40; // RFC 4122 v4
+    bytes[8] = (bytes[8]! & 0x3f) | 0x80; // RFC 4122 variant
+    let hex = "";
+    for (let i = 0; i < 16; i++) {
+      if (i === 4 || i === 6 || i === 8 || i === 10) {
+        hex += "-";
+      }
+      hex += bytes[i]!.toString(16).padStart(2, "0");
+    }
+    return hex;
+  }
+
   /** Snapshot/restore for replay & node-restart determinism. */
   getState(): [bigint, bigint, bigint, bigint] {
     return [this.s0, this.s1, this.s2, this.s3];
