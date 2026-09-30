@@ -180,4 +180,11 @@ describe("Simulator", () => {
     const r = await sim.run();
     expect(r.trace.config.network).toEqual(customConfig);
   });
+
+  it("settle returns SchedulerRunResult with completion and step count", async () => {
+    const sim = new Simulator({ seed: 1n, nodes: 1 });
+    sim.scheduler.schedule(5, () => {}, { nodeId: "node-0" });
+    const result = await sim.settle();
+    expect(result).toEqual({ completed: true, steps: 1 });
+  });
 });

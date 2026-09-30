@@ -43,4 +43,9 @@ describe("Rng (xoshiro256**)", () => {
     }
     expect(diff).toBe(true);
   });
+
+  it("setState rejects all-zero state", () => {
+    const rng = new Rng(1n);
+    expect(() => rng.setState([0n, 0n, 0n, 0n])).toThrow(/all zeros/);
+  });
 });

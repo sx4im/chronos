@@ -95,6 +95,12 @@ export class Rng {
   }
 
   setState(s: [bigint, bigint, bigint, bigint]): void {
-    [this.s0, this.s1, this.s2, this.s3] = s;
+    if ((s[0] | s[1] | s[2] | s[3]) === 0n) {
+      throw new Error("Rng state cannot be all zeros");
+    }
+    this.s0 = s[0] & MASK64;
+    this.s1 = s[1] & MASK64;
+    this.s2 = s[2] & MASK64;
+    this.s3 = s[3] & MASK64;
   }
 }

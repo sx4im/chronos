@@ -6,7 +6,7 @@
 
 import { VirtualClock } from "./clock.js";
 import { Rng } from "./random.js";
-import { Scheduler, type SimEvent } from "./scheduler.js";
+import { Scheduler, type SimEvent, type SchedulerRunResult } from "./scheduler.js";
 import { createEnv, type SimEnv, type SimNet } from "./env.js";
 import {
   BasicNetwork,
@@ -253,11 +253,10 @@ export class Simulator {
   }
 
   /** Run until the queue is empty (no step cap beyond maxSteps). Used inside sim
-   *  bodies. Note: if the budget is exhausted with events pending, this returns
-   *  silently — check `sim.scheduler.hasPending()` if the body needs to know
-   *  whether the system actually settled. */
-  async settle(): Promise<void> {
-    await this.scheduler.run({ maxSteps: this.maxSteps });
+   *  bodies. Returns the SchedulerRunResult indicating whether the heap drained
+   *  or hit the step budget. */
+  async settle(): Promise<SchedulerRunResult> {
+    return await this.scheduler.run({ maxSteps: this.maxSteps });
   }
 
   // ------------------------------------------------------------------
