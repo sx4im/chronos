@@ -161,4 +161,23 @@ describe("Simulator", () => {
     });
     expect(getSimEnv()).toBeUndefined();
   });
+
+  it("captures actual network config from netFactory in trace snapshot", async () => {
+    const customConfig = {
+      minLatency: 20,
+      maxLatency: 40,
+      dropProb: 0.25,
+      dupProb: 0.15,
+    };
+    const sim = new Simulator({
+      seed: 1n,
+      nodes: 2,
+      netFactory: () => ({
+        send: () => {},
+        getConfig: () => customConfig,
+      }),
+    });
+    const r = await sim.run();
+    expect(r.trace.config.network).toEqual(customConfig);
+  });
 });

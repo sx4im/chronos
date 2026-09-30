@@ -138,6 +138,7 @@ export class Simulator {
       trace: this.trace,
       deliver,
       isDown,
+      config: this.networkConfig,
     };
     this.net = opts.netFactory
       ? opts.netFactory(ctx)
@@ -286,7 +287,8 @@ export class Simulator {
   }
 
   private configSnapshot(): { network: NetworkConfig; chaos: ChaosConfig } {
-    return { network: this.networkConfig, chaos: this.chaosConfig };
+    const network = this.net.getConfig?.() ?? this.networkConfig;
+    return { network, chaos: this.chaosConfig };
   }
 
   private okResult(): RunResult {

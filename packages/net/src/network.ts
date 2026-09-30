@@ -35,6 +35,10 @@ export interface SimNetworkOptions {
 export class SimNetwork {
   constructor(private o: SimNetworkOptions) {}
 
+  getConfig(): NetworkConfig {
+    return this.o.config;
+  }
+
   send(from: string, to: string, payload: unknown): void {
     const t = this.o.clock.now();
 

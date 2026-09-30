@@ -65,6 +65,7 @@ export function sampleLatency(
  */
 export interface SimNetworkLike {
   send(from: string, to: string, payload: unknown): void;
+  getConfig?: () => NetworkConfig;
 }
 
 /**
@@ -81,6 +82,7 @@ export interface NetworkContext {
   trace: TraceLogger;
   deliver: DeliverFn;
   isDown: (nodeId: string) => boolean;
+  config?: NetworkConfig;
 }
 
 /** Inject a custom network (e.g. @sx4im/chronos-net's SimNetwork) into the Simulator. */
@@ -147,6 +149,10 @@ export interface BasicNetworkOptions {
  */
 export class BasicNetwork implements SimNetworkLike {
   constructor(private o: BasicNetworkOptions) {}
+
+  getConfig(): NetworkConfig {
+    return this.o.config;
+  }
 
   send(from: string, to: string, payload: unknown): void {
     const t = this.o.clock.now();
