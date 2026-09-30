@@ -1,7 +1,7 @@
 {
   "name": "@sx4im/chronos-core",
   "description": "Deterministic Simulation Testing core: PRNG (xoshiro256**), VirtualClock, MinHeap scheduler, SimEnv, strict guards, invariants, trace, RealEnv. Zero runtime dependencies.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "keywords": [
     "chronos",

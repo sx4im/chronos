@@ -25,7 +25,7 @@ A clear and concise description of what you expected to happen.
 
 ### Environment
 - **Node.js version**: (e.g. `node -v` >= 20)
-- **Chronos version**: (e.g. `0.2.0`)
+- **Chronos version**: (e.g. `0.3.0`)
 - **Package(s) affected**: (e.g. `@sx4im/chronos-core`, `@sx4im/chronos-net`, `@sx4im/chronos-vitest`, `@sx4im/chronos-cli`, `@sx4im/chronos-inspector`)
 - **OS**: (Linux, macOS, Windows)
 

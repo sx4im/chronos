@@ -1,7 +1,7 @@
 {
   "name": "@sx4im/chronos-net",
   "description": "Fault-injecting simulated network for Chronos: seeded latency, drops, duplicates, partition- and crash-awareness. Pluggable via the Simulator's NetworkFactory seam.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "keywords": [
     "chronos",

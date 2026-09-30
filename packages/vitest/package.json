@@ -1,7 +1,7 @@
 {
   "name": "@sx4im/chronos-vitest",
   "description": "Vitest integration for Chronos: simTest, expectInvariant, replayTest, failure capsules, failure shrinking. Reproduce distributed-systems bugs from a single integer seed.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "keywords": [
     "chronos",

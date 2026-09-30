@@ -1,30 +1,50 @@
 # <img src="./assets/logo.svg" alt="Chronos Logo" width="32" height="32" align="absmiddle" style="vertical-align: middle; margin-right: 8px;" /> Chronos
 
-**The Deterministic Simulation Testing (DST) Framework for Node.js & TypeScript**
+**Deterministic Simulation Testing (DST) Framework for Node.js & TypeScript**
 
 [![npm version](https://img.shields.io/npm/v/@sx4im/chronos-core.svg?color=indigo)](https://www.npmjs.com/package/@sx4im/chronos-core)
 [![npm downloads](https://img.shields.io/npm/dm/@sx4im/chronos-vitest.svg?color=blue)](https://www.npmjs.com/package/@sx4im/chronos-vitest)
 [![CI status](https://github.com/sx4im/chronos/actions/workflows/ci.yml/badge.svg)](https://github.com/sx4im/chronos/actions/workflows/ci.yml)
 [![determinism guard](https://img.shields.io/badge/determinism%20guard-passing-brightgreen)](./packages/core/test/determinism.test.ts)
-[![good first issues](https://img.shields.io/github/issues/sx4im/chronos/good%20first%20issue?color=7057ff&label=good%20first%20issues)](https://github.com/sx4im/chronos/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![good first issues](https://img.shields.io/badge/good%20first%20issues-available-7057ff.svg)](./GOOD_FIRST_ISSUES.md)
+[![Zero Dependencies](https://img.shields.io/badge/core%20runtime%20deps-0-success)](./packages/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vitest](https://img.shields.io/badge/Vitest-native-FCC72B?logo=vitest&logoColor=black)](https://vitest.dev/)
+[![Node >=20](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/sx4im/chronos?style=social)](https://github.com/sx4im/chronos)
 
 > **Find 1-in-a-million race conditions in concurrent & distributed systems and replay them bit-for-bit from a single integer seed.** Inspired by FoundationDB & TigerBeetle, built natively for TypeScript & Node.js.
 
 ---
 
-## Explainer Video
+## ⚡ In 30 Seconds: The Problem Chronos Solves
+
+Ever had a flaky test in CI that failed once and never reproduced locally? Or spent days tracking down a distributed race condition between microservices or asynchronous event handlers?
+
+Async heisenbugs, network partitions, and timing races are notoriously difficult to debug because **real-world execution is non-deterministic**: system clocks tick unpredictably, OS threads interleave arbitrarily, and network packets arrive in unpredictable orders.
+
+**Chronos eliminates external entropy and serializes your concurrent cluster onto a single controlled thread:**
+
+* ⏱️ **Instant Virtual Time**: Fast-forwards simulated hours or days in milliseconds with zero real-time waiting.
+* 🎲 **Seeded PRNG**: `xoshiro256**` pseudo-random generator guarantees that every coin flip, network delay, and scheduling decision is 100% reproducible.
+* 🌐 **Simulated Chaos Network**: Injects latency jitter, packet loss, message duplication, network split-brains (partitions), and node crash/restart cycles.
+* 🛡️ **Strict Entropy Guards**: Automatically intercepts and throws if code accidentally calls non-deterministic APIs (`Date.now()`, `Math.random()`, native `setTimeout`).
+* 📦 **Failure Capsules & Replay**: When a safety invariant fails across 10,000 randomized simulation seeds, Chronos emits a failure capsule. Running `chronos replay <capsule>` recreates the **exact execution path, byte-for-byte, every single time.**
+
+---
+
+## 📺 Explainer Video
 
 [![Watch the Explainer Video](./assets/video-thumbnail.jpg)](https://www.youtube.com/watch?v=7d9_jUrygKM)
 
 ---
 
-## Table of Contents
+## 🧭 Table of Contents
 
 - [Why Chronos?](#why-chronos)
 - [The Magic Moment](#the-magic-moment)
+- [When to Use Chronos](#when-to-use-chronos)
 - [Key Features](#key-features)
 - [Quickstart & Installation](#quickstart--installation)
 - [Architecture & System Flow](#architecture--system-flow)
@@ -35,41 +55,44 @@
 - [Examples & Reference Implementations](#examples--reference-implementations)
 - [Comparison: Chronos vs Traditional Testing vs Madsim / Turmoil](#comparison-chronos-vs-traditional-testing-vs-madsim--turmoil)
 - [Security](#security)
-- [Contributing](#contributing)
+- [Contributing & Good First Issues](#contributing--good-first-issues)
 - [License](#license)
 
 ---
 
 ## Why Chronos?
 
-Async bugs, heisenbugs, and network race conditions in Node.js microservices, Raft consensus nodes, CRDTs, and distributed databases are notoriously hard to debug. They manifest once in CI, log an intermittent timeout, and disappear when you try to attach a debugger.
+Distributed systems, microservices, consensus nodes, and CRDTs fail at the seams:
+- **Network drops and reordering** cause state machines to process messages out-of-order.
+- **Split-brain network partitions** lead to dual leaders or split voting terms.
+- **Clock drift and timeout races** trigger spurious leader re-elections or premature aborts.
+- **Uncoordinated retries** produce duplicate writes that violate idempotency.
 
-**Chronos solves this by replacing real-world entropy with deterministic virtual primitives.** It executes your concurrent code on a **single controlled thread** using:
+Traditional testing tools (mock clocks, Jest timers, or real Docker containers) either:
+1. Only test a single node with synchronous mock time, or
+2. Run unrepeatable end-to-end chaos tests that take minutes to run and never reproduce the same failure twice.
 
-* **Virtual Clock**: Fast-forwards time instantly (milliseconds or hours in fractions of a second).
-* **Seeded PRNG**: `xoshiro256**` generator for 100% reproducible random choices.
-* **Simulated Network**: Configurable latency, packet drops, duplication, network partitions, and node crash/restarts.
-* **Entropy Safety Guards**: Fails fast if non-deterministic methods like `Date.now()`, `Math.random()`, or real `setTimeout` escape into your simulation.
-
-If a failure occurs across 10,000 randomized simulation runs, Chronos outputs a **failure capsule** containing the exact seed. Running `chronos replay <capsule>` recreates the **exact execution path, bit-for-bit, every single time.**
+Chronos gives JavaScript and TypeScript developers the **Deterministic Simulation Testing (DST)** superpowers pioneered by systems like **FoundationDB** and **TigerBeetle**, without leaving the familiar Node.js and Vitest ecosystem.
 
 ---
 
 ## The Magic Moment
 
+Write your distributed safety invariants once with `simTest`:
+
 ```ts
 import { simTest, expectInvariant } from "@sx4im/chronos-vitest";
 
-// Run 100 seeds across 3 simulated nodes under network drops & partitions
+// Run 500 randomized seeds across 3 simulated nodes under network chaos
 simTest("distributed counter never loses increments", {
-  seeds: 100,
+  seeds: 500,
   nodes: 3,
   network: { dropProb: 0.05, dupProb: 0.01 },
   chaos: { partitionProb: 0.05, crashProb: 0.02 },
 }, async (sim) => {
   // Interact with injected SimEnv on each simulated node
   for (const node of sim.nodes) {
-    node.env.net.send(/* ... messages ... */);
+    node.env.net.send("counter-service", { type: "INCREMENT", amount: 1 });
   }
   
   await sim.settle();
@@ -77,13 +100,27 @@ simTest("distributed counter never loses increments", {
 });
 ```
 
-When an invariant breaks, Chronos isolates the failure:
+When an invariant breaks, Chronos isolates the exact reproducing seed and creates a failure capsule:
 
 ```text
 ✗ seed 8273461 violated "no lost increments" — total=99, expected=100
   → Failure capsule saved: .chronos/failures/8273461.json
   → Replay command: npx chronos replay .chronos/failures/8273461.json
+  → Interactive visual inspector: npx chronos open .chronos/failures/8273461.json
 ```
+
+---
+
+## 🎯 When to Use Chronos
+
+| Use Case | What Chronos Tests | Example Systems |
+| :--- | :--- | :--- |
+| **Distributed Consensus & Coordination** | Split-brain elections, term increments, log divergence, uncommitted entry recovery | Raft, Paxos, Zab, Bully algorithm |
+| **Local-First & CRDTs** | Convergence under out-of-order packets, concurrent edits, last-writer-wins tiebreakers | Automerge, Yjs, collaborative canvases, state-based CRDTs |
+| **Distributed Transactions** | Two-phase commit (2PC) abort safety, coordinator crashes, participant timeouts | Sagas, distributed KV stores, payment settlement |
+| **Microservice Event Workflows** | Idempotency under duplicate delivery, dead-letter recovery, retry storm backoff | Kafka/RabbitMQ consumer groups, SQS workflows, BullMQ |
+| **Gossip & P2P Protocols** | Peer discovery, anti-entropy state synchronization, epidemic dissemination | HashiCorp Serf/Memberlist, BitTorrent DHT |
+| **Network Protocol Drivers & WebSockets** | Heartbeat timeouts, connection drops, reconnect state reconciliation | Real-time gaming, financial exchange adapters |
 
 ---
 
@@ -91,7 +128,7 @@ When an invariant breaks, Chronos isolates the failure:
 
 * **100% Deterministic Execution**: Zero non-determinism. `Same Seed ⇒ Byte-Identical Event Trace`.
 * **Simulated Fault-Injecting Network**: Simulates latency jitter, packet loss, reordering, duplicate delivery, network split-brains (partitions), and crash/restart node lifecycles.
-* **Vitest Native Integration**: Drop `simTest` right into your standard Vitest or Jest test suite.
+* **Vitest Native Integration**: Drop `simTest` right into your standard Vitest test suites.
 * **Time-Travel Inspector**: Serve an interactive web UI (`chronos open`) to scrub timeline events, inspect message state, step through logs, and generate sequence diagrams.
 * **AI Failure Diagnostics**: Integrated `chronos explain` provider menu supporting OpenAI, Anthropic, Gemini, DeepSeek, xAI Grok, Ollama, and local models.
 * **Zero Runtime Dependencies**: `@sx4im/chronos-core` is lightweight, ultra-fast, and has zero external dependencies.
@@ -100,7 +137,7 @@ When an invariant breaks, Chronos isolates the failure:
 
 ## Quickstart & Installation
 
-Install the Vitest integration and CLI tool:
+Install the Vitest integration and CLI toolkit:
 
 ```bash
 # Using pnpm
@@ -115,15 +152,16 @@ yarn add -D @sx4im/chronos-vitest @sx4im/chronos-cli
 
 ### Running Your First DST Test
 
-Add a test file `system.test.ts`:
+Add a test file `distributed.test.ts`:
 
 ```ts
 import { simTest, expectInvariant } from "@sx4im/chronos-vitest";
 
 simTest("cluster reaches consensus under chaos", { seeds: 500, nodes: 5 }, async (sim) => {
-  // Access node environments via sim.nodes[i].env
+  // Access node environments via sim.nodes[i].env:
   //   env.now()          -> Deterministic virtual clock time
   //   env.random()       -> Seeded PRNG random number (0..1)
+  //   env.uuid()         -> Deterministic RFC 4122 v4 UUID
   //   env.sleep(ms)      -> Virtual time sleep
   //   env.setTimeout()   -> Virtual timer handle
   //   env.net.send()     -> Simulated fault-injecting network
@@ -166,7 +204,7 @@ flowchart TB
         
         MinHeap --> MicrotaskBarrier["Microtask Barrier\n(setImmediate drain per tick)"]
         
-        MicrotaskBarrier --> SimEnv["SimEnv Injected Interface\n• env.now()\n• env.random()\n• env.sleep / setTimeout\n• env.net.send"]
+        MicrotaskBarrier --> SimEnv["SimEnv Injected Interface\n• env.now() / env.random() / env.uuid()\n• env.sleep / setTimeout\n• env.net.send"]
         
         SimEnv --> StrictGuards["Strict Safety Guards (installGuards)\nThrows on Date.now, Math.random, native timers"]
     end
@@ -217,7 +255,7 @@ Chronos strips out these sources of non-determinism and wraps your system inside
 
 1. **Seeded PRNG**: All randomness derives from a single `xoshiro256**` generator seeded by `SplitMix64`.
 2. **MinHeap Priority Queue**: Events (timers, network packet deliveries, node crashes) are ordered by `(time, insert_sequence)`.
-3. **Microtask Barrier**: Microtasks drain deterministically between discrete scheduler ticks.
+3. **Microtask Barrier**: Microtasks drain deterministically between discrete scheduler ticks via a controlled barrier.
 
 ---
 
@@ -228,7 +266,8 @@ Chronos provides a unified `Environment` contract (`SimEnv` in tests, `RealEnv` 
 | Code Pattern | In Simulated DST (`SimEnv`) | In Production (`RealEnv`) |
 | :--- | :--- | :--- |
 | **Clock** | `env.now()` | `Date.now()` |
-| **Randomness** | `env.random()` | `Math.random()` |
+| **Randomness** | `env.random()` | Cryptographic float (53-bit CSPRNG) |
+| **UUID** | `env.uuid()` (Deterministic RFC 4122 v4) | `crypto.randomUUID()` |
 | **Sleep** | `await env.sleep(ms)` | `await new Promise(r => setTimeout(r, ms))` |
 | **Timer** | `env.setTimeout(cb, ms)` | `setTimeout(cb, ms)` |
 | **Networking** | `env.net.send(to, msg)` | Real TCP / HTTP / WebSocket transport |
@@ -247,7 +286,7 @@ Chronos is organized as a modular TypeScript monorepo:
 | **[`@sx4im/chronos-net`](./packages/net)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-net.svg)](https://www.npmjs.com/package/@sx4im/chronos-net) | Simulated network layer (latency, drop, duplicate, partition splits, crash/restart lifecycle). |
 | **[`@sx4im/chronos-vitest`](./packages/vitest)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-vitest.svg)](https://www.npmjs.com/package/@sx4im/chronos-vitest) | Vitest & Jest runner integrations (`simTest`, `expectInvariant`, `replayTest`, state shrinker). |
 | **[`@sx4im/chronos-cli`](./packages/cli)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-cli.svg)](https://www.npmjs.com/package/@sx4im/chronos-cli) | Command-line toolkit (`replay`, `trace`, `sweep`, `shrink`, `open`, `explain`, `stats`, `check`, `export`, `doctor`). |
-| **[`@sx4im/chronos-inspector`](./packages/inspector)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-inspector.svg)](https://www.npmjs.com/package/@sx4im/chronos-inspector) | Web-based time-travel visual debugger (React + Vite + Tailwind UI). |
+| **[`@sx4im/chronos-inspector`](./packages/inspector)** | [![Private](https://img.shields.io/badge/status-ready-brightgreen)](./packages/inspector) | Web-based time-travel visual debugger (React + Vite + Tailwind UI). |
 
 ---
 
@@ -274,12 +313,17 @@ npx chronos <command> [options]
 
 ---
 
-## Examples & Reference Implementations
+## 🧪 Examples & Reference Implementations
 
-Explore ready-to-run examples in the repository:
+Explore complete, production-grade distributed system reference implementations tested under intense chaos in the repository:
 
-1. **[`counter`](./examples/counter)**: A distributed counter with intentional race condition bugs. Demonstrates how Chronos catches non-idempotent duplicate messages and writes failure capsules.
-2. **[`raft-lite`](./examples/raft-lite)**: A complete implementation of the Raft consensus algorithm (Leader Election, Log Replication, Term Validation) tested under intense chaos (drops, duplicates, partitions, node crashes) across **2,000 seeds**.
+| System / Algorithm | Directory | Tested Invariants | Chaos Injected | Seeds Verified |
+| :--- | :--- | :--- | :--- | :--- |
+| **Raft Consensus** | [`examples/raft-lite`](./examples/raft-lite) | • Single leader per term<br>• Log matching & commit index<br>• Term monotonicity | Drops, duplicates, partitions, node crashes | **2,000 seeds** (100% pass) |
+| **CRDT (LWW-Register)** | [`examples/crdt`](./examples/crdt) | • Strong Eventual Consistency (SEC)<br>• LWW tiebreaker convergence | Packet loss, out-of-order reordering, partitions | **1,000 seeds** (100% pass) |
+| **Gossip Protocol** | [`examples/gossip`](./examples/gossip) | • Anti-entropy key agreement<br>• Monotonic versioning across peers | Asymmetric partitions, packet drops, node crashes | **1,000 seeds** (100% pass) |
+| **Two-Phase Commit (2PC)** | [`examples/twophase-commit`](./examples/twophase-commit) | • Transaction atomicity (never mixed commit/abort)<br>• Non-spontaneous commit | Participant crashes, coordinator timeouts | **1,000 seeds** (100% pass) |
+| **Distributed Counter** | [`examples/counter`](./examples/counter) | • Exact increment totals<br>• Duplicate write idempotency | Message duplicates, packet drops | Failure capsule demo |
 
 ---
 
@@ -288,12 +332,12 @@ Explore ready-to-run examples in the repository:
 | Feature / Capability | Traditional Unit / Integration Tests | Jepsen / Chaos Mesh | Madsim / Turmoil (Rust) | Chronos (Node.js & TypeScript) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Language** | Any | Clojure / Java | Rust | TypeScript / JavaScript |
-| **100% Deterministic Replay** | No | No | Yes | Yes (Bit-for-Bit) |
-| **Virtual Clock Fast-Forward** | Real time wait | Real time wait | Yes | Yes (Instant) |
-| **Single-Thread Execution** | No | No | Yes | Yes (Single-Thread V8) |
-| **Vitest / Jest Native** | Yes | No | No | Yes |
-| **Visual Time-Travel Inspector** | No | No | No | Yes (`chronos open`) |
-| **AI Failure Explainer** | No | No | No | Yes (`chronos explain`) |
+| **100% Deterministic Replay** | No | No | Yes | **Yes (Bit-for-Bit)** |
+| **Virtual Clock Fast-Forward** | Real time wait | Real time wait | Yes | **Yes (Instant)** |
+| **Single-Thread Execution** | No | No | Yes | **Yes (Single-Thread V8)** |
+| **Vitest / Jest Native** | Yes | No | No | **Yes (`simTest`)** |
+| **Visual Time-Travel Inspector** | No | No | No | **Yes (`chronos open`)** |
+| **AI Failure Explainer** | No | No | No | **Yes (`chronos explain`)** |
 
 ---
 
@@ -307,15 +351,17 @@ Read **[SECURITY.md](./SECURITY.md)** for the full threat model and how to repor
 
 ---
 
-## Contributing
+## 🤝 Contributing & Good First Issues
 
-We welcome contributions from the open-source community! 
+We warmly welcome contributions from the community!
 
-Please read **[CONTRIBUTING.md](./CONTRIBUTING.md)** before submitting pull requests.
+Whether you are looking to add a new network fault, build a new distributed algorithm example, improve the web inspector, or expand CLI tooling:
 
-> **The Golden Rule of Chronos**: Determinism is the product. Any change that causes a given seed to generate a different execution trace is considered a breaking bug.
+👉 **Check out our [Good First Issues Catalog](./GOOD_FIRST_ISSUES.md)** for curated, pre-scoped starter tasks with step-by-step guidance!
 
-Review our **[Code of Conduct](./CODE_OF_CONDUCT.md)** for community guidelines.
+Please read our **[CONTRIBUTING.md](./CONTRIBUTING.md)** and review our **[Code of Conduct](./CODE_OF_CONDUCT.md)** before opening a pull request.
+
+> **The Golden Rule**: *Determinism is the product.* Any change that causes a given seed to generate a different execution trace is considered a breaking bug.
 
 ### Contributors
 

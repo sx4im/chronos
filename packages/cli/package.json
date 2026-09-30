@@ -1,7 +1,7 @@
 {
   "name": "@sx4im/chronos-cli",
   "description": "Chronos CLI: replay, trace, sweep, shrink, open, explain. Distributed-systems DST on a single thread.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "keywords": [
     "chronos",
