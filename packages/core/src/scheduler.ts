@@ -81,6 +81,7 @@ export interface SchedulerRunResult {
 export class Scheduler {
   private heap = new MinHeap<SimEvent>(cmp);
   private seqCounter = 0;
+  private asyncError: unknown = null;
 
   // The clock and rng are exposed for the env/network to read/write.
   constructor(
@@ -98,6 +99,11 @@ export class Scheduler {
     // the load-bearing boundary between "weird input" and "corrupted run".
     if (!Number.isFinite(time)) {
       throw new Error(`scheduled time must be finite (got ${time})`);
+    }
+    if (time < this.clock.now()) {
+      throw new Error(
+        `cannot schedule event in the past (now=${this.clock.now()}, attempted=${time})`,
+      );
     }
     const ev: SimEvent = {
       time,
@@ -126,8 +132,18 @@ export class Scheduler {
       if (ev.canceled) continue;
       this.clock.advanceTo(ev.time); // time jumps forward
       opts.onStep?.(ev); // hook for logging
-      ev.run(); // user continuation runs (to its next await / completion)
+      const ret = ev.run() as unknown; // user continuation runs (to its next await / completion)
+      if (ret != null && typeof (ret as Promise<unknown>).then === "function") {
+        (ret as Promise<unknown>).catch((err) => {
+          this.asyncError = err;
+        });
+      }
       await drainMicrotasks(); // let Promise continuations settle (§3.4)
+      if (this.asyncError) {
+        const err = this.asyncError;
+        this.asyncError = null;
+        throw err;
+      }
       opts.onStepEnd?.(ev); // hook for safety-invariant checks
       steps++;
     }

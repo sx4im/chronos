@@ -168,4 +168,23 @@ describe("Scheduler", () => {
     // Nothing was enqueued — the guard threw before the heap.push.
     expect(scheduler.pendingCount()).toBe(0);
   });
+
+  it("rejects scheduling an event in the past (time < clock.now())", async () => {
+    const { scheduler, clock } = makeScheduler();
+    scheduler.schedule(50, () => {}, {});
+    await scheduler.run();
+    expect(clock.now()).toBe(50);
+
+    // Attempting to schedule at t=40 when clock.now() is 50 must throw immediately
+    expect(() => scheduler.schedule(40, () => {}, {})).toThrow(/cannot schedule event in the past/);
+    expect(scheduler.pendingCount()).toBe(0);
+  });
+
+  it("surfaces async continuation rejection during scheduler.run()", async () => {
+    const { scheduler } = makeScheduler();
+    scheduler.schedule(10, async () => {
+      throw new Error("async failure in continuation");
+    });
+    await expect(scheduler.run()).rejects.toThrow("async failure in continuation");
+  });
 });
