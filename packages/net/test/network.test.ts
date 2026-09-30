@@ -130,6 +130,37 @@ describe("@sx4im/chronos-net SimNetwork", () => {
     }
   });
 
+  it("drops in-flight packet if partition starts while packet is in flight", async () => {
+    const received: string[] = [];
+    const sim = simWithFaults(
+      1n,
+      ["a", "b"],
+      { minLatency: 50, maxLatency: 50, dropProb: 0, dupProb: 0 },
+      (from, payload, to) => received.push(`${from}->${to}:${String(payload)}`),
+    );
+    const a = sim.nodes[0]!;
+
+    // t=0: send packet with 50ms latency (scheduled for delivery at t=50)
+    sim.scheduler.schedule(0, () => {
+      a.env.net.send("b", "in-flight-msg");
+    }, { kind: "kick", nodeId: "a" });
+
+    // t=10: partition link a|b for 100ms (active over [10, 110))
+    sim.scheduler.schedule(10, () => {
+      sim.partition([["a"], ["b"]], 100);
+    }, { kind: "kick", nodeId: "a" });
+
+    const r = await sim.run({ maxSteps: 10_000 });
+    expect(r.status).toBe("ok");
+    // The message arrived at t=50 during the active partition, so it must be dropped!
+    expect(received).toEqual([]);
+    // Trace records the partition drop at delivery time
+    const droppedDelivers = r.trace.events.filter(
+      (e) => e.kind === "deliver" && (e.summary ?? "").includes("partition"),
+    );
+    expect(droppedDelivers.length).toBe(1);
+  });
+
   it("minLatency>maxLatency (inverted config) is clamped, not a backwards-time crash", async () => {
     // A malformed NetworkConfig constructed directly (bypassing validateCapsule,
     // e.g. `new Simulator({ network: { minLatency: 50, maxLatency: 1 } })`) must

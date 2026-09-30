@@ -169,8 +169,18 @@ export class BasicNetwork implements SimNetworkLike {
     const deliver = () => {
       // Re-check at delivery time: a node may have crashed after the send.
       if (this.o.isDown?.(to)) return;
+      const now = this.o.clock.now();
+      if (this.o.partitions.isBlocked(from, to, now)) {
+        this.o.trace.append(now, {
+          kind: "deliver",
+          from,
+          to,
+          summary: `dropped by partition ${summary}`,
+        });
+        return;
+      }
       this.o.deliver({ from, to, payload: clonedPayload });
-      this.o.trace.append(this.o.clock.now(), {
+      this.o.trace.append(now, {
         kind: "deliver",
         from,
         to,

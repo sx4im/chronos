@@ -67,8 +67,18 @@ export class SimNetwork {
     const deliver = () => {
       // Re-check at delivery time: a node may have crashed after the send.
       if (this.o.isDown?.(to)) return;
+      const now = this.o.clock.now();
+      if (this.o.partitions.isBlocked(from, to, now)) {
+        this.o.trace.append(now, {
+          kind: "deliver",
+          from,
+          to,
+          summary: `dropped by partition ${summary}`,
+        });
+        return;
+      }
       this.o.deliver({ from, to, payload: clonedPayload });
-      this.o.trace.append(this.o.clock.now(), { kind: "deliver", from, to, summary });
+      this.o.trace.append(now, { kind: "deliver", from, to, summary });
     };
     const meta: ScheduleMeta = { kind: "deliver", nodeId: to, from, to, summary };
     this.o.scheduler.schedule(t + latency, deliver, meta);
@@ -84,8 +94,18 @@ export class SimNetwork {
       const dupClonedPayload = payload !== undefined ? structuredClone(payload) : undefined;
       const deliverDup = () => {
         if (this.o.isDown?.(to)) return;
+        const now = this.o.clock.now();
+        if (this.o.partitions.isBlocked(from, to, now)) {
+          this.o.trace.append(now, {
+            kind: "deliver",
+            from,
+            to,
+            summary: `dropped by partition ${summary}`,
+          });
+          return;
+        }
         this.o.deliver({ from, to, payload: dupClonedPayload });
-        this.o.trace.append(this.o.clock.now(), { kind: "deliver", from, to, summary });
+        this.o.trace.append(now, { kind: "deliver", from, to, summary });
       };
       this.o.scheduler.schedule(t + extra, deliverDup, meta);
     }
