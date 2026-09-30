@@ -150,12 +150,16 @@ export class Simulator {
   }
 
   /** The world view passed to invariant checks. */
-  private world(): WorldView {
+  public getWorld(): WorldView {
     return {
       time: this.clock.now(),
       nodeIds: this.nodes.map((n) => n.id),
       crashedNodes: [...this.crashed],
     };
+  }
+
+  private world(): WorldView {
+    return this.getWorld();
   }
 
   /** Manual chaos controls (deterministic, for targeted tests). */

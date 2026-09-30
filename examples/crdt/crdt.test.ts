@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { simTest, runSimTest, executeScenario } from "@sx4im/chronos-vitest";
+import { simTest, runSimTest, executeScenario, expectInvariant } from "@sx4im/chronos-vitest";
 import { buildSimulator } from "@sx4im/chronos-vitest/engine";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -71,5 +71,26 @@ describe("crdt — LWW register convergence under Chronos", () => {
     const a = await runOnce(42n);
     const b = await runOnce(42n);
     expect(b).toEqual(a);
+  });
+
+  it("catches invariants registered after settlement if inconsistent", async () => {
+    const opts = {
+      seeds: 1,
+      nodes: 3,
+      netFactory: crdtNetFactory,
+      maxSteps: CRDT_MAX_STEPS,
+    } as const;
+
+    const buggyBody = async (sim: any) => {
+      await sim.settle();
+      expectInvariant("should-fail-if-broken", (world: any) => {
+        throw new Error("artificially-broken-crdt");
+      });
+    };
+
+    const sim = buildSimulator(opts, 42n);
+    const result = await executeScenario(sim, buggyBody);
+    expect(result.violation?.name).toBe("should-fail-if-broken");
+    expect(result.violation?.detail).toContain("artificially-broken-crdt");
   });
 });

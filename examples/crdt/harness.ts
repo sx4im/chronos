@@ -49,7 +49,15 @@ export const crdtSafetyBody: SimTestBody = async (sim: Simulator) => {
     }, i * 10);
   }
 
-  // Allow system to process events and heal partitions
+  // Allow system to process initial writes and concurrent chaos
+  await sim.settle();
+
+  // Heal any lingering partitions and run an anti-entropy sync round
+  // so alive nodes can converge (eventual consistency contract)
+  sim.heal();
+  for (const reg of registers.values()) {
+    reg.broadcast();
+  }
   await sim.settle();
 
   // Invariant 1: Convergence across all alive/non-partitioned nodes

@@ -89,5 +89,35 @@ export function expectInvariant(name: string, predicate: InvariantPredicate): vo
       kind: "safety",
       check: predicate as (world: WorldView) => boolean | void,
     });
+
+    // If the simulation has already settled/drained and has no pending events,
+    // evaluate immediately against current world state so post-settle invariants
+    // do not silently skip execution if no further steps run.
+    if (!sim.scheduler.hasPending()) {
+      let ok = true;
+      let detail = "";
+      try {
+        const world = sim.getWorld();
+        const r = (predicate as (world: WorldView) => unknown)(world);
+        if (r !== null && typeof r === "object" && "then" in (r as Record<string, unknown>)) {
+          throw new Error(`expectInvariant predicate "${name}" must be synchronous (returned a Promise)`);
+        }
+        if (r === false) {
+          ok = false;
+          detail = "expectInvariant returned false";
+        }
+      } catch (e) {
+        ok = false;
+        detail = `threw: ${e instanceof Error ? e.message : String(e)}`;
+      }
+      if (!ok) {
+        sim.trace.append(sim.clock.now(), {
+          kind: "invariant-violation",
+          name,
+          detail: detail || "expectInvariant failed",
+        });
+        throw new InvariantViolated(name, detail || "expectInvariant failed");
+      }
+    }
   }
 }
