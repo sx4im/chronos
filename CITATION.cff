@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use Chronos in your research, production systems, or testing infrastructure, please cite it as below."
+authors:
+  - family-names: "Shafique"
+    given-names: "Saim"
+title: "Chronos: Deterministic Simulation Testing (DST) Framework for TypeScript & Node.js"
+version: 0.2.0
+date-released: 2024-07-04
+url: "https://github.com/sx4im/chronos"
+repository-code: "https://github.com/sx4im/chronos"
+license: MIT
+keywords:
+  - "deterministic simulation testing"
+  - "distributed systems"
+  - "chaos engineering"
+  - "fault injection"
+  - "testing framework"
+  - "typescript"
+  - "vitest"

@@ -1,97 +1,130 @@
 # Contributing to Chronos
 
-Thanks for being interested — Chronos is young, and good contributions land hard.
+Thanks for your interest in contributing to **Chronos**! As an open-source Deterministic Simulation Testing (DST) framework, community contributions help make concurrent and distributed software in the JavaScript/TypeScript ecosystem rock solid.
 
-## The one rule
+---
 
-**Determinism is the product.** Any change that can make the same seed produce a
-different trace is a bug, no matter how small. The whole point of the framework
-is: *same seed ⇒ byte-identical run, forever*. Run `pnpm test` — the determinism
-guard (`packages/core/test/determinism.test.ts`) must stay green. It is
-**bug class #1**; if it ever fails or flakes, stop everything else and fix it first.
+## 🌟 Start Here: Good First Issues
 
-So: **never** introduce real time, real randomness, real timers, or real I/O into
-any code path that runs *inside* a simulation. Use the injected `env`:
+If you're looking for an impactful way to get started, check out our curated list of beginner and intermediate tasks:
 
-| Don't (in simulated code)                  | Use instead                          |
-| ------------------------------------------ | ------------------------------------ |
-| `Date.now()` / `new Date()` / `performance.now()` / `process.hrtime()` | `env.now()` |
-| `Math.random()` / `crypto.random*`         | `env.random()`                      |
-| `setTimeout` / `setInterval` / `setImmediate` | `env.setTimeout()` / `env.sleep()` (the **only** allowed real primitive is the single `setImmediate` microtask-drain barrier in `packages/core/src/scheduler.ts`) |
-| real sockets / `fs` / network              | `env.net` (the simulated network)  |
+👉 **[Browse the Good First Issues Catalog](./GOOD_FIRST_ISSUES.md)**
 
-The same business logic runs in production via a `RealEnv` with the same
-`SimEnv` interface — only the `env` differs. Keep `@sx4im/chronos-core` **zero runtime
-dependencies**; don't loosen TypeScript strictness to make something compile —
-fix the types.
+Each issue in the catalog contains:
+- Exact problem statement and motivation
+- Target package and file paths
+- Step-by-step implementation guide
+- Acceptance criteria and verification commands
 
-## Setup (2-Minute Local Dev Setup)
+You can also browse open issues on GitHub tagged with [`good first issue`](https://github.com/sx4im/chronos/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) and [`help wanted`](https://github.com/sx4im/chronos/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).
+
+---
+
+## ⚖️ The Golden Rule
+
+> **Determinism is the product.** Any change that causes the same seed to produce a different trace is a breaking bug. The core promise of Chronos is: *same seed ⇒ byte-identical run, forever*.
+
+The determinism guard test (`packages/core/test/determinism.test.ts`) must **never fail**. If it fails or flakes, stop all other work and fix it first.
+
+### Safe Simulation Patterns
+
+**Never** introduce real-world time, real-world entropy, or native I/O inside simulation paths. Always use the injected `env`:
+
+| Avoid (Inside Simulations) | Use Injected Interface | Why |
+| :--- | :--- | :--- |
+| `Date.now()`, `new Date()`, `performance.now()`, `process.hrtime()` | `env.now()` | Virtual clock fast-forwards instantly and deterministically. |
+| `Math.random()`, `crypto.randomBytes()`, `crypto.randomUUID()` | `env.random()` | Seeded `xoshiro256**` PRNG ensures reproducible randomness. |
+| Native `setTimeout`, `setInterval`, `setImmediate` | `env.setTimeout()`, `env.sleep()` | Virtual scheduler coordinates all async operations via a deterministic min-heap. |
+| Native `net.Socket`, `fetch`, `WebSocket` | `env.net` | Simulated network injects latency, drops, duplicates, and partitions deterministically. |
+
+The same user business logic runs in production via `RealEnv` with the same `SimEnv` interface.
+
+### Architectural Rules
+- `@sx4im/chronos-core` has **zero external runtime dependencies**. Do not add any.
+- TypeScript is configured in **strict mode** with `noUncheckedIndexedAccess`. Do not loosen type definitions or add `any` casts to make code compile.
+- Single responsibility: Keep source files modular and under 300 lines where practical.
+
+---
+
+## ⚡ 2-Minute Local Development Setup
 
 Prerequisites: **Node.js >= 20** and **pnpm >= 9** (`corepack enable && corepack prepare pnpm@latest --activate`).
 
 ```bash
-# 1. Clone and install dependencies
-git clone https://github.com/sx4im/chronos.git && cd chronos
+# 1. Clone the repository
+git clone https://github.com/sx4im/chronos.git
+cd chronos
+
+# 2. Install workspace dependencies
 pnpm install
 
-# 2. Fast smoke test (runs in ~5 seconds to verify your local environment)
+# 3. Fast sanity smoke test (~5 seconds)
 pnpm vitest run packages/core/test/determinism.test.ts
 
-# 3. Full verification bar (run before opening a PR)
+# 4. Run the full test suite
+pnpm test
+
+# 5. Full pre-flight verification bar (must pass before opening a PR)
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
-Vitest is the test runner (`pnpm test:watch` for fast TDD iteration).
-The Time-Travel Inspector UI is a Vite app in `packages/inspector` — run with `pnpm --filter @sx4im/chronos-inspector dev`.
+### Useful Development Commands
 
-## How to Contribute
+- `pnpm test:watch`: Runs Vitest in interactive watch mode for instant feedback during TDD.
+- `pnpm --filter @sx4im/chronos-inspector dev`: Launches the interactive visual Time-Travel Inspector locally at `http://localhost:5173`.
+- `pnpm format`: Formats all files with Prettier.
 
-1. **Find an issue**: Look for open issues with the [`good first issue`](https://github.com/sx4im/chronos/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or [`help wanted`](https://github.com/sx4im/chronos/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label.
-2. **Claim the issue**: Leave a brief comment stating you'd like to work on it so others don't duplicate effort. Maintainers will assign it or confirm approach.
-3. **Branch from `main`**: Use a descriptive branch name (e.g. `feat/trace-diff` or `fix/burst-loss`).
-4. **Follow the Golden Rule**: Determinism is the product. Never introduce real timers, real I/O, or unseeded entropy into simulated paths. Keep `@sx4im/chronos-core` at zero external runtime dependencies.
-5. **Open a PR**: Follow the pull request checklist below. Maintainers review PRs promptly!
+---
 
-## Where to help (good first issues)
+## 🛠️ Contribution Workflow
 
-- **New fault types** — clock skew, slow disk, message corruption, byzantine
-  delivery. Add a fault to `@sx4im/chronos-net` and a focused test.
-- **More dogfood systems** — a CRDT, a two-phase-commit coordinator, a gossip
-  protocol, a sharded KV. Each lives under `examples/` and ships a `simTest`
-  with a safety invariant. (Raft-lite is the template.)
-- **Inspector views** — a state-diff panel, an export-to-PNG, a capsule
-  side-by-side compare. `packages/inspector/src` (pure logic in `capsule.ts`,
-  React in the views).
-- **Adapters** — a Jest integration beside `@sx4im/chronos-vitest`; a real-transport
-  adapter so a popular library (e.g. `ws`, `@grpc/grpc-js`) can run under
-  Chronos in tests and over a real socket in prod.
-- **WASM RNG** — the hot path is the BigInt xoshiro256\*\*; a Rust/WASM
-  implementation behind the same `Rng` interface, feature-flagged, with the
-  pure-TS fallback kept as default. (Phase 6.2.)
+1. **Find or open an issue**: Choose an issue from [GOOD_FIRST_ISSUES.md](./GOOD_FIRST_ISSUES.md) or open a new issue describing what you'd like to build.
+2. **Claim the issue**: Leave a short comment so others know you're working on it. Maintainers will confirm and assign you.
+3. **Create a topic branch**:
+   ```bash
+   git checkout -b feat/add-uuid-generator
+   ```
+4. **Implement incrementally**: Write tests first or alongside your implementation.
+5. **Run the pre-flight checks**:
+   ```bash
+   pnpm typecheck && pnpm lint && pnpm test && pnpm build
+   ```
+6. **Commit with Conventional Commits**: Use clean commit messages like `feat(core): add deterministic uuid generator` or `fix(net): handle zero latency edge case`.
+7. **Open a Pull Request**: Provide a concise description of your changes and reference the issue (e.g. `Closes #12`).
 
-## PR checklist
+---
 
-- [ ] Determinism guard passes (`pnpm test`)
-- [ ] `pnpm typecheck && pnpm lint && pnpm test && pnpm build` all green, zero errors
-- [ ] New behavior has tests — and, if it fixes a found bug, a saved failure
-      capsule under `.chronos/failures/` plus a regression test that replays it
-- [ ] No new runtime dependencies in `@sx4im/chronos-core`
-- [ ] No real time/entropy/timers/sockets introduced into simulated paths
-- [ ] Conventional Commit messages (`feat:`, `fix:`, `test:`, `docs:`)
+## 📋 Pull Request Checklist
 
-## Commit + history conventions
+Before submitting your PR, ensure:
+- [ ] Determinism guard passes: `pnpm vitest run packages/core/test/determinism.test.ts`
+- [ ] Complete CI verification passes: `pnpm typecheck && pnpm lint && pnpm test && pnpm build`
+- [ ] Tests added or updated for any new functionality
+- [ ] `@sx4im/chronos-core` has zero new runtime dependencies
+- [ ] No native `Date.now()`, `Math.random()`, or unvirtualized timers in simulated code
+- [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
 
-- **Conventional Commits** (`feat:`, `fix:`, `docs:`, `test:`, `chore:`,
-  `refactor:`). Small commits after each green milestone, not one big dump.
-- One concept per file; match the layout in `docs/architecture.md`.
-- Don't push force-rewrites over `main`/`master`; branch + PR.
+---
 
-## Reporting a bug Chronos found
+## 🐛 Found a Bug in Your Own System Using Chronos?
 
-That's the best kind of issue — and the framework makes it reproducible by
-design. If you hit a `simTest` violation in CI, the `failure-capsules-<run>`
-artifact contains `<seed>.json`. Attach it (or just the seed + the scenario
-module) so a maintainer can `chronos replay <seed>.json` and see the exact
-failing run in the Inspector.
+That's the best kind of issue! When Chronos discovers an invariant violation, it writes a **failure capsule** file (`.chronos/failures/<seed>.json`).
 
-Thanks again — and remember the one rule. **Determinism is the product.**
+You can report it or share the failure reproduction with your team. Include:
+1. The failure seed
+2. The scenario configuration
+3. The violated invariant message
+4. The failure capsule JSON (if shareable)
+
+Anyone with Chronos can instantly run `chronos replay <seed>.json` and replay the exact race condition.
+
+---
+
+## 💬 Community & Questions
+
+Have questions, ideas, or need guidance?
+- Open a discussion in [GitHub Discussions](https://github.com/sx4im/chronos/discussions)
+- Report issues in [GitHub Issues](https://github.com/sx4im/chronos/issues)
+- Review our [Code of Conduct](./CODE_OF_CONDUCT.md)
+
+Thank you for helping make distributed systems testing accessible and reproducible for everyone!

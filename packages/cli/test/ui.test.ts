@@ -28,6 +28,9 @@ describe("stripAnsi", () => {
 
 describe("C palette", () => {
   it("wraps text in SGR sequences when color is on", () => {
+    const prevNoColor = process.env.NO_COLOR;
+    const prevForce = process.env.FORCE_COLOR;
+    delete process.env.NO_COLOR;
     process.env.FORCE_COLOR = "1";
     try {
       expect(C.bold("hi")).toBe("\x1b[1mhi\x1b[0m");
@@ -37,7 +40,10 @@ describe("C palette", () => {
         "\x1b[48;2;16;185;129m\x1b[38;2;255;255;255m\x1b[1m  OK  \x1b[0m",
       );
     } finally {
-      delete process.env.FORCE_COLOR;
+      if (prevNoColor === undefined) delete process.env.NO_COLOR;
+      else process.env.NO_COLOR = prevNoColor;
+      if (prevForce === undefined) delete process.env.FORCE_COLOR;
+      else process.env.FORCE_COLOR = prevForce;
     }
   });
 

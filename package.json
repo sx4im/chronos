@@ -39,5 +39,28 @@
       "postcss@>=8 <9": "^8.5.23",
       "brace-expansion@>=4.0.0 <5.0.8": ">=5.0.9"
     }
-  }
+  },
+  "keywords": [
+    "deterministic-simulation-testing",
+    "dst",
+    "distributed-systems",
+    "vitest",
+    "testing-framework",
+    "chaos-engineering",
+    "fault-injection",
+    "reproducibility",
+    "race-conditions",
+    "heisenbug",
+    "discrete-event-simulation",
+    "foundationdb",
+    "tigerbeetle",
+    "jepsen",
+    "time-travel-debugging",
+    "virtual-clock",
+    "prng",
+    "crdt",
+    "raft",
+    "typescript",
+    "nodejs"
+  ]
 }

@@ -5,7 +5,9 @@ import readline from "node:readline";
 import { CHRONOS_VERSION } from "@sx4im/chronos-core";
 
 function useColor(): boolean {
-  return !process.env.NO_COLOR && (!!process.stdout.isTTY || process.env.FORCE_COLOR === "1");
+  if (process.env.FORCE_COLOR === "1") return true;
+  if (process.env.NO_COLOR) return false;
+  return !!process.stdout.isTTY;
 }
 
 export const C = {
