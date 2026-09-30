@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { simTest, runSimTest, executeScenario, expectInvariant } from "@sx4im/chronos-vitest";
+import { simTest, runSimTest, executeScenario, expectInvariant, type SimTestBody } from "@sx4im/chronos-vitest";
 import { buildSimulator } from "@sx4im/chronos-vitest/engine";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -81,9 +81,9 @@ describe("crdt — LWW register convergence under Chronos", () => {
       maxSteps: CRDT_MAX_STEPS,
     } as const;
 
-    const buggyBody = async (sim: any) => {
+    const buggyBody: SimTestBody = async (sim) => {
       await sim.settle();
-      expectInvariant("should-fail-if-broken", (world: any) => {
+      expectInvariant("should-fail-if-broken", (_world) => {
         throw new Error("artificially-broken-crdt");
       });
     };

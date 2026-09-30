@@ -178,7 +178,7 @@ describe("Simulator", () => {
       }),
     });
     const r = await sim.run();
-    expect(r.trace.config.network).toEqual(customConfig);
+    expect((r.trace.config as { network: unknown }).network).toEqual(customConfig);
   });
 
   it("settle returns SchedulerRunResult with completion and step count", async () => {
