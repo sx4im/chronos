@@ -19,8 +19,11 @@ import { join } from "node:path";
 import { traceCommand } from "../src/trace.js";
 import { statsCommand } from "../src/stats.js";
 import { exportCommand } from "../src/export.js";
+import { replayCommand } from "../src/replay.js";
+import { shrinkCommand } from "../src/shrink.js";
 import { checkCommand } from "../src/check.js";
 import { sweepCommand } from "../src/sweep.js";
+import { resolveCapsulePath, resolveScenarioPath, CapsulePathRefused } from "../src/util.js";
 import { sanitizeText, safeText, escapeCsvCell, escapeMarkdownCell } from "../src/sanitize.js";
 
 const ESC = "\x1b";
@@ -310,5 +313,84 @@ describe("chronos sweep — scenario path confinement", () => {
     } finally {
       rmSync(outside, { recursive: true, force: true });
     }
+  });
+
+  it("refuses symlinked capsules and scenarios that escape the allowed roots", () => {
+    const outside = mkdtempSync(join(tmpdir(), "chronos-outside-sym-"));
+    try {
+      const extCap = join(outside, "secret.json");
+      writeFileSync(extCap, "{}", "utf8");
+      const linkCap = join(dir, "link-cap.json");
+      symlinkSync(extCap, linkCap);
+      expect(() => resolveCapsulePath(linkCap)).toThrow(CapsulePathRefused);
+
+      const extScen = join(outside, "scen.mjs");
+      writeFileSync(extScen, "export const body = () => {};\n", "utf8");
+      const linkScen = join(dir, "link-scen.mjs");
+      symlinkSync(extScen, linkScen);
+      expect(() => resolveScenarioPath(linkScen)).toThrow(CapsulePathRefused);
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses export --output outside allowed roots or through a symlink", async () => {
+    const p = hostileCapsule("exp-confine.json", "ok");
+    const outside = mkdtempSync(join(tmpdir(), "chronos-outside-exp-"));
+    try {
+      const outsideTarget = join(outside, "pwned.md");
+      const r1 = await exportCommand(p, { format: "markdown", output: outsideTarget });
+      expect(r1.exitCode).toBe(2);
+
+      const symOut = join(dir, "sym-out.md");
+      writeFileSync(outsideTarget, "original", "utf8");
+      symlinkSync(outsideTarget, symOut);
+      const r2 = await exportCommand(p, { format: "markdown", output: symOut });
+      expect(r2.exitCode).toBe(2);
+      expect(readFileSync(outsideTarget, "utf8")).toBe("original");
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("chronos replay / shrink — terminal escape stripping", () => {
+  it("strips ANSI/OSC/CR sequences from invariant name, detail, and nodes in replay and shrink", async () => {
+    const p = hostileCapsule("ansi-replay.json", `${ESC}[2J${ESC}[H0 violations\rforged`);
+    const c = JSON.parse(readFileSync(p, "utf8")) as {
+      invariant: { name: string; detail: string };
+      nodes: string[];
+    };
+    c.invariant.name = `inv${ESC}]0;PWNED\x07`;
+    c.nodes = [`a\rFORGED`, "b"];
+    writeFileSync(p, JSON.stringify(c), "utf8");
+
+    const rep = await replayCommand(p);
+    expect(rep.exitCode).toBe(0);
+    expect(rep.message).not.toContain(ESC);
+    expect(rep.message).not.toContain("\r");
+
+    const scen = join(dir, "noop-scen.mjs");
+    writeFileSync(scen, "export const body = () => {};\n", "utf8");
+    const shr = await shrinkCommand(p, scen);
+    expect(shr.exitCode).toBe(1);
+    expect(shr.message).not.toContain(ESC);
+  });
+
+  it("counts partition-dropped deliveries as dropped rather than delivered/duplicated in stats", async () => {
+    const p = hostileCapsule("part-drop.json", "ping");
+    const c = JSON.parse(readFileSync(p, "utf8")) as {
+      trace: { events: unknown[] };
+    };
+    c.trace.events = [
+      { t: 0, seq: 0, kind: "send", from: "a", to: "b", summary: "ping" },
+      { t: 5, seq: 1, kind: "deliver", from: "a", to: "b", summary: "dropped by partition ping" },
+    ];
+    writeFileSync(p, JSON.stringify(c), "utf8");
+    const st = await statsCommand(p);
+    expect(st.exitCode).toBe(0);
+    expect(st.message).toContain("(0 delivered)");
+    expect(st.message).toContain("(1 dropped)");
+    expect(st.message).toContain("(0 duplicated)");
   });
 });

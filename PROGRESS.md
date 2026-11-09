@@ -24,13 +24,13 @@ This document tracks the features, validation steps, and progress of the **Chron
 - **Expect Invariants**: In-body check helper `expectInvariant` to halt the simulation instantly on violations.
 
 ### 4. `@sx4im/chronos-cli` (CLI Tooling)
-- `chronos doctor`: Runtime environment diagnosis (Node version, inspector asset availability, NVIDIA NIM configurations, and static DST compliance verification).
+- `chronos doctor`: Runtime environment diagnosis (Node version, inspector asset availability, AI provider key status, and static DST compliance verification).
 - `chronos sweep`: Runs a scenario across thousands of seeds to find first-violating inputs and output capsules.
 - `chronos replay`: Re-runs a specific capsule to prove reproduction with bit-identical traces.
 - `chronos shrink`: Coordinate descent probability reduction and binary-search step-shrinking to reduce chaos scenarios to minimal reproduction.
 - `chronos trace`: ASCII timeline pretty-printing with customizable/TTY-gated coloring.
 - `chronos open`: Launches the Inspector UI preloaded with a given capsule.
-- `chronos explain`: Summarizes a failure in natural language using LLM inference (NVIDIA NIM).
+- `chronos explain`: Summarizes a failure in natural language using OpenAI, Anthropic, Gemini, or custom OpenAI-compatible endpoints.
 - `chronos stats`: Generates detailed trace statistics (sends, delivers, drops, duplicate rates, latency bounds).
 - `chronos check`: Static analysis compliance checker to find non-deterministic code blocks and global entropy references in source directories.
 - `chronos export`: Converts trace event timelines to Markdown tables or CSV files.
@@ -43,32 +43,20 @@ This document tracks the features, validation steps, and progress of the **Chron
 
 ### 6. Security Hardening
 
-A full audit against the [vibe-security](https://github.com/raroque/vibe-security-skill)
-checklist, with every finding fixed and pinned by a regression test. The threat
-model is written up in [`SECURITY.md`](./SECURITY.md); its central assumption is
-that **a failure capsule is untrusted input**, since capsules exist to be shared.
+Two security audits have been completed across all packages, with every finding fixed and pinned by regression tests. See [`SECURITY.md`](./SECURITY.md) for the threat model:
 
-- **Capsule trust boundary**: the whole capsule — trace envelope and every event
-  against the `TraceEvent` union — is validated at read time, so renderers can
-  stay simple. File size is capped before reading, `__proto__` is rejected at the
-  parse boundary, and writes use an unpredictable temp name with an exclusive
-  `0600` create.
-- **Per-sink output escaping**: terminal control sequences are stripped before
-  printing, CSV cells are neutralized against spreadsheet formula injection, and
-  Markdown cells against table breakout.
-- **Credential handling**: `chronos explain` sends API keys as headers only,
-  requires `https` off-loopback, and masks the interactive key prompt.
-- **Bounded rendering**: the Inspector drops malformed events and caps event
-  count, node count, and laid-out time span — surfacing any truncation in the UI.
-- **Deployment**: security headers on the hosted Inspector, no published source
-  maps, and least-privilege CI token permissions.
+- **Capsule trust boundary**: Both `readCapsule` (CLI/Vitest) and `parseCapsule` (Inspector) reject `__proto__`/`constructor`/`prototype` keys, validate every event against the `TraceEvent` union, cap file and array sizes, and use exclusive `0600` temp-file writes.
+- **Canonical path confinement**: `resolveCapsulePath`, `resolveScenarioPath`, and `chronos export` resolve symlinks via `realpathSync` and confine reads, dynamic imports, and exports to `cwd`, `CHRONOS_DIR`, and `CHRONOS_CAPSULE_DIR`.
+- **Per-sink output escaping**: Terminal control sequences and bidirectional overrides are stripped in `trace`, `stats`, `replay`, `shrink`, `export`, and `explain`; CSV cells are neutralized against spreadsheet formula injection; Markdown cells are escaped against table breakout.
+- **Credential handling**: `chronos explain` sends API keys in request headers with `redirect: "error"`, requires `https` off-loopback, masks interactive key prompts, and redacts JSON-serialized credentials and full/truncated JWTs in `sanitizeSummary`.
+- **Bounded rendering**: The Inspector validates `?capsule=` via WHATWG URL resolution, drops malformed events, and clamps event count, node count, and virtual-time SVG geometry.
 
 ---
 
 ## Workspace Status
 
-All components of the monorepo are fully operational and verified:
-- **Build**: Successfully compiles ESM and TypeScript definitions (`dts`) across all packages.
+All components of the monorepo are verified:
+- **Build**: Compiles ESM and TypeScript definitions (`dts`) across all packages.
 - **Typecheck**: Zero TypeScript compile errors (`tsc --noEmit` is clean).
 - **Lint**: Zero ESLint warnings or errors.
-- **Tests**: All 326 tests are passing.
+- **Tests**: All 340 tests are passing across 30 test files.

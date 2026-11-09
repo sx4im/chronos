@@ -37,6 +37,21 @@ describe("sanitizeSummary — credential redaction", () => {
     expect(out).not.toContain("\x1b[");
     expect(out).toContain("[REDACTED]");
   });
+
+  it("redacts JSON-serialized credentials and 80-char truncated JWTs from TraceLogger.summarize", () => {
+    const jsonSummary = '{"token":"sk-live-secret","password":"pw123","apiKey":"k-999","secret":"s-1"}';
+    const out = sanitizeSummary(jsonSummary);
+    expect(out).not.toContain("sk-live-secret");
+    expect(out).not.toContain("pw123");
+    expect(out).not.toContain("k-999");
+    expect(out).not.toContain("s-1");
+    expect(out).toContain("[REDACTED]");
+
+    const truncatedJwt = '{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZ…';
+    const jwtOut = sanitizeSummary(truncatedJwt);
+    expect(jwtOut).toContain("[REDACTED_JWT]");
+    expect(jwtOut).not.toContain("eyJzdWIi");
+  });
 });
 
 describe("isLoopback — the legitimate plaintext case", () => {

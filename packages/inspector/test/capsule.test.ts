@@ -391,9 +391,36 @@ describe("parseCapsule — untrusted capsule defenses", () => {
   });
 
   it("rejects a cross-origin ?capsule= value (client-side SSRF)", () => {
-    for (const u of ["//evil.test/c.json", "https://evil.test/c.json", "data:,x", "capsule.json"]) {
+    for (const u of [
+      "//evil.test/c.json",
+      "/\\evil.test/c.json",
+      "/\t/evil.test/c.json",
+      "/\n/evil.test/c.json",
+      "https://evil.test/c.json",
+      "data:,x",
+      "capsule.json",
+    ]) {
       expect(isSameOriginCapsuleUrl(u)).toBe(false);
     }
     expect(isSameOriginCapsuleUrl("/capsule")).toBe(true);
+  });
+
+  it("rejects forbidden prototype-pollution keys and oversized partition groups", () => {
+    expect(() =>
+      parseCapsule('{"__proto__":{"polluted":true},"seed":"1","trace":{"seed":"1","nodes":[],"events":[]}}'),
+    ).toThrow(/forbidden/);
+    const bigGroups = Array.from({ length: 300 }, () => ["0"]);
+    const parsed = parseCapsule(raw([{ t: 0, seq: 0, kind: "partition", groups: bigGroups, healAt: 10 }]));
+    expect(parsed.droppedEvents).toBe(1);
+    expect(parsed.trace.events).toHaveLength(0);
+  });
+
+  it("marks a send whose deliver was dropped by partition as 'dropped'", () => {
+    const flows = pairMessages([
+      ev({ kind: "send", from: "0", to: "1", summary: "ping", t: 1, seq: 0 }),
+      ev({ kind: "deliver", from: "0", to: "1", summary: "dropped by partition ping", t: 5, seq: 1 }),
+    ]);
+    expect(flows).toHaveLength(1);
+    expect(flows[0]!.status).toBe("dropped");
   });
 });

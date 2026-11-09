@@ -35,8 +35,7 @@
     "node": ">=20"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "publishConfig": {
     "access": "public"

@@ -209,8 +209,11 @@ describe("validateCapsule — trace envelope (renderer crash surface)", () => {
     rej((c) => (asMap(c.trace).nodes = [42]), /trace\.nodes\[0\]/);
   });
 
-  it("accepts a well-formed trace envelope", () => {
+  it("accepts a well-formed trace envelope (including timeout result)", () => {
     expect(validateCapsule(base()).trace.result).toBe("violation");
+    const c = base();
+    asMap(c.trace).result = "timeout";
+    expect(validateCapsule(c).trace.result).toBe("timeout");
   });
 });
 

@@ -10,23 +10,23 @@ Chronos is a developer tool. It runs on developer laptops and CI runners, and it
 
 ### A failure capsule is untrusted input
 
-This is the load-bearing assumption. A capsule (`.chronos/failures/<seed>.json`) exists to be **shared** — attached to a GitHub issue, produced by someone else's CI, handed to a teammate — and then opened with `chronos trace`, `chronos stats`, `chronos export`, `chronos replay`, or the Inspector.
+A capsule (`.chronos/failures/<seed>.json`) exists to be shared (attached to a GitHub issue, produced by someone else's CI, handed to a teammate) and then opened with `chronos trace`, `chronos stats`, `chronos export`, `chronos replay`, `chronos shrink`, or the Inspector.
 
-So a capsule is treated exactly like a file downloaded from a stranger:
+Chronos treats every capsule as untrusted input:
 
-- **Everything is validated at the read boundary.** `readCapsule` caps the file size before reading (128 MB; `CHRONOS_MAX_CAPSULE_BYTES` raises it), rejects a `__proto__` key at the parse boundary, and validates the whole structure — including every trace event against the `TraceEvent` union — before any field reaches the `Simulator` or a renderer. A malformed capsule produces a clear `InvalidCapsule` error, never a crash and never a partially-applied config.
-- **Errors never echo capsule bytes.** Node's `JSON.parse` `SyntaxError` embeds the offending file contents, which on a misdirected `chronos replay /etc/passwd` would disclose that file. All capsule read errors are content-free.
-- **Capsule paths are confined.** By default, capsules and scenarios must live under the working directory, `CHRONOS_DIR`, or `CHRONOS_CAPSULE_DIR`. Set `CHRONOS_ALLOW_OUTSIDE_CAPSULES=1` to opt out. Importing a scenario *executes* it, so `replay`, `shrink`, and `sweep` all apply this.
-- **Capsule text is escaped per output sink.** Capsule strings are attacker-chosen, and each renderer feeds a sink with its own injection grammar: terminal escape sequences are stripped before printing (a trace viewer that can be made to repaint its own output can lie about what it found), CSV cells are prefixed against spreadsheet formula injection, and Markdown cells are escaped against table breakout.
-- **The Inspector bounds what it draws.** Events that don't match the `TraceEvent` union are dropped, and event count, node count, and the laid-out time span are all capped — with any truncation shown in the UI, so a partial trace is never presented as a complete one.
+- **Validated at the read boundary.** `readCapsule` caps file size before reading (128 MB default; `CHRONOS_MAX_CAPSULE_BYTES` raises it), rejects `__proto__`, `constructor`, and `prototype` keys during `JSON.parse`, and validates every field and trace event against the `TraceEvent` union before anything reaches `Simulator` or a renderer.
+- **Content-free read errors.** Node's `JSON.parse` `SyntaxError` embeds offending file bytes, which on a misdirected `chronos replay /etc/passwd` would disclose that file. Capsule read errors never echo file contents or full paths.
+- **Canonical path confinement.** Capsules, scenario modules, and `chronos export` outputs must resolve (including via `realpath` across symlinks) under the working directory, `CHRONOS_DIR`, or `CHRONOS_CAPSULE_DIR`. Set `CHRONOS_ALLOW_OUTSIDE_CAPSULES=1` to opt out.
+- **Per-sink output escaping.** Terminal control sequences and bidirectional overrides are stripped before printing in `trace`, `stats`, `replay`, `shrink`, `export`, and `explain`. CSV cells are prefixed against spreadsheet formula injection, and Markdown cells are escaped against table breakout.
+- **Bounded Inspector rendering.** The Inspector rejects prototype-pollution keys, drops malformed events or oversized partition groups, and caps event count (`50,000`), node count (`256`), and virtual-time SVG coordinates (`10,000,000` ms) while surfacing any truncation in the UI.
 
 ### `chronos open` serves only to localhost
 
-The Inspector server binds `127.0.0.1`, requires a loopback `Host` header (blocking DNS rebinding), confines file serving to the built `dist/`, and sends a restrictive CSP plus `X-Frame-Options: DENY`. The `?capsule=` parameter accepts only same-origin absolute paths, so a crafted link cannot make your browser fetch a cross-origin URL on your behalf.
+The Inspector server binds `127.0.0.1`, requires a loopback `Host` header (blocking DNS rebinding), confines static file serving to the built `dist/`, and sends a restrictive CSP plus `X-Frame-Options: DENY`. The `?capsule=` parameter rejects backslashes, control characters, and cross-origin URLs via WHATWG URL resolution against a local origin.
 
 ### `chronos explain` is optional and isolated
 
-It is the only feature that makes a network call, it is off unless you set a key, and it is absent from `@sx4im/chronos-core` entirely. Your API key is sent as a header (never in a URL, where proxies and access logs would retain it), only over `https` unless the endpoint is loopback. The capsule summary is redacted for JWTs and `token=`/`key=`/`secret=`/`password=` values before it is sent, and the model's reply is sanitized before it is printed — a capsule shapes that prompt, so the reply is the exit of a prompt-injection path.
+`chronos explain` is off unless you configure a provider key, and is absent from `@sx4im/chronos-core`. API keys are sent in request headers only, with `redirect: "error"`, over `https` unless the endpoint is loopback. Capsule summaries redact full and truncated JWTs as well as JSON-quoted and unquoted `token`/`key`/`secret`/`password`/`auth` fields before leaving the machine, and the model's reply is sanitized before printing.
 
 ### Determinism is a security property
 

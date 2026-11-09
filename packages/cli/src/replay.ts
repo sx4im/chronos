@@ -10,6 +10,7 @@
 import { replayCapsule, readCapsule, type SimTestBody, type FailureCapsule } from "@sx4im/chronos-vitest/engine";
 import type { NetworkFactory } from "@sx4im/chronos-core";
 import { toFileUrl, resolveCapsulePath, resolveScenarioPath, capsuleReadError } from "./util.js";
+import { safeText } from "./sanitize.js";
 
 export interface ScenarioModule {
   body: SimTestBody;
@@ -58,14 +59,17 @@ export async function replayCommand(
   }
 
   if (scenarioPath === undefined) {
-    const status = capsule.trace.result;
+    const status = safeText(capsule.trace.result);
+    const invName = safeText(capsule.invariant.name);
+    const invDetail = safeText(capsule.invariant.detail);
+    const nodeList = capsule.nodes.map((n) => safeText(n)).join(", ");
     return {
       exitCode: 0,
       message:
-        `capsule recorded result="${status}" — invariant ${capsule.invariant.name} (${capsule.invariant.detail}).\n` +
-        `  seed=${capsule.seed}, nodes=[${capsule.nodes.join(", ")}], ${capsule.trace.events.length} events.\n` +
+        `capsule recorded result="${status}" — invariant ${invName} (${invDetail}).\n` +
+        `  seed=${safeText(capsule.seed)}, nodes=[${nodeList}], ${capsule.trace.events.length} events.\n` +
         `Reproduction needs the system-under-test. Re-run with a scenario module:\n` +
-        `  $ chronos replay ${capsulePath} <path/to/scenario.{js,ts}>\n` +
+        `  $ chronos replay ${safeText(capsulePath)} <path/to/scenario.{js,ts}>\n` +
         `where the module exports { body, netFactory? } (and optional nodes/network/chaos).`,
       reproduced: false,
     };
@@ -78,7 +82,7 @@ export async function replayCommand(
     return {
       exitCode: 2,
       message:
-        `could not import scenario "${scenarioPath}": ${e instanceof Error ? e.message : String(e)}\n` +
+        `could not import scenario "${safeText(scenarioPath)}": ${e instanceof Error ? safeText(e.message) : safeText(String(e))}\n` +
         `Tip: .ts scenarios need a TS-aware runner (vitest/tsx); build to .js or run under tsx.`,
       reproduced: false,
     };
@@ -93,7 +97,7 @@ export async function replayCommand(
     return {
       exitCode: 0,
       message:
-        `✓ reproduced: invariant "${violation?.name ?? "<unknown>"}" recurred from seed ${capsule.seed}\n` +
+        `✓ reproduced: invariant "${safeText(violation?.name ?? "<unknown>")}" recurred from seed ${safeText(capsule.seed)}\n` +
         `  the re-run trace is bit-identical to the capsule (${trace.events.length} events match).`,
       reproduced: true,
     };
@@ -101,8 +105,8 @@ export async function replayCommand(
   return {
     exitCode: 1,
     message:
-      `✗ could NOT reproduce the violation from seed ${capsule.seed}\n` +
-      `  re-run violation: ${violation?.name ?? "<none>"}\n` +
+      `✗ could NOT reproduce the violation from seed ${safeText(capsule.seed)}\n` +
+      `  re-run violation: ${safeText(violation?.name ?? "<none>")}\n` +
       `  re-run events: ${trace.events.length} (capsule recorded ${capsule.trace.events.length})\n` +
       `  Most likely the scenario's netFactory/network doesn't match the one that produced the capsule.`,
     reproduced: false,

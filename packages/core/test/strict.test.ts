@@ -259,15 +259,21 @@ describe("installGuards — restore", () => {
     }
   });
 
-  it("handles nested installGuards and restores native globals only when root restores", () => {
+  it("handles nested installGuards and restores outer SimEnv when inner restores", () => {
     const realNow = Date.now;
-    const { sim } = makeEnv();
+    const outerEnv = makeEnv();
+    const innerEnv = makeEnv();
+    outerEnv.clock.advanceTo(100);
+    innerEnv.clock.advanceTo(500);
 
-    const outer = installGuards(sim, "route");
-    const inner = installGuards(sim, "route");
+    const outer = installGuards(outerEnv.sim, "route");
+    expect(Date.now()).toBe(100);
 
-    expect(Date.now).not.toBe(realNow);
-    inner.restore(); // nested restore should not yet put back native Date.now
+    const inner = installGuards(innerEnv.sim, "route");
+    expect(Date.now()).toBe(500);
+
+    inner.restore(); // nested restore immediately puts back outer SimEnv
+    expect(Date.now()).toBe(100);
     expect(Date.now).not.toBe(realNow);
 
     outer.restore(); // root restore puts back original native Date.now

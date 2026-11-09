@@ -18,29 +18,27 @@
 
 ---
 
-## ⚡ In 30 Seconds: The Problem Chronos Solves
+## In 30 Seconds: The Problem Chronos Solves
 
-Ever had a flaky test in CI that failed once and never reproduced locally? Or spent days tracking down a distributed race condition between microservices or asynchronous event handlers?
+Distributed race conditions, split-brain partitions, and timer bugs fail once in CI and refuse to reproduce locally because wall clocks, OS thread scheduling, and socket I/O are non-deterministic.
 
-Async heisenbugs, network partitions, and timing races are notoriously difficult to debug because **real-world execution is non-deterministic**: system clocks tick unpredictably, OS threads interleave arbitrarily, and network packets arrive in unpredictable orders.
+**Chronos removes external entropy and runs your concurrent cluster on a single controlled thread:**
 
-**Chronos eliminates external entropy and serializes your concurrent cluster onto a single controlled thread:**
-
-* ⏱️ **Instant Virtual Time**: Fast-forwards simulated hours or days in milliseconds with zero real-time waiting.
-* 🎲 **Seeded PRNG**: `xoshiro256**` pseudo-random generator guarantees that every coin flip, network delay, and scheduling decision is 100% reproducible.
-* 🌐 **Simulated Chaos Network**: Injects latency jitter, packet loss, message duplication, network split-brains (partitions), and node crash/restart cycles.
-* 🛡️ **Strict Entropy Guards**: Automatically intercepts and throws if code accidentally calls non-deterministic APIs (`Date.now()`, `Math.random()`, native `setTimeout`).
-* 📦 **Failure Capsules & Replay**: When a safety invariant fails across 10,000 randomized simulation seeds, Chronos emits a failure capsule. Running `chronos replay <capsule>` recreates the **exact execution path, byte-for-byte, every single time.**
+* **Virtual Time**: Advances simulated hours in milliseconds when the next scheduled event fires, with zero real-time waiting.
+* **Seeded PRNG**: `xoshiro256**` seeded by `SplitMix64` drives every random draw, network delay, and scheduling tiebreak from one integer seed.
+* **Simulated Chaos Network**: Injects latency jitter, packet drops, duplicate deliveries, network partitions, and node crash/restart cycles.
+* **Strict Entropy Guards**: Intercepts accidental calls to `Date.now()`, `Math.random()`, `performance.now()`, `process.hrtime()`, and global timers (`route` mode by default, `throw` mode via `CHRONOS_STRICT=throw`).
+* **Failure Capsules & Replay**: When an invariant fails across a seed sweep, Chronos writes a `.chronos/failures/<seed>.json` capsule. `chronos replay <capsule> <scenario>` reproduces the exact execution trace.
 
 ---
 
-## 📺 Explainer Video
+## Explainer Video
 
 [![Watch the Explainer Video](./assets/video-thumbnail.jpg)](https://www.youtube.com/watch?v=7d9_jUrygKM)
 
 ---
 
-## 🧭 Table of Contents
+## Table of Contents
 
 - [Why Chronos?](#why-chronos)
 - [The Magic Moment](#the-magic-moment)
@@ -62,17 +60,13 @@ Async heisenbugs, network partitions, and timing races are notoriously difficult
 
 ## Why Chronos?
 
-Distributed systems, microservices, consensus nodes, and CRDTs fail at the seams:
-- **Network drops and reordering** cause state machines to process messages out-of-order.
-- **Split-brain network partitions** lead to dual leaders or split voting terms.
-- **Clock drift and timeout races** trigger spurious leader re-elections or premature aborts.
-- **Uncoordinated retries** produce duplicate writes that violate idempotency.
+Distributed systems, consensus protocols, and CRDTs fail at the boundaries:
+- **Network drops and reordering** deliver messages out of order.
+- **Network partitions** cause split-brain elections or stale reads.
+- **Timer races** trigger overlapping leader elections or premature transaction aborts.
+- **Retries** produce duplicate writes that break non-idempotent handlers.
 
-Traditional testing tools (mock clocks, Jest timers, or real Docker containers) either:
-1. Only test a single node with synchronous mock time, or
-2. Run unrepeatable end-to-end chaos tests that take minutes to run and never reproduce the same failure twice.
-
-Chronos gives JavaScript and TypeScript developers the **Deterministic Simulation Testing (DST)** superpowers pioneered by systems like **FoundationDB** and **TigerBeetle**, without leaving the familiar Node.js and Vitest ecosystem.
+Mock clocks only test a single node synchronously, while multi-container chaos tests take minutes and never replay the same interleaving twice. Chronos brings the Deterministic Simulation Testing (DST) model from FoundationDB and TigerBeetle to Node.js and Vitest.
 
 ---
 
@@ -111,7 +105,7 @@ When an invariant breaks, Chronos isolates the exact reproducing seed and create
 
 ---
 
-## 🎯 When to Use Chronos
+## When to Use Chronos
 
 | Use Case | What Chronos Tests | Example Systems |
 | :--- | :--- | :--- |
@@ -126,12 +120,12 @@ When an invariant breaks, Chronos isolates the exact reproducing seed and create
 
 ## Key Features
 
-* **100% Deterministic Execution**: Zero non-determinism. `Same Seed ⇒ Byte-Identical Event Trace`.
-* **Simulated Fault-Injecting Network**: Simulates latency jitter, packet loss, reordering, duplicate delivery, network split-brains (partitions), and crash/restart node lifecycles.
-* **Vitest Native Integration**: Drop `simTest` right into your standard Vitest test suites.
-* **Time-Travel Inspector**: Serve an interactive web UI (`chronos open`) to scrub timeline events, inspect message state, step through logs, and generate sequence diagrams.
-* **AI Failure Diagnostics**: Integrated `chronos explain` provider menu supporting OpenAI, Anthropic, Gemini, DeepSeek, xAI Grok, Ollama, and local models.
-* **Zero Runtime Dependencies**: `@sx4im/chronos-core` is lightweight, ultra-fast, and has zero external dependencies.
+* **Deterministic Execution**: `Same Seed => Identical Event Trace`.
+* **Simulated Fault-Injecting Network**: Injects latency jitter, packet loss, reordering, duplicate delivery, network partitions, and node crash/restart lifecycles.
+* **Vitest Integration**: Run seed sweeps inside standard Vitest suites with `simTest` and `replayTest`.
+* **Time-Travel Inspector**: Serve a local web UI (`chronos open`) to scrub timeline events, inspect message flows, and view sequence diagrams and link matrices.
+* **Optional LLM Failure Summaries**: `chronos explain` summarizes a failing trace using OpenAI, Anthropic, Gemini, or any OpenAI-compatible endpoint (`LLM_BASE_URL`).
+* **Zero Runtime Dependencies in Core**: `@sx4im/chronos-core` has no external runtime dependencies.
 
 ---
 
@@ -206,7 +200,7 @@ flowchart TB
         
         MicrotaskBarrier --> SimEnv["SimEnv Injected Interface\n• env.now() / env.random() / env.uuid()\n• env.sleep / setTimeout\n• env.net.send"]
         
-        SimEnv --> StrictGuards["Strict Safety Guards (installGuards)\nThrows on Date.now, Math.random, native timers"]
+        SimEnv --> StrictGuards["Strict Safety Guards (installGuards)\nRoutes or throws on Date.now, Math.random, native timers"]
     end
 
     subgraph NetLayer["@sx4im/chronos-net (Fault Injection & Network)"]
@@ -232,11 +226,11 @@ flowchart TB
         CLI --> AIExplainer["chronos explain (Multi-Provider LLM Diagnostics)"]
         
         InspectorServer --> ReactUI["React + Vite Time-Travel Dashboard\n• Timeline scrubber\n• Sequence diagrams\n• State & event metrics"]
-        AIExplainer --> LLMProviders["AI APIs: OpenAI, Anthropic, Gemini,\nDeepSeek, Grok, Ollama"]
+        AIExplainer --> LLMProviders["AI APIs: OpenAI, Anthropic, Gemini,\nOpenAI-Compatible Endpoints"]
     end
 
     subgraph ProductionDual["Production Runtime Seam"]
-        RealEnv["RealEnv (Production Seam)\n• Date.now()\n• Math.random()\n• Real TCP/HTTP transport"]
+        RealEnv["RealEnv (Production Seam)\n• Date.now()\n• crypto.randomBytes CSPRNG\n• Real TCP/HTTP transport"]
         SimEnv -. Same API Interface .- RealEnv
     end
 ```
@@ -284,15 +278,15 @@ Chronos is organized as a modular TypeScript monorepo:
 | :--- | :--- | :--- |
 | **[`@sx4im/chronos-core`](./packages/core)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-core.svg)](https://www.npmjs.com/package/@sx4im/chronos-core) | Core DST Engine (`PRNG`, `VirtualClock`, `MinHeap`, `Scheduler`, `SimEnv`, `RealEnv`, strict guards). Zero dependencies. |
 | **[`@sx4im/chronos-net`](./packages/net)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-net.svg)](https://www.npmjs.com/package/@sx4im/chronos-net) | Simulated network layer (latency, drop, duplicate, partition splits, crash/restart lifecycle). |
-| **[`@sx4im/chronos-vitest`](./packages/vitest)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-vitest.svg)](https://www.npmjs.com/package/@sx4im/chronos-vitest) | Vitest & Jest runner integrations (`simTest`, `expectInvariant`, `replayTest`, state shrinker). |
+| **[`@sx4im/chronos-vitest`](./packages/vitest)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-vitest.svg)](https://www.npmjs.com/package/@sx4im/chronos-vitest) | Vitest runner integration (`simTest`, `expectInvariant`, `replayTest`, capsule I/O, failure shrinker). |
 | **[`@sx4im/chronos-cli`](./packages/cli)** | [![npm](https://img.shields.io/npm/v/@sx4im/chronos-cli.svg)](https://www.npmjs.com/package/@sx4im/chronos-cli) | Command-line toolkit (`replay`, `trace`, `sweep`, `shrink`, `open`, `explain`, `stats`, `check`, `export`, `doctor`). |
-| **[`@sx4im/chronos-inspector`](./packages/inspector)** | [![Private](https://img.shields.io/badge/status-ready-brightgreen)](./packages/inspector) | Web-based time-travel visual debugger (React + Vite + Tailwind UI). |
+| **[`@sx4im/chronos-inspector`](./packages/inspector)** | [![Private](https://img.shields.io/badge/status-ready-brightgreen)](./packages/inspector) | Web-based time-travel visual debugger (React + Vite UI). |
 
 ---
 
 ## CLI Reference
 
-The `@sx4im/chronos-cli` binary provides comprehensive tools for managing simulations and failure capsules:
+`@sx4im/chronos-cli` inspects and replays simulation traces and failure capsules:
 
 ```bash
 npx chronos <command> [options]
@@ -300,22 +294,22 @@ npx chronos <command> [options]
 
 ### Main Commands:
 
-* **`chronos doctor`**: Check system Node.js environment compatibility and DST readiness.
-* **`chronos check [paths...]`**: Statically analyze TypeScript/JavaScript source files for non-deterministic leaks.
-* **`chronos replay <capsule>`**: Re-execute a failure capsule to verify bit-for-bit reproduction.
-* **`chronos trace <capsule>`**: Output an ASCII execution timeline of events, network delivery, and state mutations.
-* **`chronos sweep <scenario> [seeds]`**: Run a test scenario across $N$ seeds to discover hidden race conditions.
-* **`chronos shrink <capsule>`**: Shrink a complex failure trace into the minimal reproducing steps.
-* **`chronos open <capsule>`**: Launch the web-based time-travel inspector preloaded with the capsule data.
-* **`chronos explain <capsule>`**: Get AI-powered failure analysis and root-cause explanations. Set `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` — or point `LLM_BASE_URL` at any OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, OpenRouter, Groq, …).
-* **`chronos stats <capsule>`**: Print execution statistics, network packet metrics, and event distributions.
-* **`chronos export <capsule> --format markdown|csv`**: Export trace timelines to Markdown documents or CSV reports.
+* **`chronos doctor`**: Check Node.js version, inspector assets, and static DST compliance.
+* **`chronos check [paths...]`**: Scan TypeScript/JavaScript source files for non-deterministic globals.
+* **`chronos replay <capsule> [scenario]`**: Re-run a failure capsule against its scenario to verify bit-for-bit reproduction.
+* **`chronos trace <capsule>`**: Print an ASCII timeline of scheduled events, message deliveries, and faults.
+* **`chronos sweep <scenario> [seeds]`**: Run a scenario module across $N$ seeds and write a capsule for the first violation.
+* **`chronos shrink <capsule> <scenario>`**: Reduce chaos probabilities and step count to the smallest reproducing failure.
+* **`chronos open <capsule>`**: Launch the local time-travel inspector preloaded with a capsule.
+* **`chronos explain <capsule>`**: Summarize a failure capsule via OpenAI (`OPENAI_API_KEY`), Anthropic (`ANTHROPIC_API_KEY`), Gemini (`GEMINI_API_KEY`), or any OpenAI-compatible endpoint (`LLM_BASE_URL`).
+* **`chronos stats <capsule>`**: Print event counts, delivery/drop/duplicate rates, and latency bounds.
+* **`chronos export <capsule> --format markdown|csv`**: Export trace timelines to Markdown or CSV.
 
 ---
 
-## 🧪 Examples & Reference Implementations
+## Examples & Reference Implementations
 
-Explore complete, production-grade distributed system reference implementations tested under intense chaos in the repository:
+Reference distributed-system implementations in [`examples/`](./examples) tested under fault injection:
 
 | System / Algorithm | Directory | Tested Invariants | Chaos Injected | Seeds Verified |
 | :--- | :--- | :--- | :--- | :--- |
@@ -351,17 +345,11 @@ Read **[SECURITY.md](./SECURITY.md)** for the full threat model and how to repor
 
 ---
 
-## 🤝 Contributing & Good First Issues
+## Contributing & Good First Issues
 
-We warmly welcome contributions from the community!
+See the [Good First Issues Catalog](./GOOD_FIRST_ISSUES.md) for scoped starter tasks, and read [CONTRIBUTING.md](./CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) before opening a pull request.
 
-Whether you are looking to add a new network fault, build a new distributed algorithm example, improve the web inspector, or expand CLI tooling:
-
-👉 **Check out our [Good First Issues Catalog](./GOOD_FIRST_ISSUES.md)** for curated, pre-scoped starter tasks with step-by-step guidance!
-
-Please read our **[CONTRIBUTING.md](./CONTRIBUTING.md)** and review our **[Code of Conduct](./CODE_OF_CONDUCT.md)** before opening a pull request.
-
-> **The Golden Rule**: *Determinism is the product.* Any change that causes a given seed to generate a different execution trace is considered a breaking bug.
+> **The Golden Rule**: *Determinism is the product.* Any change that causes a given seed to generate a different execution trace is a breaking bug.
 
 ### Contributors
 

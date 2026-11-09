@@ -70,8 +70,9 @@ export function drawBox(title: string, contentLines: string[]): string {
 
 export function stripAnsi(str: string): string {
   return str
-    .replace(/\x1b\[[0-9;]*m/g, "")
-    .replace(/\x1b\][^\x07]*\x07/g, "");
+    .replace(/\x1b[\]PX^_][^\x07\x1b]*(?:\x07|\x1b\\)?/g, "")
+    .replace(/\x1b\[[0-?]*[ -/]*[@-~]?/g, "")
+    .replace(/\x1b[ -/]*[0-~]?/g, "");
 }
 
 export interface PromptOption<T> {

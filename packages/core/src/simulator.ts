@@ -159,10 +159,6 @@ export class Simulator {
     };
   }
 
-  private world(): WorldView {
-    return this.getWorld();
-  }
-
   /** Manual chaos controls (deterministic, for targeted tests). */
   crash(nodeId: string): void {
     if (this.crashed.has(nodeId)) return;
@@ -188,34 +184,22 @@ export class Simulator {
     this.partitions.clear();
   }
 
-  /** Run until the queue drains, an invariant breaks, or maxSteps is hit.
-   *
-   *  Statuses: `"ok"` (heap drained, all invariants held), `"timeout"` (the
-   *  step budget ran out with events still pending — a TRUNCATED run; liveness
-   *  invariants are deliberately NOT checked because "end of run" here is an
-   *  artifact of the budget, not system quiescence), or `"violation"`.
-   *  A truncated run is never reported as `"ok"` — silently blessing a
-   *  half-finished simulation as settled would be a determinism lie. */
+  /** Run until the queue drains, an invariant breaks, or maxSteps is hit. */
   async run(opts: RunOptions = {}): Promise<RunResult> {
     const cap = opts.maxSteps ?? this.maxSteps;
     let steps = 0;
-
-    const world = () => this.world();
 
     try {
       const outcome = await this.scheduler.run({
         maxSteps: cap,
         onStep: (ev) => this.onStep(ev, steps++),
         onStepEnd: () => {
-          // Safety invariants hold after every step.
           for (const inv of this.invariants) {
             if (inv.kind === "liveness") continue;
-            checkInvariant(inv, world());
+            checkInvariant(inv, this.getWorld());
           }
         },
       });
-      // A truncated run never reaches end-of-run semantics: no liveness checks,
-      // and the trace records `timeout` so replay/inspector see it too.
       if (!outcome.completed) {
         return {
           status: "timeout",
@@ -229,9 +213,8 @@ export class Simulator {
           pending: this.scheduler.pendingCount(),
         };
       }
-      // Liveness invariants checked at end-of-run — only when truly at end.
       for (const inv of this.invariants) {
-        if (inv.kind === "liveness") checkInvariant(inv, world());
+        if (inv.kind === "liveness") checkInvariant(inv, this.getWorld());
       }
       return this.okResult();
     } catch (e) {

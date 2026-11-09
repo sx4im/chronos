@@ -8,31 +8,28 @@ This document tracks any outstanding bugs, tasks, or issues remaining in the **C
 
 ## Code Quality Status
 
-- **Unit and Simulation Tests**: 326/326 passing.
+- **Unit and Simulation Tests**: 340/340 passing across 30 test files.
 - **TypeScript Typecheck**: Clean (0 compilation errors).
 - **ESLint**: Clean (0 warnings or errors).
 - **Build**: All workspace packages compile (ESM + type declarations). CI gates on `pnpm build` across Node 20 + 22.
+- **File Modularity**: Every source file across all packages is under the 300-line ceiling (`CLAUDE.md`).
 
 ## Security Posture
 
-A full audit of every package was completed against the categories in the
-[vibe-security](https://github.com/raroque/vibe-security-skill) checklist, and
-every finding is fixed with a regression test. See [`SECURITY.md`](./SECURITY.md)
-for the threat model — the central assumption is that **a failure capsule is
-untrusted input**, because it is designed to be shared.
+Two full security audits have been completed and all findings are fixed with regression tests. See [`SECURITY.md`](./SECURITY.md) for the threat model.
 
-Closed in that pass:
+Closed across audit passes:
 
 | Area | Issue |
 | --- | --- |
-| Core | The strict-mode `setTimeout` guard compiled string handlers via `new Function` — an eval sink Node itself does not have |
-| CLI | Untrusted capsule text reached the terminal unescaped (ANSI/OSC injection could repaint the trace viewer's own output) |
-| CLI | `chronos export --csv` allowed spreadsheet formula injection; Markdown export allowed table breakout |
-| CLI | The Gemini API key was sent in a URL query string; the interactive key prompt echoed in the clear |
-| CLI | `chronos check` followed symlinks and recursed forever on a cycle; `sweep` imported scenarios from any path |
-| Capsules | No file-size limit before read; no `__proto__` rejection; predictable temp filename on write; trace events unvalidated |
-| Inspector | Malformed events crashed the render; event count, node count, and time span were unbounded |
-| Deployment | No security headers on the hosted Inspector; source maps published; CI ran with default (write) token permissions |
+| Core | Strict-mode `setTimeout` guard compiled string handlers via `new Function`; nested `installGuards` calls now maintain a snapshot stack |
+| CLI | Untrusted capsule text reached the terminal unescaped in `trace`, `stats`, `replay`, and `shrink` (ANSI/OSC injection) |
+| CLI | `chronos export` allowed spreadsheet formula injection, Markdown table breakout, or unconfined/symlinked `--output` writes |
+| CLI | `chronos explain` sent Gemini API keys in URL query strings, echoed interactive key input, and missed JSON-quoted keys or 80-char truncated JWTs in `sanitizeSummary` |
+| CLI | `chronos check` followed symlinks on directory walks; `resolveCapsulePath` and `resolveScenarioPath` now canonicalize paths via `realpathSync` to block symlink escapes |
+| Capsules | Added 128 MB pre-read size cap, `__proto__`/`constructor`/`prototype` reviver rejection, exclusive `0600` temp-file writes, and `TraceEvent` union + `"timeout"` validation |
+| Inspector | Hardened `isSameOriginCapsuleUrl` against WHATWG backslash/control-character cross-origin bypasses, bounded partition groups, and clamped virtual-time SVG coordinates to `MAX_RENDERED_SPAN` |
+| Deployment | Added CSP/HSTS/XFO security headers on the hosted Inspector, removed published source maps and `src` directories, and restricted CI `GITHUB_TOKEN` to `contents: read` |
 
 ## Known Non-Goals
 

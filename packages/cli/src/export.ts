@@ -1,9 +1,9 @@
 // chronos export — export capsule traces to CSV or Markdown format.
 
-import { writeFile } from "node:fs/promises";
+import { lstat, writeFile } from "node:fs/promises";
 import { readCapsule, type FailureCapsule } from "@sx4im/chronos-vitest/engine";
-import { resolveCapsulePath, capsuleReadError } from "./util.js";
-import { escapeCsvCell, escapeMarkdownCell } from "./sanitize.js";
+import { resolveCapsulePath, capsuleReadError, CapsulePathRefused } from "./util.js";
+import { escapeCsvCell, escapeMarkdownCell, safeText } from "./sanitize.js";
 import { C } from "./ui.js";
 
 export interface ExportResult {
@@ -95,7 +95,6 @@ export async function exportCommand(
     }
   }
 
-  // Determine output file path
   let outPath = opts.output;
   if (!outPath) {
     const base = capsulePath.replace(/\.json$/i, "");
@@ -103,15 +102,20 @@ export async function exportCommand(
   }
 
   try {
-    await writeFile(outPath, content, "utf8");
+    const confinedOut = resolveCapsulePath(outPath);
+    const existing = await lstat(confinedOut).catch(() => null);
+    if (existing?.isSymbolicLink()) {
+      throw new CapsulePathRefused("refusing to write export through a symbolic link");
+    }
+    await writeFile(confinedOut, content, "utf8");
     return {
       exitCode: 0,
-      message: `\n${C.badgeEmerald(" SUCCESS ")} Exported trace to ${C.bold(outPath)} (${events.length} events)\n`,
+      message: `\n${C.badgeEmerald(" SUCCESS ")} Exported trace to ${C.bold(safeText(outPath))} (${events.length} events)\n`,
     };
   } catch (e) {
     return {
       exitCode: 2,
-      message: `\n${C.badgeRose(" ERROR ")} Could not write export file ${outPath}: ${e instanceof Error ? e.message : String(e)}\n`,
+      message: `\n${C.badgeRose(" ERROR ")} Could not write export file ${safeText(outPath)}: ${e instanceof Error ? e.message : String(e)}\n`,
     };
   }
 }

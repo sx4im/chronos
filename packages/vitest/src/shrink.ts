@@ -67,37 +67,33 @@ function fmtKnobs(label: string, c: ShrinkConfig): string {
   );
 }
 
-/** Shrink a failing capsule: re-run its scenario under progressively simpler
- *  fault configs and keep the smallest config that still reproduces the SAME
- *  invariant violation, then atomically write a `<seed>.shrunk.json` capsule.
- *
- *  Throws `InvalidCapsule` if the capsule is malformed (the caller maps it to an
- *  exit code). Returns `exitCode: 1` (no throw) if the capsule does not reproduce
- *  under this scenario — e.g. a `netFactory` that doesn't match the one that
- *  produced the capsule. */
+function stripControls(s: string): string {
+  return s
+    .replace(/\x1b[\]PX^_][^\x07\x1b]*(?:\x07|\x1b\\)?/g, "")
+    .replace(/\x1b\[[0-?]*[ -/]*[@-~]?/g, "")
+    .replace(/\x1b[ -/]*[0-~]?/g, "")
+    .replace(/[\u200b-\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\u2066-\u206f\ufeff]/g, "");
+}
+
+/** Shrink a failing capsule by greedily reducing chaos probabilities and binary-searching maxSteps. */
 export async function shrinkCapsule(
   capsulePath: string,
   body: SimTestBody,
   options?: ShrinkOptions,
 ): Promise<ShrinkResult> {
-  // readCapsule → validateCapsule first: a malformed capsule throws before any
-  // field reaches a candidate Simulator (the B2 corruption path is closed at
-  // the validation boundary, not here).
   const capsule = await readCapsule(capsulePath);
 
   const netFactory = options?.netFactory;
   const invariantName = capsule.invariant.name;
+  const displayInvariant = stripControls(invariantName);
   const original = configOf(capsule);
 
-  // Baseline: does the original capsule even reproduce under this scenario? If
-  // not, there's nothing to shrink — the scenario's netFactory/network likely
-  // doesn't match the one that produced the capsule.
   const baseline = await runCandidate(capsule, original, body, netFactory, invariantName);
   if (!baseline.reproduced) {
     return {
       exitCode: 1,
       message:
-        `✗ could NOT reproduce "${invariantName}" from seed ${capsule.seed} under this scenario — ` +
+        `✗ could NOT reproduce "${displayInvariant}" from seed ${capsule.seed} under this scenario — ` +
         `can't shrink what doesn't reproduce.\n` +
         `  Most likely the scenario's netFactory/network doesn't match the one that produced the capsule.`,
       reproduced: false,
@@ -140,10 +136,6 @@ export async function shrinkCapsule(
     };
   }
 
-  // Build + atomically write the shrunk capsule next to the original. The path
-  // `<outDir>/<seed>.shrunk.json` (default: the capsule's own directory) never
-  // clobbers the original, and `writeCapsuleTo`'s same-directory temp+rename
-  // keeps a mid-write crash from corrupting either file.
   const outDir = options?.outDir ?? dirname(capsulePath);
   const shrunkPath = join(outDir, `${capsule.seed}.shrunk.json`);
   await writeCapsuleTo(shrunkPath, buildCapsule(BigInt(capsule.seed), shrink.sim, shrink.violation));
@@ -151,7 +143,7 @@ export async function shrinkCapsule(
   return {
     exitCode: 0,
     message:
-      `✓ shrunk capsule for seed ${capsule.seed} ("${invariantName}") — ${shrink.runs} run(s).\n` +
+      `✓ shrunk capsule for seed ${capsule.seed} ("${displayInvariant}") — ${shrink.runs} run(s).\n` +
       fmtKnobs("  original:", original) +
       fmtKnobs("  shrunk:  ", shrink.cfg) +
       `\n  written: ${shrunkPath}`,

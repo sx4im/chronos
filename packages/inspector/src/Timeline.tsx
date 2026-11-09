@@ -40,9 +40,6 @@ export function Timeline({ events, selectedSeq, highlight, onSelect }: TimelineP
   const { tMin, tMax } = useMemo(() => timeBounds(events), [events]);
   const spans = useMemo(() => partitionSpans(events), [events]);
 
-  // Clamp the laid-out span: `t` is unbounded in a capsule, and `span × scale`
-  // is the SVG width, so an event at t=1e12 would ask the browser for a canvas
-  // of ~4e13 px. Clamping squashes such a trace instead of hanging the tab.
   const span = Math.min(MAX_RENDERED_SPAN, Math.max(1, tMax - tMin));
   const tEnd = tMin + span;
   const innerW = span * scale + PAD_R;
@@ -51,7 +48,8 @@ export function Timeline({ events, selectedSeq, highlight, onSelect }: TimelineP
   const ticks: number[] = [];
   for (let t = Math.ceil(tMin / step) * step; t <= tEnd; t += step) ticks.push(t);
 
-  const xOf = (t: number) => PAD_L + (t - tMin) * scale;
+  const clampT = (t: number) => Math.min(tEnd, Math.max(tMin, t));
+  const xOf = (t: number) => PAD_L + (clampT(t) - tMin) * scale;
   const selected = events.find((e) => e.seq === selectedSeq) ?? null;
 
   const tAtCursor = (clientX: number, svg: SVGSVGElement): number => {
@@ -106,7 +104,7 @@ export function Timeline({ events, selectedSeq, highlight, onSelect }: TimelineP
               key={`part-${s.event.seq}`}
               x={xOf(s.start)}
               y={TOP}
-              width={Math.max(2, (s.end - s.start) * scale)}
+              width={Math.max(2, xOf(s.end) - xOf(s.start))}
               height={MARKER_AREA_H}
               className="part-band"
             />

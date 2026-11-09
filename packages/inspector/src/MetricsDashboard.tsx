@@ -39,7 +39,7 @@ export function MetricsDashboard({
         <div className="dashboard-card">
           <div className="card-label">Msg Delivery Rate</div>
           <div className="card-val color-green">{deliveryRate.toFixed(1)}%</div>
-          <div className="card-desc">{netStats.delivers} messages delivered</div>
+          <div className="card-desc">{netStats.delivers + netStats.dups} messages delivered</div>
         </div>
         <div className="dashboard-card">
           <div className="card-label">Msg Drop Rate</div>

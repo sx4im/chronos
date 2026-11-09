@@ -1,91 +1,53 @@
-// Pure capsule parsing + the helpers the Inspector views derive from a Trace.
-//
-// Everything here is intentionally framework-free / DOM-free so it can be unit
-// tested under Vitest (see ../test/capsule.test.ts) without a DOM and without
-// react. The React views import these pure functions and just render their
-// results — keeping the deterministic-data logic out of the JSX.
+// Pure capsule parsing and trace derivations for the Inspector views.
 
 import type { Trace, TraceEvent } from "@sx4im/chronos-core";
 import type { Capsule } from "./types.js";
 
-/** A capsule reduced to what the views actually need.
- *
- *  `trace.events` here is the RENDERABLE set — validated and capped — not
- *  necessarily everything the file contained. The three counts let the UI say
- *  so out loud instead of quietly presenting a partial trace as complete. */
 export interface ParsedCapsule {
   seed: string;
   nodes: string[];
   invariant: { name: string; detail: string };
   trace: Trace;
-  /** Events present in the file, before validation or capping. */
   totalEvents: number;
-  /** Events discarded for not matching the `TraceEvent` union. */
   droppedEvents: number;
-  /** Valid events omitted because they exceeded `MAX_RENDERED_EVENTS`. */
   truncatedEvents: number;
 }
 
-/** A `?capsule=` query value may only be a same-origin absolute path — the only
- *  form `chronos open` ever sets (`/capsule`). Reject protocol-relative `//host`,
- *  schemes (`http:`, `data:`, `blob:`), and bare relative paths so a crafted link
- *  can't make the browser fetch a cross-origin URL on the viewer's behalf
- *  (client-side SSRF, audit A2). The CSP `connect-src 'self'` is the
- *  browser-level backstop; this is the code-level check that yields a friendly
- *  error. Lives here (pure, DOM-free) so it is unit-tested in capsule.test.ts. */
+/** Accept only a genuine same-origin path (`/` prefix, no WHATWG authority/control bypass). */
 export function isSameOriginCapsuleUrl(u: string): boolean {
-  return u.startsWith("/") && !u.startsWith("//");
+  if (!u.startsWith("/") || u.startsWith("//") || /[\\\s\x00-\x1f\x7f]/.test(u)) {
+    return false;
+  }
+  try {
+    const parsed = new URL(u, "http://localhost");
+    return parsed.origin === "http://localhost" && parsed.pathname.startsWith("/");
+  } catch {
+    return false;
+  }
 }
 
-/** The friendly error string for a rejected `?capsule=` value. The offending
- *  value is JSON-quoted (and truncated) so it can never render as a clickable
- *  cross-origin URL and never echoes an unbounded attacker string. */
 export function capsuleParamError(u: string): string {
   return `capsule URL must be a same-origin path (got ${JSON.stringify(u).slice(0, 80)})`;
 }
 
-/** Upper bound on `trace.events` — mirrors MAX_EVENTS in @sx4im/chronos-vitest's
- * validateCapsule. */
 const MAX_EVENTS = 2_000_000;
-
-/** How many events the views will actually draw.
- *
- * The 2M ceiling is a fine limit for a CLI that prints lines, but the Inspector
- * maps every event to SVG markers with no virtualization — 2M of them is a
- * hung tab, reachable from a single shared capsule file. Render a prefix and
- * say so, rather than either refusing a legitimate large capsule or freezing.
- * A trace this long is unreadable by eye anyway; `chronos trace` and `chronos
- * export` are the tools for the tail. */
 export const MAX_RENDERED_EVENTS = 50_000;
-
-/** Upper bound on `trace.nodes` — matches validateCapsule's MAX_NODES. The
- * metrics dashboard builds an n×n link matrix, so this bound is quadratic in
- * the DOM. */
 const MAX_NODES = 256;
-
-/** Upper bound on the virtual-time span the views will lay out.
- *
- * Both the timeline and the sequence diagram size their SVG as `span × zoom`.
- * Event `t` values are unbounded, so a capsule holding events at t=0 and
- * t=1e12 asks the browser for a canvas ~4×10¹³ px on a side at max zoom. The
- * views clamp against this so a hostile (or merely odd) trace degrades into a
- * squashed diagram instead of an out-of-memory tab. */
 export const MAX_RENDERED_SPAN = 10_000_000;
-
 const MAX_STR = 4096;
+const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 function isStr(x: unknown, max = MAX_STR): x is string {
   return typeof x === "string" && x.length <= max;
 }
 
-/** Validate one event against core's `TraceEvent` union.
- *
- * The views destructure events by `kind` and index style tables with it, so an
- * unknown kind or a `groups` that isn't an array of arrays throws mid-render
- * and white-screens the whole app. Checking the union here — the same check
- * `validateCapsule` performs CLI-side — is what lets the views stay declarative.
- * Returns false rather than throwing: one bad event should not discard an
- * otherwise readable trace. */
+function reviveSafely(this: unknown, key: string, value: unknown): unknown {
+  if (FORBIDDEN_KEYS.has(key)) {
+    throw new Error(`capsule contains a forbidden \`${key}\` key`);
+  }
+  return value;
+}
+
 function isValidEvent(e: unknown): e is TraceEvent {
   if (typeof e !== "object" || e === null || Array.isArray(e)) return false;
   const ev = e as Record<string, unknown>;
@@ -93,101 +55,80 @@ function isValidEvent(e: unknown): e is TraceEvent {
   if (typeof ev.seq !== "number" || !Number.isInteger(ev.seq)) return false;
   switch (ev.kind) {
     case "timer":
-      return ev.nodeId === undefined || isStr(ev.nodeId);
+      return ev.nodeId === undefined || isStr(ev.nodeId, 64);
     case "wake":
     case "crash":
     case "restart":
-      return isStr(ev.nodeId);
+      return isStr(ev.nodeId, 64);
     case "send":
     case "deliver":
-      return isStr(ev.from) && isStr(ev.to) && isStr(ev.summary);
+      return isStr(ev.from, 64) && isStr(ev.to, 64) && isStr(ev.summary);
     case "partition":
       return (
         Array.isArray(ev.groups) &&
-        ev.groups.every((g) => Array.isArray(g) && g.every((n) => isStr(n))) &&
+        ev.groups.length <= MAX_NODES &&
+        ev.groups.every(
+          (g) => Array.isArray(g) && g.length <= MAX_NODES && g.every((n) => isStr(n, 64)),
+        ) &&
         typeof ev.healAt === "number" &&
         Number.isFinite(ev.healAt)
       );
     case "invariant-violation":
-      return isStr(ev.name) && isStr(ev.detail);
+      return isStr(ev.name, 256) && isStr(ev.detail);
     default:
       return false;
   }
 }
 
-/** Parse + validate a capsule JSON string. Throws on malformed input (a missing
- * `trace.events` array is the most common shape error) so the UI can surface a
- * friendly message rather than silently rendering nothing. */
 export function parseCapsule(json: string): ParsedCapsule {
   let obj: unknown;
   try {
-    obj = JSON.parse(json);
-  } catch {
-    // Content-free: a SyntaxError from JSON.parse can embed the offending bytes
-    // (e.g. a 30 KB blob truncated mid-string). The capsule is the user's own
-    // data, but the inspector's UI might surface this in a copy/paste-able form
-    // (screenshot, error report), so stay generic.
+    obj = JSON.parse(json, reviveSafely);
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("capsule contains a forbidden")) {
+      throw e;
+    }
     throw new Error("not valid JSON");
   }
-  if (typeof obj !== "object" || obj === null) {
+  if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
     throw new Error("capsule root is not an object");
   }
   const c = obj as Partial<Capsule>;
   const trace = c.trace;
   if (!trace || !Array.isArray(trace.events) || !Array.isArray(trace.nodes)) {
-    throw new Error(
-      "capsule is missing a valid `trace` (expected { events: [], nodes: [] })"
-    );
+    throw new Error("capsule is missing a valid `trace` (expected { events: [], nodes: [] })");
   }
   if (trace.events.length > MAX_EVENTS) {
-    throw new Error(
-      `capsule \`trace.events\` exceeds the maximum of ${MAX_EVENTS} entries`
-    );
+    throw new Error(`capsule \`trace.events\` exceeds the maximum of ${MAX_EVENTS} entries`);
   }
   if (typeof trace.seed !== "string") {
     throw new Error("capsule `trace.seed` is missing");
   }
   const invariant = c.invariant ?? { name: "unknown", detail: "" };
-  if (
-    typeof invariant.name !== "string" ||
-    typeof invariant.detail !== "string"
-  ) {
+  if (typeof invariant.name !== "string" || typeof invariant.detail !== "string") {
     throw new Error("capsule `invariant` must be { name, detail }");
   }
-  // Prefer the trace's node list (it is authoritative for replay); fall back to
-  // the capsule-level `nodes` if the trace omitted it.
-  const rawNodes = trace.nodes.length > 0 ? trace.nodes : (c.nodes ?? []);
+  const rawNodes = trace.nodes.length > 0 ? trace.nodes : Array.isArray(c.nodes) ? c.nodes : [];
   const nodes = rawNodes.filter((n): n is string => isStr(n, 64)).slice(0, MAX_NODES);
 
-  // Drop events that don't match the TraceEvent union, then render at most a
-  // bounded prefix. Both filters are reported so the UI never silently shows a
-  // partial trace as if it were the whole thing.
   const valid = trace.events.filter(isValidEvent);
   const dropped = trace.events.length - valid.length;
   const truncated = Math.max(0, valid.length - MAX_RENDERED_EVENTS);
   const events = truncated > 0 ? valid.slice(0, MAX_RENDERED_EVENTS) : valid;
+  const result: Trace["result"] =
+    trace.result === "ok" || trace.result === "timeout" ? trace.result : "violation";
 
   return {
     seed: trace.seed,
     nodes,
-    invariant,
-    trace: { ...trace, nodes, events },
+    invariant: { name: invariant.name, detail: invariant.detail },
+    trace: { seed: trace.seed, config: trace.config, nodes, events, result },
     totalEvents: trace.events.length,
     droppedEvents: dropped,
     truncatedEvents: truncated,
   };
 }
 
-/** A send paired with the deliver event(s) it produced — the input to the
- * sequence diagram. The simulated network emits a `send` per message; `deliver`
- * is appended when it arrives. One send may have 0, 1, or 2 delivers:
- *   - 0 → dropped (random drop, or lost in flight to a crashed node), or the
- *         send's `summary` is prefixed `dropped …` (the net's drop marker).
- *   - 1 → delivered normally.
- *   - 2 → duplicated (the net's independent second delivery).
- * Pairing is FIFO per (from, to, summary): the sends and their deliveries for
- * an identical message maintain insertion order, so a deliver matches the
- * oldest unmatched send with the same key. */
 export type SendEvent = Extract<TraceEvent, { kind: "send" }>;
 export type DeliverEvent = Extract<TraceEvent, { kind: "deliver" }>;
 
@@ -199,16 +140,14 @@ export interface MessageFlow {
 }
 
 const DROP_PREFIX = "dropped ";
-const flowKey = (from: string, to: string, summary: string) =>
-  `${from} ${to} ${summary}`;
+const PARTITION_DROP_PREFIX = "dropped by partition ";
+const flowKey = (from: string, to: string, summary: string) => `${from} ${to} ${summary}`;
 
 export function pairMessages(events: TraceEvent[]): MessageFlow[] {
   const flows: MessageFlow[] = [];
-  // Per-key list of flows awaiting their deliveries, in send order. A flow stays
-  // in its list until it has 2 delivers (the net emits at most 2 per send: one
-  // normal + one independent duplicate), so a duplicate's second deliver finds
-  // the SAME flow still waiting rather than slipping to the next send.
-  const pending = new Map<string, MessageFlow[]>();
+  // Two FIFO queues per key: `unmatched` (0 delivers) and `once` (1 deliver), for O(1) pairing.
+  const unmatched = new Map<string, MessageFlow[]>();
+  const once = new Map<string, MessageFlow[]>();
   let nextId = 0;
 
   for (const ev of events) {
@@ -221,39 +160,39 @@ export function pairMessages(events: TraceEvent[]): MessageFlow[] {
       };
       flows.push(flow);
       if (ev.summary.startsWith(DROP_PREFIX)) {
-        // The net already marked this one dropped: no deliver will ever come.
         flow.status = "dropped";
         continue;
       }
       const key = flowKey(ev.from, ev.to, ev.summary);
-      const list = pending.get(key) ?? [];
-      list.push(flow);
-      pending.set(key, list);
+      const q = unmatched.get(key) ?? [];
+      q.push(flow);
+      unmatched.set(key, q);
     } else if (ev.kind === "deliver") {
-      const key = flowKey(ev.from, ev.to, ev.summary);
-      const list = pending.get(key);
-      if (!list || list.length === 0) {
-        // A deliver with no matching send shouldn't happen in our trace model;
-        // if it ever does, it has no arrow origin so we don't render it.
+      if (ev.summary.startsWith(PARTITION_DROP_PREFIX)) {
+        const origSummary = ev.summary.slice(PARTITION_DROP_PREFIX.length);
+        const key = flowKey(ev.from, ev.to, origSummary);
+        const q = unmatched.get(key);
+        if (q && q.length > 0) q.shift();
         continue;
       }
-      // Prefer the OLDEST flow still awaiting its FIRST deliver (FIFO across
-      // interleaved same-key sends); else the oldest awaiting its DUPLICATE
-      // (the net's independent second delivery of one send). This is what makes
-      // a duplicated message attach both delivers to the same arrow.
-      const target =
-        list.find((f) => f.delivers.length === 0) ??
-        list.find((f) => f.delivers.length === 1);
-      if (target) {
+      const key = flowKey(ev.from, ev.to, ev.summary);
+      const q0 = unmatched.get(key);
+      if (q0 && q0.length > 0) {
+        const target = q0.shift()!;
         target.delivers.push(ev);
-        // The net emits at most 2 deliveries per send. A full flow can't accept
-        // a third, so drop it from the pending list.
-        if (target.delivers.length >= 2) list.splice(list.indexOf(target), 1);
+        const q1 = once.get(key) ?? [];
+        q1.push(target);
+        once.set(key, q1);
+      } else {
+        const q1 = once.get(key);
+        if (q1 && q1.length > 0) {
+          const target = q1.shift()!;
+          target.delivers.push(ev);
+        }
       }
     }
   }
 
-  // Finalize: a non-dropped send whose deliver never landed was lost in flight.
   for (const f of flows) {
     if (f.delivers.length === 0) f.status = "dropped";
     else if (f.delivers.length >= 2) f.status = "duplicated";
@@ -262,7 +201,6 @@ export function pairMessages(events: TraceEvent[]): MessageFlow[] {
   return flows;
 }
 
-/** Count events by kind, for the summary header. */
 export function eventKindCounts(events: TraceEvent[]): Map<string, number> {
   const counts = new Map<string, number>();
   for (const ev of events) {
@@ -271,7 +209,6 @@ export function eventKindCounts(events: TraceEvent[]): Map<string, number> {
   return counts;
 }
 
-/** The virtual-time span of a trace [tMin, tMax]; 0..0 if empty. */
 export function timeBounds(events: TraceEvent[]): {
   tMin: number;
   tMax: number;
@@ -286,24 +223,16 @@ export function timeBounds(events: TraceEvent[]): {
   return { tMin, tMax };
 }
 
-/** The invariant-violation event, if the trace contains one (the first match). */
 export function findViolation(events: TraceEvent[]): TraceEvent | undefined {
   return events.find((e) => e.kind === "invariant-violation");
 }
 
-/** The `window` events immediately preceding the violation — the causal
- * neighborhood a human scans first. Returns [] if there is no violation. */
-export function eventsBeforeViolation(
-  events: TraceEvent[],
-  window = 5
-): TraceEvent[] {
+export function eventsBeforeViolation(events: TraceEvent[], window = 5): TraceEvent[] {
   const i = events.findIndex((e) => e.kind === "invariant-violation");
   if (i === -1) return [];
   return events.slice(Math.max(0, i - window), i);
 }
 
-/** `seq` values of the violation and its preceding window, for quick highlight
- * lookups in the views. */
 export function highlightSeqs(events: TraceEvent[], window = 5): Set<number> {
   const set = new Set<number>();
   const v = findViolation(events);
@@ -313,36 +242,28 @@ export function highlightSeqs(events: TraceEvent[], window = 5): Set<number> {
   return set;
 }
 
-/** A `partition` trace event, narrowed from the discriminated union. */
 export type PartitionEvent = Extract<TraceEvent, { kind: "partition" }>;
 
-/** Partition spans active over a time range, derived from `partition` events.
- * Each `partition` event marks the START of a partition that heals at `healAt`. */
 export interface PartitionSpan {
   event: PartitionEvent;
-  start: number; // event.t
-  end: number; // event.healAt
+  start: number;
+  end: number;
 }
 
 export function partitionSpans(events: TraceEvent[]): PartitionSpan[] {
   const spans: PartitionSpan[] = [];
   for (const ev of events) {
     if (ev.kind === "partition") {
-      // `t` may exceed `healAt` if a partition was recorded retroactively; clamp.
       spans.push({ event: ev, start: ev.t, end: Math.max(ev.t, ev.healAt) });
     }
   }
   return spans;
 }
 
-/** A one-line, human description of an event — the text shown in tooltips and
- * the detail panel. Grouped by kind so the JSX stays declarative. */
 export function describeEvent(ev: TraceEvent): string {
   switch (ev.kind) {
     case "timer":
-      return ev.nodeId
-        ? `timer scheduled @ node ${ev.nodeId}`
-        : "timer scheduled";
+      return ev.nodeId ? `timer scheduled @ node ${ev.nodeId}` : "timer scheduled";
     case "wake":
       return `timer fired @ node ${ev.nodeId}`;
     case "send":

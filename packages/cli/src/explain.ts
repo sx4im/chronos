@@ -57,27 +57,16 @@ export const PROVIDERS: ProviderDefinition[] = [
   },
 ];
 
-// Exported for tests — these are the security-critical pure transforms
-// (credential redaction, endpoint validation) that deserve direct coverage.
 export function sanitizeSummary(summary: string): string {
-  // Control characters first: this text is bound for a third-party API AND for
-  // the terminal, and the credential redaction below should not be dodgeable by
-  // splicing an escape sequence into the middle of a token.
+  // Strip terminal controls first so escape sequences inside a token cannot bypass redaction.
   return safeText(summary)
-    .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "[REDACTED_JWT]")
+    .replace(/eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?…?/g, "[REDACTED_JWT]")
     .replace(
-      /(bearer\s+|token[=:]\s*|key[=:]\s*|secret[=:]\s*|password[=:]\s*)(?!\[REDACTED)("[^"]*"|[^\s,;"]+)/gi,
+      /(bearer\s+|(?:token|key|secret|password|passwd|pwd|auth|authorization)(?:["']?\s*[=:]\s*))(?!["']?\[REDACTED)("[^"]*"?|'[^']*'?|[^\s,;"'}]+)/gi,
       "$1[REDACTED]",
     );
 }
 
-/** An LLM endpoint must be plain `http:`/`https:`.
- *
- *  The base URL comes from `CHRONOS_EXPLAIN_BASE_URL`/`LLM_BASE_URL` or an
- *  interactive prompt, and the API key is attached to whatever it names — so a
- *  malformed or hostile value is a credential-exfiltration path, and a scheme
- *  like `file:` is a request the user never intended. Validate before the key
- *  is ever attached. */
 function assertUsableEndpoint(baseUrl: string): URL {
   let url: URL;
   try {
@@ -91,9 +80,6 @@ function assertUsableEndpoint(baseUrl: string): URL {
   return url;
 }
 
-/** Loopback hosts are the legitimate plaintext case (Ollama, LM Studio, a local
- *  vLLM). Anywhere else, `http:` puts the API key on the wire in the clear. */
-/** Exported for tests. */
 export function isLoopback(url: URL): boolean {
   const h = url.hostname.toLowerCase();
   return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]";
@@ -103,21 +89,21 @@ function formatEvent(e: TraceEvent): string {
   const where = `t=${e.t} seq=${e.seq}`;
   switch (e.kind) {
     case "timer":
-      return `${where} timer${e.nodeId !== undefined ? " " + e.nodeId : ""}`;
+      return `${where} timer${e.nodeId !== undefined ? " " + sanitizeSummary(e.nodeId) : ""}`;
     case "wake":
-      return `${where} wake ${e.nodeId}`;
+      return `${where} wake ${sanitizeSummary(e.nodeId)}`;
     case "send":
-      return `${where} send ${e.from}→${e.to} ${sanitizeSummary(e.summary)}`;
+      return `${where} send ${sanitizeSummary(e.from)}→${sanitizeSummary(e.to)} ${sanitizeSummary(e.summary)}`;
     case "deliver":
-      return `${where} deliver ${e.from}→${e.to} ${sanitizeSummary(e.summary)}`;
+      return `${where} deliver ${sanitizeSummary(e.from)}→${sanitizeSummary(e.to)} ${sanitizeSummary(e.summary)}`;
     case "crash":
-      return `${where} crash ${e.nodeId}`;
+      return `${where} crash ${sanitizeSummary(e.nodeId)}`;
     case "restart":
-      return `${where} restart ${e.nodeId}`;
+      return `${where} restart ${sanitizeSummary(e.nodeId)}`;
     case "partition":
-      return `${where} partition [${e.groups.map((g) => g.join(",")).join("] | [")}] healAt=${e.healAt}`;
+      return `${where} partition [${e.groups.map((g) => g.map(sanitizeSummary).join(",")).join("] | [")}] healAt=${e.healAt}`;
     case "invariant-violation":
-      return `${where} VIOLATION ${e.name} — ${sanitizeSummary(e.detail)}`;
+      return `${where} VIOLATION ${sanitizeSummary(e.name)} — ${sanitizeSummary(e.detail)}`;
   }
 }
 
@@ -125,9 +111,9 @@ function summarize(c: FailureCapsule): string {
   const events = c.trace.events;
   const tail = events.slice(-30);
   return [
-    `seed=${c.seed}`,
-    `nodes=[${c.nodes.join(", ")}]`,
-    `invariant: ${c.invariant.name} — ${sanitizeSummary(c.invariant.detail)}`,
+    `seed=${safeText(c.seed)}`,
+    `nodes=[${c.nodes.map(sanitizeSummary).join(", ")}]`,
+    `invariant: ${sanitizeSummary(c.invariant.name)} — ${sanitizeSummary(c.invariant.detail)}`,
     `network: latency ${c.config.network.minLatency}-${c.config.network.maxLatency}ms, drop=${c.config.network.dropProb}, dup=${c.config.network.dupProb}`,
     `chaos: partition=${c.config.chaos.partitionProb} crash=${c.config.chaos.crashProb} restart=${c.config.chaos.restartProb}`,
     `events (last ${tail.length} of ${events.length}):`,
@@ -216,27 +202,22 @@ export async function explainCommand(capsulePath: string): Promise<ExplainResult
   try {
     const explanationText = await executeLLMCall(config.provider, config.key, config.model, config.baseUrl, prompt);
     const reportLines = [
-      `${C.bold("Provider")}: ${C.cyan(config.provider.name)}  ${C.bold("Model")}: ${C.purple(config.model)}`,
+      `${C.bold("Provider")}: ${C.cyan(safeText(config.provider.name))}  ${C.bold("Model")}: ${C.purple(safeText(config.model))}`,
       `${C.bold("Capsule")}:  ${C.white(safeText(capsulePath))}`,
       "",
       `${C.bold("ROOT CAUSE ANALYSIS")}:`,
-      // The model's reply is doubly untrusted: it is generated text, and the
-      // capsule that shaped the prompt is attacker-controlled, so this is the
-      // exit of a prompt-injection path straight onto the user's terminal.
       ...explanationText.split("\n").map((line) => `  ${safeText(line)}`),
     ];
     return { exitCode: 0, message: "\n" + drawBox(`${C.indigo("EXPLANATION")}`, reportLines) + "\n" };
   } catch (e) {
-    const err = e instanceof Error ? e.message : "API call failed";
+    const err = e instanceof Error ? safeText(e.message) : "API call failed";
     return {
       exitCode: 1,
-      message: `\n${C.badgeRose(" ERROR ")} ${C.rose(`${config.provider.name} failed: ${err}`)}\n`,
+      message: `\n${C.badgeRose(" ERROR ")} ${C.rose(`${safeText(config.provider.name)} failed: ${err}`)}\n`,
     };
   }
 }
 
-// Minimal structural views of the three response shapes. Typing them (rather
-// than `as any`) is what makes the optional chaining below actually checked.
 interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[];
 }
@@ -258,15 +239,13 @@ async function executeLLMCall(provider: ProviderDefinition, key: string, model: 
   const to = setTimeout(() => ctrl.abort(), 30_000);
   try {
     if (provider.type === "gemini") {
-      // The key goes in a HEADER, never `?key=`. Query strings are logged by
-      // proxies, CDNs, and the server's own access log, and they leak through
-      // `Referer` — putting a long-lived credential there means it outlives the
-      // request in places nobody audits.
+      // Send API key in header rather than URL query string so proxies/logs never retain it.
       const endpoint = baseUrl.endsWith("/generateContent")
         ? baseUrl
         : `${baseUrl.replace(/\/$/, "")}/models/${encodeURIComponent(model)}:generateContent`;
       const res = await fetch(endpoint, {
         method: "POST",
+        redirect: "error",
         headers: { "content-type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
         signal: ctrl.signal,
@@ -279,6 +258,7 @@ async function executeLLMCall(provider: ProviderDefinition, key: string, model: 
       const endpoint = baseUrl.endsWith("/messages") ? baseUrl : `${baseUrl.replace(/\/$/, "")}/messages`;
       const res = await fetch(endpoint, {
         method: "POST",
+        redirect: "error",
         headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({ model, max_tokens: 600, messages: [{ role: "user", content: prompt }] }),
         signal: ctrl.signal,
@@ -290,6 +270,7 @@ async function executeLLMCall(provider: ProviderDefinition, key: string, model: 
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl.replace(/\/$/, "")}/chat/completions`;
     const res = await fetch(endpoint, {
       method: "POST",
+      redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
       body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 600 }),
       signal: ctrl.signal,

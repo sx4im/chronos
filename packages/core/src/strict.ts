@@ -59,60 +59,53 @@ interface HrtimeFn {
   bigint: () => bigint;
 }
 
-// Global nesting tracking for re-entrant installGuards calls
-let patchDepth = 0;
-let globalSaved: SavedGlobals | null = null;
+// Stack of saved global snapshots for nested installGuards calls.
+const savedStack: SavedGlobals[] = [];
 
-// A function-shaped Date stand-in. Using `Function` (not a class) keeps `new
-// Date()` returning a real Date instance whose prototype chain is unchanged, so
-// `instanceof Date` and all Date methods keep working without touching the
-// read-only `DateConstructor.prototype`.
 type GuardedDateCtor = DateConstructor & { (this: unknown, ...args: unknown[]): Date | string };
 
 export function installGuards(env: SimEnv, level: StrictLevel = "route"): InstalledGuards {
-  if (patchDepth === 0) {
-    const proc = globalThis as {
-      process?: { hrtime?: HrtimeFn };
-    };
-    globalSaved = {
-      date: Date,
-      mathRandom: Math.random,
-      perfNow:
-        typeof performance !== "undefined" ? (performance.now.bind(performance) as () => number) : undefined,
-      hrtime: proc.process?.hrtime as (() => [number, number]) | undefined,
-      setTimeout: globalThis.setTimeout,
-      clearTimeout: globalThis.clearTimeout,
-      clearInterval: globalThis.clearInterval,
-      setInterval: globalThis.setInterval,
-    };
-  }
-  patchDepth++;
+  const proc = globalThis as {
+    process?: { hrtime?: HrtimeFn };
+  };
+  const snapshot: SavedGlobals = {
+    date: Date,
+    mathRandom: Math.random,
+    perfNow:
+      typeof performance !== "undefined" ? (performance.now.bind(performance) as () => number) : undefined,
+    hrtime: proc.process?.hrtime as (() => [number, number]) | undefined,
+    setTimeout: globalThis.setTimeout,
+    clearTimeout: globalThis.clearTimeout,
+    clearInterval: globalThis.clearInterval,
+    setInterval: globalThis.setInterval,
+  };
+  const rootDate = savedStack[0]?.date ?? snapshot.date;
+  savedStack.push(snapshot);
 
   let restored = false;
   const restore = (): void => {
     if (restored) return;
     restored = true;
-    patchDepth--;
-    if (patchDepth === 0 && globalSaved) {
-      (globalThis as unknown as { Date: DateConstructor }).Date = globalSaved.date;
-      Math.random = globalSaved.mathRandom;
-      if (typeof performance !== "undefined" && globalSaved.perfNow) {
-        performance.now = globalSaved.perfNow;
+    const idx = savedStack.lastIndexOf(snapshot);
+    if (idx !== -1) savedStack.splice(idx, 1);
+    if (idx === savedStack.length) {
+      (globalThis as unknown as { Date: DateConstructor }).Date = snapshot.date;
+      Math.random = snapshot.mathRandom;
+      if (typeof performance !== "undefined" && snapshot.perfNow) {
+        performance.now = snapshot.perfNow;
       }
-      if (globalSaved.hrtime !== undefined) {
-        const proc = globalThis as unknown as {
+      if (snapshot.hrtime !== undefined) {
+        const p = globalThis as unknown as {
           process?: { hrtime?: HrtimeFn };
         };
-        if (proc.process) {
-          // Restore the ORIGINAL reference (saved unbound) so identity holds.
-          proc.process.hrtime = globalSaved.hrtime as HrtimeFn;
+        if (p.process) {
+          p.process.hrtime = snapshot.hrtime as HrtimeFn;
         }
       }
-      globalThis.setTimeout = globalSaved.setTimeout;
-      globalThis.clearTimeout = globalSaved.clearTimeout;
-      globalThis.clearInterval = globalSaved.clearInterval;
-      globalThis.setInterval = globalSaved.setInterval;
-      globalSaved = null;
+      globalThis.setTimeout = snapshot.setTimeout;
+      globalThis.clearTimeout = snapshot.clearTimeout;
+      globalThis.clearInterval = snapshot.clearInterval;
+      globalThis.setInterval = snapshot.setInterval;
     }
   };
 
@@ -151,8 +144,7 @@ export function installGuards(env: SimEnv, level: StrictLevel = "route"): Instal
 
     // --- the Date constructor: routes/throws for no-arg (wall-clock) reads;
     //     arg-ful construction always dispatches to the real ctor unchanged. ---
-    const RealDateToUse = globalSaved?.date ?? Date;
-    const GuardedDate = makeGuardedDate(RealDateToUse, level, () => env.now());
+    const GuardedDate = makeGuardedDate(rootDate, level, () => env.now());
     (globalThis as unknown as { Date: DateConstructor }).Date = GuardedDate as DateConstructor;
 
     // --- setTimeout & clearTimeout: route to env in BOTH levels (a forgotten timer is

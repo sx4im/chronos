@@ -45,6 +45,7 @@ export async function statsCommand(capsulePath: string): Promise<StatsResult> {
   // FIFO pairing lists to handle latency calculation
   const pendingSends = new Map<string, number[]>(); // key -> array of send times
 
+  const PARTITION_DROP_PREFIX = "dropped by partition ";
   const flowKey = (from: string, to: string, summary: string) => `${from}->${to}:${summary}`;
 
   for (const ev of events) {
@@ -59,21 +60,25 @@ export async function statsCommand(capsulePath: string): Promise<StatsResult> {
         pendingSends.set(key, list);
       }
     } else if (ev.kind === "deliver") {
+      if (ev.summary.startsWith(PARTITION_DROP_PREFIX)) {
+        const origSummary = ev.summary.slice(PARTITION_DROP_PREFIX.length);
+        const key = flowKey(ev.from, ev.to, origSummary);
+        const list = pendingSends.get(key);
+        if (list && list.length > 0) list.shift();
+        totalDrops++;
+        continue;
+      }
       totalDelivers++;
       const key = flowKey(ev.from, ev.to, ev.summary);
       const list = pendingSends.get(key);
       if (list && list.length > 0) {
-        // Normal delivery of oldest pending send
         const sendTime = list.shift()!;
         const lat = ev.t - sendTime;
         totalLatency += lat;
         if (lat < minLatency) minLatency = lat;
         if (lat > maxLatency) maxLatency = lat;
       } else {
-        // This is a duplicate (the first delivery already popped the send)
         totalDups++;
-        // Try to estimate latency based on the send timestamp if we still have it
-        // Or if it was already cleared.
       }
     }
   }

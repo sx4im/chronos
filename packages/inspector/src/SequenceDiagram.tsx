@@ -39,16 +39,15 @@ export function SequenceDiagram({
   const flows = useMemo(() => pairMessages(events), [events]);
   const spans = useMemo(() => partitionSpans(events), [events]);
 
-  // Clamped for the same reason as the timeline: `height = span × vScale`, and
-  // an unbounded `t` in a capsule would otherwise size the SVG into the tens of
-  // trillions of pixels.
   const span = Math.min(MAX_RENDERED_SPAN, Math.max(1, tMax - tMin));
+  const tEnd = tMin + span;
   const laneX = (id: string): number => {
     const i = nodes.indexOf(id);
     if (i === -1) return PAD_L + nodes.length * LANE_W + LANE_W / 2; // unknown → right void
     return PAD_L + i * LANE_W + LANE_W / 2;
   };
-  const yOf = (t: number) => HEADER + (t - tMin) * vScale;
+  const clampT = (t: number) => Math.min(tEnd, Math.max(tMin, t));
+  const yOf = (t: number) => HEADER + (clampT(t) - tMin) * vScale;
   const height = HEADER + span * vScale + PAD_B;
   const width = PAD_L + nodes.length * LANE_W + PAD_R;
 
@@ -116,7 +115,7 @@ export function SequenceDiagram({
                 x={xs}
                 y={yOf(s.start)}
                 width={xe - xs}
-                height={Math.max(2, (s.end - s.start) * vScale)}
+                height={Math.max(2, yOf(s.end) - yOf(s.start))}
                 className="part-band"
               >
                 <title>partition until t={s.end}</title>
